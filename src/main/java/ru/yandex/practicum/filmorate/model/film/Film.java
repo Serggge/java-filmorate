@@ -11,7 +11,8 @@ public class Film {
 
     @Setter
     private int id;
-    @NotBlank
+    @NotBlank()
+    @NotNull()
     private String name;
     @Size(max = 200)
     private String description;

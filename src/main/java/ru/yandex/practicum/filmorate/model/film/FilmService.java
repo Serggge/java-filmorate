@@ -21,8 +21,14 @@ public class FilmService {
     }
 
     public Film add(Film film) {
-        if (film.getReleaseDate().isBefore(FIRST_FILM)) {
+        if (film.getName() == null || film.getName().isBlank()) {
+            throw new ValidationException("Название фильма не может быть пустым");
+        } else if (film.getDescription() != null && film.getDescription().length() > 200) {
+            throw new ValidationException("Максимальная длина описания — 200 символов");
+        } else if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(FIRST_FILM)) {
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года");
+        } else if (film.getDuration() <= 0) {
+            throw new ValidationException("Продолжительность фильма должна быть положительной");
         } else {
             film.setId(++count);
             films.put(film.getId(), film);
