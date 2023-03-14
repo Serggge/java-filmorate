@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.model.user;
 
 import java.time.LocalDate;
 import lombok.Data;
-import lombok.Setter;
 
 import javax.validation.constraints.*;
 
@@ -24,6 +23,5 @@ public class User {
         this.login = login;
         this.name = name;
         this.birthday = birthday;
-        ++id;
     }
 }
