@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
@@ -11,8 +10,7 @@ import java.util.List;
 @Slf4j
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService = new UserService();
 
     @PostMapping
     public User add(@RequestBody @Valid User user) {
