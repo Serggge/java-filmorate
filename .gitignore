@@ -3,6 +3,12 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.github/
+.mvn/
+checkstyle.xml
+mvnw
+mvnw.cmd
+suppressions.xml
 
 ### STS ###
 .apt_generated

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model.film;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
@@ -10,25 +11,26 @@ import java.util.List;
 @Slf4j
 public class FilmController {
 
-    private final FilmService filmService = new FilmService();
+    @Autowired
+    private FilmServiceImpl filmService;
 
     @PostMapping
-    public Film add(@RequestBody @Valid Film film) {
-        Film response = filmService.add(film);
+    public Film addFilm(@RequestBody @Valid Film film) {
+        Film response = filmService.addFilm(film);
         log.info("Добавлен фильм: {}", film.toString());
         return response;
     }
 
     @PutMapping
-    public Film update(@RequestBody @Valid Film film) {
-        Film response = filmService.update(film);
+    public Film updateFilm(@RequestBody @Valid Film film) {
+        Film response = filmService.updateFilm(film);
         log.info("Обновлён фильм: {}", film.toString());
         return response;
     }
 
     @GetMapping
-    public List<Film> list() {
-        return filmService.list();
+    public List<Film> returnAllFilms() {
+        return filmService.returnAllFilms();
     }
 
 }
