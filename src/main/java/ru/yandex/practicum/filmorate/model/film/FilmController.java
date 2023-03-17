@@ -12,7 +12,7 @@ import java.util.List;
 public class FilmController {
 
     @Autowired
-    private FilmServiceImpl filmService;
+    private FilmService filmService;
 
     @PostMapping
     public Film addFilm(@RequestBody @Valid Film film) {

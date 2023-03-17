@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model.film;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import java.time.LocalDate;
 import java.util.Collections;

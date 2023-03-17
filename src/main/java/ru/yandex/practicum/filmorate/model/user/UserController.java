@@ -12,7 +12,7 @@ import java.util.List;
 public class UserController {
 
     @Autowired
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @PostMapping
     public User addUser(@RequestBody @Valid User user) {
