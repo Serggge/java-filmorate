@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.model.User;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -14,7 +15,6 @@ import java.time.LocalDate;
 public class UserValidatorTest {
 
     static Validator validator;
-
     User validUser;
 
     @BeforeAll

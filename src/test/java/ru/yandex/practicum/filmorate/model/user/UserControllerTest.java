@@ -1,89 +1,107 @@
 package ru.yandex.practicum.filmorate.model.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.ArgumentMatchers.any;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
+@WebMvcTest(UserController.class)
 class UserControllerTest {
 
-    UserController userController;
+    @Autowired
+    MockMvc mvc;
+    @Autowired
+    ObjectMapper mapper;
+    @MockBean
+    UserService service;
     User firsUser;
     User secondUser;
 
     @BeforeEach
     public void beforeEach() {
-        userController = new UserController();
-        firsUser = new User("ivan@yandex.ru", "Ivan2000", "Ivan",
-                LocalDate.of(1990, 1, 1));
-        secondUser = new User("peter@yandex.ru", "Peter123", "Peter",
-                LocalDate.of(1995, 2, 2));
+        firsUser = User.builder()
+                       .email("ivan2000@yandex.ru")
+                       .login("Ivan2000")
+                       .name("Ivan")
+                       .birthday(LocalDate.of(2000, 1, 1))
+                       .build();
+        secondUser = User.builder()
+                         .email("peter666@google.com")
+                         .login("Peter666")
+                         .name("Peter")
+                         .birthday(LocalDate.of(2002, 2, 2))
+                         .build();
     }
 
     @Test
-    void testAddUser() {
-        final User newUser = firsUser;
-        final User returnedUser = userController.addUser(newUser);
-        final int userId = returnedUser.getId();
-        newUser.setId(userId);
+    void handlePostUsers_addNewUser_returnAdded() throws Exception {
+        when(service.addNewUser(any(User.class))).thenReturn(firsUser);
 
-        assertNotNull(returnedUser, "Пользователь не возвращается");
-        assertEquals(newUser, returnedUser, "Пользователи не совпадают");
+        var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
+                                       .content(mapper.writeValueAsString(firsUser))
+                                       .accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(mvcRequest)
+           .andExpect(status().isCreated())
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.email", is("ivan2000@yandex.ru")))
+           .andExpect(jsonPath("$.login", is("Ivan2000")))
+           .andExpect(jsonPath("$.name", is("Ivan")))
+           .andExpect(jsonPath("$.birthday", is("2000-01-01")));
     }
 
     @Test
-    void testUpdateUser() {
-        final User newUser = firsUser;
-        User returnedUser = userController.addUser(newUser);
-        final int userId = returnedUser.getId();
-        returnedUser.setName("Ivan Ivanov");
-        final User userAfterUpdateInfo = userController.updateUser(returnedUser);
+    void handlePutUsers_updateIncomingUser_returnUpdated() throws Exception {
+        secondUser.setId(1);
+        when(service.updateIncomingUser(any(User.class))).thenReturn(secondUser);
 
-        assertNotNull(userAfterUpdateInfo, "Пользователь не возвращается");
-        assertEquals(returnedUser, userAfterUpdateInfo, "Пользователи не совпадают");
+        var mvcRequest = put("/users").contentType(MediaType.APPLICATION_JSON)
+                                      .content(mapper.writeValueAsString(secondUser))
+                                      .accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(mvcRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.email", is("peter666@google.com")))
+           .andExpect(jsonPath("$.login", is("Peter666")))
+           .andExpect(jsonPath("$.name", is("Peter")))
+           .andExpect(jsonPath("$.birthday", is("2002-02-02")))
+           .andExpect(jsonPath("$.id", is(1)));
     }
 
     @Test
-    void testGetUserList() {
-        final User firstNewUser = firsUser;
-        final User firstReturnedUser = userController.addUser(firstNewUser);
-        final int firstUserId = firstReturnedUser.getId();
-        firstNewUser.setId(firstUserId);
-        final User secondNewUser = secondUser;
-        final User secondReturnedUser = userController.addUser(secondNewUser);
-        final int secondUserId = secondReturnedUser.getId();
-        secondNewUser.setId(secondUserId);
+    void handleGetUsers_returnAllUsers() throws Exception {
+        firsUser.setId(1);
+        secondUser.setId(2);
+        when(service.returnAllUsers()).thenReturn(List.of(firsUser, secondUser));
 
-        assertEquals(2, userController.returnAllUsers().size(), "Количество пользователей не совпадает");
-        assertEquals(List.of(firstNewUser, secondNewUser), userController.returnAllUsers(),
-                "Пользователи в списке не совпадают");
-    }
+        var mvcRequest = get("/users").contentType(MediaType.APPLICATION_JSON)
+                                      .content(mapper.writeValueAsString(List.of(firsUser, secondUser)))
+                                      .accept(MediaType.APPLICATION_JSON);
 
-    @Test
-    void testAddUserWhenUserNameIsBlank() {
-        final User newUser = firsUser;
-        final String userLogin = newUser.getLogin();
-        newUser.setName("");
-        final User returnedUser = userController.addUser(newUser);
-
-        assertEquals(userLogin, returnedUser.getName(), "Значение имени не совпадает с логином пользователя");
-    }
-
-    @Test
-    void testUpdateUserWhenUserNotPresent() {
-        final User newUser = firsUser;
-        final User returnedUser = userController.addUser(newUser);
-        returnedUser.setId(0);
-
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () ->
-                userController.updateUser(returnedUser));
-        assertEquals("Пользователя с таким id не существует", exception.getMessage(),
-                "Не совпадает описание ошибки");
-        assertEquals(Collections.singletonList(newUser), userController.returnAllUsers(),
-                "Пользователь добавляется в список");
+        mvc.perform(mvcRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$", hasSize(2)))
+           .andExpect(jsonPath("$[*].email", contains("ivan2000@yandex.ru", "peter666@google.com")))
+           .andExpect(jsonPath("$[*].login", contains("Ivan2000", "Peter666")))
+           .andExpect(jsonPath("$[*].name", contains("Ivan", "Peter")))
+           .andExpect(jsonPath("$[*].birthday", contains("2000-01-01", "2002-02-02")))
+           .andExpect(jsonPath("$[*].id", contains(1, 2)));
     }
 
 }
