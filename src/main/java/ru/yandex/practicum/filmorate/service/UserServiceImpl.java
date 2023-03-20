@@ -18,18 +18,18 @@ public class UserServiceImpl implements UserService {
     private UserRepository repository;
 
     @Override
-    public User addNewUser(User user) {
+    public User create(User user) {
         user.setId(++count);
-        user.validate();
+        validate(user);
         log.info("Создан пользователь: {}", user);
         return repository.save(user);
     }
 
     @Override
-    public User updateIncomingUser(User user) {
+    public User update(User user) {
         Optional<User> existingUser = repository.findById(user.getId());
         if (existingUser.isPresent()) {
-            user.validate();
+            validate(user);
             repository.save(user);
             log.info("Пользователь обновлён: {}", user);
         } else {
@@ -39,8 +39,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> returnAllUsers() {
+    public List<User> getAll() {
         return repository.findAll();
+    }
+
+    private static void validate(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 
 }

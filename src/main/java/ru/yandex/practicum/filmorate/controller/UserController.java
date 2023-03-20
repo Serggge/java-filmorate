@@ -19,18 +19,18 @@ public class UserController {
     private UserService service;
 
     @PostMapping
-    public ResponseEntity<User> addUser(@RequestBody @Valid User user) {
-        return new ResponseEntity<>(service.addNewUser(user), HttpStatus.CREATED);
+    public ResponseEntity<User> addNew(@RequestBody @Valid User user) {
+        return new ResponseEntity<>(service.create(user), HttpStatus.CREATED);
     }
 
     @PutMapping
-    public ResponseEntity<User> updateUser(@RequestBody @Valid User user) {
-        return ResponseEntity.ok(service.updateIncomingUser(user));
+    public ResponseEntity<User> updateExisting(@RequestBody @Valid User user) {
+        return ResponseEntity.ok(service.update(user));
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> returnAllUsers() {
-        return ResponseEntity.ok(service.returnAllUsers());
+    public ResponseEntity<List<User>> returnAll() {
+        return ResponseEntity.ok(service.getAll());
     }
 
 }

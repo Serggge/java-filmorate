@@ -51,7 +51,7 @@ class FilmControllerTest {
 
     @Test
     void handlePostFilms_addNewFilm_ReturnAdded() throws Exception {
-        when(service.addNewFilm(any(Film.class))).thenReturn(firstFilm);
+        when(service.create(any(Film.class))).thenReturn(firstFilm);
 
         var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON)
                                        .content(mapper.writeValueAsString(firstFilm))
@@ -69,7 +69,7 @@ class FilmControllerTest {
     @Test
     void handlePutFilms_updateIncomingFilm_returnUpdated() throws Exception {
         secondFilm.setId(1);
-        when(service.updateIncomingFilm(any(Film.class))).thenReturn(secondFilm);
+        when(service.update(any(Film.class))).thenReturn(secondFilm);
 
         var mvcRequest = put("/films").contentType(MediaType.APPLICATION_JSON)
                                       .content(mapper.writeValueAsString(secondFilm))
@@ -89,7 +89,7 @@ class FilmControllerTest {
     void handleGetFilms_returnAllFilms() throws Exception {
         firstFilm.setId(1);
         secondFilm.setId(2);
-        when(service.returnAllFilms()).thenReturn(List.of(firstFilm, secondFilm));
+        when(service.getAll()).thenReturn(List.of(firstFilm, secondFilm));
 
         var mvcRequest = get("/films").accept(MediaType.APPLICATION_JSON);
 

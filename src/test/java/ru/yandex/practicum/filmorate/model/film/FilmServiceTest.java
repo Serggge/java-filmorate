@@ -48,7 +48,7 @@ class FilmServiceTest {
     void givenFilmObject_whenAddNewFilm_thenReturnFilmObject() {
         given(repository.save(any(Film.class))).willReturn(firstFilm);
 
-        Film savedFilm = service.addNewFilm(firstFilm);
+        Film savedFilm = service.create(firstFilm);
 
         verify(repository).save(firstFilm);
         assertThat(savedFilm).isNotNull();
@@ -61,10 +61,10 @@ class FilmServiceTest {
         given(repository.findById(anyLong())).willReturn(Optional.of(firstFilm));
         given(repository.save(secondFilm)).willReturn(secondFilm);
 
-        Film savedFilm = service.addNewFilm(firstFilm);
+        Film savedFilm = service.create(firstFilm);
         long id = savedFilm.getId();
         secondFilm.setId(id);
-        Film updatedFilm = service.updateIncomingFilm(secondFilm);
+        Film updatedFilm = service.update(secondFilm);
 
         verify(repository).save(firstFilm);
         verify(repository).save(secondFilm);
@@ -77,7 +77,7 @@ class FilmServiceTest {
         List<Film> films = List.of(firstFilm, secondFilm);
         given(repository.findAll()).willReturn(films);
 
-        List<Film> allFilms = service.returnAllFilms();
+        List<Film> allFilms = service.getAll();
 
         assertThat(allFilms).isNotNull();
         assertThat(allFilms.size()).isEqualTo(films.size());

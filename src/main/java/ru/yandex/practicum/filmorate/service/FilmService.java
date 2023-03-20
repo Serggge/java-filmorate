@@ -5,8 +5,8 @@ import java.util.List;
 
 public interface FilmService {
 
-    Film addNewFilm(Film film);
-    Film updateIncomingFilm(Film film);
-    List<Film> returnAllFilms();
+    Film create(Film film);
+    Film update(Film film);
+    List<Film> getAll();
 
 }

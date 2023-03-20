@@ -17,18 +17,18 @@ public class FilmController {
     private FilmService filmService;
 
     @PostMapping
-    public ResponseEntity<Film> addFilm(@RequestBody @Valid Film film) {
-        return new ResponseEntity<>(filmService.addNewFilm(film), HttpStatus.CREATED);
+    public ResponseEntity<Film> addNew(@RequestBody @Valid Film film) {
+        return new ResponseEntity<>(filmService.create(film), HttpStatus.CREATED);
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateFilm(@RequestBody @Valid Film film) {
-        return ResponseEntity.ok(filmService.updateIncomingFilm(film));
+    public ResponseEntity<Film> updateExisting(@RequestBody @Valid Film film) {
+        return ResponseEntity.ok(filmService.update(film));
     }
 
     @GetMapping
-    public ResponseEntity<List<Film>> returnAllFilms() {
-        return ResponseEntity.ok(filmService.returnAllFilms());
+    public ResponseEntity<List<Film>> returnAll() {
+        return ResponseEntity.ok(filmService.getAll());
     }
 
 }

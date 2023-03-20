@@ -49,7 +49,7 @@ class UserServiceTest {
     void givenUserObject_whenAddNewUser_thenReturnUserObject() {
         given(repository.save(any(User.class))).willReturn(firsUser);
 
-        User savedUser = service.addNewUser(firsUser);
+        User savedUser = service.create(firsUser);
 
         verify(repository).save(firsUser);
         assertThat(savedUser).isNotNull();
@@ -62,10 +62,10 @@ class UserServiceTest {
         given(repository.findById(anyLong())).willReturn(Optional.of(firsUser));
         given(repository.save(secondUser)).willReturn(secondUser);
 
-        User savedUser = service.addNewUser(firsUser);
+        User savedUser = service.create(firsUser);
         long id = savedUser.getId();
         secondUser.setId(id);
-        User updatedUser = service.updateIncomingUser(secondUser);
+        User updatedUser = service.update(secondUser);
 
         verify(repository).save(firsUser);
         verify(repository).save(secondUser);
@@ -78,7 +78,7 @@ class UserServiceTest {
         List<User> users = List.of(firsUser, secondUser);
         given(repository.findAll()).willReturn(users);
 
-        List<User> allUsers = service.returnAllUsers();
+        List<User> allUsers = service.getAll();
 
         verify(repository).findAll();
         assertThat(allUsers).isNotNull();

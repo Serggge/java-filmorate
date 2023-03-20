@@ -49,7 +49,7 @@ class UserControllerTest {
 
     @Test
     void handlePostUsers_addNewUser_returnAdded() throws Exception {
-        when(service.addNewUser(any(User.class))).thenReturn(firsUser);
+        when(service.create(any(User.class))).thenReturn(firsUser);
 
         var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
                                        .content(mapper.writeValueAsString(firsUser))
@@ -67,7 +67,7 @@ class UserControllerTest {
     @Test
     void handlePutUsers_updateIncomingUser_returnUpdated() throws Exception {
         secondUser.setId(1);
-        when(service.updateIncomingUser(any(User.class))).thenReturn(secondUser);
+        when(service.update(any(User.class))).thenReturn(secondUser);
 
         var mvcRequest = put("/users").contentType(MediaType.APPLICATION_JSON)
                                       .content(mapper.writeValueAsString(secondUser))
@@ -87,7 +87,7 @@ class UserControllerTest {
     void handleGetUsers_returnAllUsers() throws Exception {
         firsUser.setId(1);
         secondUser.setId(2);
-        when(service.returnAllUsers()).thenReturn(List.of(firsUser, secondUser));
+        when(service.getAll()).thenReturn(List.of(firsUser, secondUser));
 
         var mvcRequest = get("/users").contentType(MediaType.APPLICATION_JSON)
                                       .content(mapper.writeValueAsString(List.of(firsUser, secondUser)))

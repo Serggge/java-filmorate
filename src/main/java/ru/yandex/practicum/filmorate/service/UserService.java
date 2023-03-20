@@ -5,8 +5,8 @@ import java.util.List;
 
 public interface UserService {
 
-    User addNewUser(User user);
-    User updateIncomingUser(User user);
-    List<User> returnAllUsers();
+    User create(User user);
+    User update(User user);
+    List<User> getAll();
 
 }
