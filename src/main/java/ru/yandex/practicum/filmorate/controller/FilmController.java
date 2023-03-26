@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,24 +11,25 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
-    @Autowired
-    private FilmService filmService;
+    private final FilmService filmService;
 
     @PostMapping
-    public ResponseEntity<Film> addNew(@RequestBody @Valid Film film) {
-        return new ResponseEntity<>(filmService.create(film), HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Film addNew(@RequestBody @Valid Film film) {
+        return filmService.create(film);
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateExisting(@RequestBody @Valid Film film) {
-        return ResponseEntity.ok(filmService.update(film));
+    public Film updateExisting(@RequestBody @Valid Film film) {
+        return filmService.update(film);
     }
 
     @GetMapping
-    public ResponseEntity<List<Film>> returnAll() {
-        return ResponseEntity.ok(filmService.getAll());
+    public List<Film> returnAll() {
+        return filmService.getAll();
     }
 
 }

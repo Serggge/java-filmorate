@@ -1,25 +1,27 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 @Data
 @Builder
+@FieldDefaults
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
 
-    private long id;
+    long id;
     @Email
     @NotEmpty
-    private String email;
+    String email;
     @NotBlank
     @Pattern(regexp = "^[^ ]+$")
-    private String login;
-    private String name;
+    String login;
+    String name;
     @NotNull
     @PastOrPresent
-    private LocalDate birthday;
+    LocalDate birthday;
 
 }

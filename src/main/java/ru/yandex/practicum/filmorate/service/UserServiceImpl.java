@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -11,11 +11,11 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private static int count;
-    @Autowired
-    private UserRepository repository;
+    private final UserRepository repository;
 
     @Override
     public User create(User user) {
@@ -33,7 +33,9 @@ public class UserServiceImpl implements UserService {
             repository.save(user);
             log.info("Пользователь обновлён: {}", user);
         } else {
-            throw new UserNotFoundException("Пользователь с указанным id не найден");
+            throw new UserNotFoundException(
+                    String.format("Пользователь с id=%d не найден", user.getId())
+            );
         }
         return user;
     }

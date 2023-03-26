@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -10,15 +10,15 @@ import ru.yandex.practicum.filmorate.repository.FilmRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import static ru.yandex.practicum.filmorate.Constants.FIRST_FILM;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmServiceImpl implements FilmService {
 
-    private static final LocalDate FIRST_FILM = LocalDate.of(1895, 12, 28);
     private static int count;
-    @Autowired
-    private FilmRepository repository;
+    private final FilmRepository repository;
 
     @Override
     public Film create(Film film) {
@@ -36,7 +36,9 @@ public class FilmServiceImpl implements FilmService {
             film = repository.save(film);
             log.info("Обновлён фильм: {}", film);
         } else {
-            throw new FilmNotFoundException("Фильм с указанным id не найден");
+            throw new FilmNotFoundException(
+                    String.format("Фильм с id=%d не найден", film.getId())
+            );
         }
         return film;
     }
@@ -49,7 +51,9 @@ public class FilmServiceImpl implements FilmService {
     private static void validate(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(FIRST_FILM)) {
-            throw new ValidationException("Дата релиза фильма раньше 28 декабря 1895 года");
+            throw new ValidationException(
+                    String.format("Дата релиза фильма раньше %s", FIRST_FILM)
+            );
         }
     }
 
