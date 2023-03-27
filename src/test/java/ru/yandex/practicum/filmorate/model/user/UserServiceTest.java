@@ -12,8 +12,8 @@ import static org.mockito.Mockito.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.UserRepository;
-import ru.yandex.practicum.filmorate.service.UserServiceImpl;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.service.user.UserServiceImpl;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.Optional;
 class UserServiceTest {
 
     @Mock
-    UserRepository repository;
+    UserStorage repository;
     @InjectMocks
     UserServiceImpl service;
     User firsUser;

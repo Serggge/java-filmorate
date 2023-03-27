@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.model.film;
 
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,13 +11,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 
 @WebMvcTest(FilmController.class)
 class FilmControllerTest {
@@ -50,7 +53,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void handlePostFilms_addNewFilm_ReturnAdded() throws Exception {
+    void handleAddNew_addNewFilm_ReturnAdded() throws Exception {
         when(service.create(any(Film.class))).thenReturn(firstFilm);
 
         var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON)
@@ -67,7 +70,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void handlePutFilms_updateIncomingFilm_returnUpdated() throws Exception {
+    void handleUpdateExisting_updateIncomingFilm_returnUpdated() throws Exception {
         secondFilm.setId(1);
         when(service.update(any(Film.class))).thenReturn(secondFilm);
 
@@ -86,7 +89,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void handleGetFilms_returnAllFilms() throws Exception {
+    void handleReturnAll_returnAllFilms() throws Exception {
         firstFilm.setId(1);
         secondFilm.setId(2);
         when(service.getAll()).thenReturn(List.of(firstFilm, secondFilm));
@@ -104,4 +107,28 @@ class FilmControllerTest {
            .andExpect(jsonPath("$[*].releaseDate", contains("2000-01-01", "2020-02-02")))
            .andExpect(jsonPath("$[*].duration", contains(120, 200)));
     }
+
+    @Test
+    public void handleReturnFilmById_returnFilmObject() throws Exception {
+        final Film film = firstFilm;
+        final int randomInt = new Random().nextInt();
+        film.setId(randomInt);
+        final String id = String.valueOf(randomInt);
+        final String jsonString = mapper.writeValueAsString(film);
+        when(service.getById(id)).thenReturn(film);
+
+        var mvcRequest = get("/films/" + id).accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(mvcRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(content().json(jsonString))
+           .andExpect(jsonPath("$", notNullValue()))
+           .andExpect(jsonPath("$.id", is(randomInt)))
+           .andExpect(jsonPath("$.name", is(film.getName())))
+           .andExpect(jsonPath("$.description", is(film.getDescription())))
+           .andExpect(jsonPath("$.releaseDate", is(film.getReleaseDate().toString())))
+           .andExpect(jsonPath("$.duration", is(film.getDuration())));
+    }
+
 }

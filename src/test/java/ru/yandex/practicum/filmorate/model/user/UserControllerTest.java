@@ -10,13 +10,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.user.UserService;
+
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.mockito.ArgumentMatchers.any;
+
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
+
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(UserController.class)
@@ -102,6 +106,57 @@ class UserControllerTest {
            .andExpect(jsonPath("$[*].name", contains("Ivan", "Peter")))
            .andExpect(jsonPath("$[*].birthday", contains("2000-01-01", "2002-02-02")))
            .andExpect(jsonPath("$[*].id", contains(1, 2)));
+    }
+
+    @Test
+    void handleReturnById_returnUserObject() throws Exception {
+        final User user = firsUser;
+        final int randomInt = new Random().nextInt();
+        user.setId(randomInt);
+        final String id = String.valueOf(randomInt);
+        final String jsonString = mapper.writeValueAsString(user);
+        when(service.getById(id)).thenReturn(user);
+
+        var mvcRequest = get("/users/" + id).accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(mvcRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(content().json(jsonString))
+           .andExpect(jsonPath("$", notNullValue()))
+           .andExpect(jsonPath("$.id", is(randomInt)))
+           .andExpect(jsonPath("$.email", is(user.getEmail())))
+           .andExpect(jsonPath("$.login", is(user.getLogin())))
+           .andExpect(jsonPath("$.name", is(user.getName())))
+           .andExpect(jsonPath("$.birthday", is(user.getBirthday()
+                                                    .toString())));
+    }
+
+    @Test
+    void handleInviteFriend_returnFriend() throws Exception {
+        final User user = firsUser;
+        final int userId = 1;
+        user.setId(userId);
+        final User friend = secondUser;
+        final int friendId = userId + 1;
+        friend.setId(friendId);
+        String jsonString = mapper.writeValueAsString(friend);
+        when(service.addFriend(String.valueOf(userId), String.valueOf(friendId))).thenReturn(friend);
+
+        var mvcRequest = put(String.format("/users/%d/friends/%d", userId, friendId))
+                .accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(mvcRequest)
+           .andExpect(status().isOk())
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(content().json(jsonString))
+           .andExpect(jsonPath("$", notNullValue()))
+           .andExpect(jsonPath("$.id", is(friendId)))
+           .andExpect(jsonPath("$.email", is(friend.getEmail())))
+           .andExpect(jsonPath("$.login", is(friend.getLogin())))
+           .andExpect(jsonPath("$.name", is(friend.getName())))
+           .andExpect(jsonPath("$.birthday", is(friend.getBirthday()
+                                                      .toString())));
     }
 
 }

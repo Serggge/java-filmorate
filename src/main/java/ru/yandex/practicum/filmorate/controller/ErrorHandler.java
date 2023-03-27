@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -6,9 +6,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.ErrorMessage;
+
 import java.time.Instant;
 
 @RestControllerAdvice
@@ -35,21 +37,35 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorMessage argumentNotValidException(MethodArgumentNotValidException exception) {
         return ErrorMessage.builder()
-                .statusCode(400)
-                .httpStatus(HttpStatus.BAD_REQUEST)
-                .timeStamp(Instant.now())
-                .message(exception.getMessage())
-                .description("Параметры запроса не удовлетворяют условиям объекта")
-                .build();
+                           .statusCode(400)
+                           .httpStatus(HttpStatus.BAD_REQUEST)
+                           .timeStamp(Instant.now())
+                           .message(exception.getMessage())
+                           .description("Параметры запроса не удовлетворяют условиям объекта")
+                           .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleIncorrectParam(IncorrectParameterException e) {
+        return ErrorMessage.builder()
+                           .statusCode(400)
+                           .httpStatus(HttpStatus.BAD_REQUEST)
+                           .timeStamp(Instant.now())
+                           .message(
+                                   String.format("Некорректный параметр %s", e.getParam())
+                           )
+                           .description(e.getDescription())
+                           .build();
     }
 
     private static ErrorMessage defaultNotFoundMessage(Exception exception) {
         return ErrorMessage.builder()
-                .statusCode(404)
-                .httpStatus(HttpStatus.NOT_FOUND)
-                .timeStamp(Instant.now())
-                .message(exception.getMessage())
-                .build();
+                           .statusCode(404)
+                           .httpStatus(HttpStatus.NOT_FOUND)
+                           .timeStamp(Instant.now())
+                           .message(exception.getMessage())
+                           .build();
     }
 
 }

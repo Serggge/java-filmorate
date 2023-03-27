@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -29,6 +29,16 @@ public class UserController {
     @GetMapping
     public List<User> returnAll() {
         return service.getAll();
+    }
+
+    @GetMapping("/{id}")
+    public User returnById(@PathVariable String id) {
+        return service.getById(id);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public User inviteFriend(@PathVariable String id, @PathVariable String friendId) {
+        return service.addFriend(id, friendId);
     }
 
 }

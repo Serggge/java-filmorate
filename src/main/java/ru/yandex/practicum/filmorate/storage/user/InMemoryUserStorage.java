@@ -1,15 +1,15 @@
-package ru.yandex.practicum.filmorate.repository;
+package ru.yandex.practicum.filmorate.storage.user;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 import java.util.*;
 
-@Repository
-public class UserRepositoryImpl implements UserRepository {
+@Component
+public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Long, User> users;
 
-    public UserRepositoryImpl() {
+    public InMemoryUserStorage() {
         users = new HashMap<>();
     }
 
