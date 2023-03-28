@@ -26,7 +26,7 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film create(Film film) {
         film.setId(++count);
-        validate(film);
+        validateInstance(film);
         log.info("Добавлен фильм: {}", film);
         return storage.save(film);
     }
@@ -35,7 +35,7 @@ public class FilmServiceImpl implements FilmService {
     public Film update(Film film) {
         Optional<Film> existingFilm = storage.findById(film.getId());
         if (existingFilm.isPresent()) {
-            validate(film);
+            validateInstance(film);
             film = storage.save(film);
             log.info("Обновлён фильм: {}", film);
         } else {
@@ -61,7 +61,7 @@ public class FilmServiceImpl implements FilmService {
         }
     }
 
-    private static void validate(Film film) {
+    private static void validateInstance(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(FIRST_FILM)) {
             throw new ValidationException(String.format("Дата релиза фильма раньше %s", FIRST_FILM));

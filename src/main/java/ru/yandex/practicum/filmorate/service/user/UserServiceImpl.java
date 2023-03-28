@@ -8,8 +8,8 @@ import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -22,21 +22,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public User create(User user) {
         user.setId(++count);
-        validate(user);
+        validateInstance(user);
         log.info("Создан пользователь: {}", user);
         return storage.save(user);
     }
 
     @Override
     public User update(User user) {
-        Optional<User> existingUser = storage.findById(user.getId());
-        if (existingUser.isPresent()) {
-            validate(user);
-            storage.save(user);
-            log.info("Пользователь обновлён: {}", user);
-        } else {
-            throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", user.getId()));
-        }
+        validateInstance(user);
+        getUserOrThrow(user.getId());
+        storage.save(user);
+        log.info("Пользователь обновлён: {}", user);
         return user;
     }
 
@@ -45,33 +41,48 @@ public class UserServiceImpl implements UserService {
         return storage.findAll();
     }
 
-    private static void validate(User user) {
-        if (user.getName() == null || user.getName()
-                                          .isBlank()) {
-            user.setName(user.getLogin());
-        }
-    }
-
     @Override
     public User getById(String stringId) {
         long id = validateId(stringId);
-        return storage.findById(id)
-                      .orElseThrow(
-                              () -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
+        return getUserOrThrow(id);
     }
 
     @Override
     public User addFriend(String stringId, String stringFriendId) {
-        long id = validateId(stringId);
+        long userId = validateId(stringId);
         long friendId = validateId(stringFriendId);
-        User user = storage.findById(id)
-                           .orElseThrow(() -> new UserNotFoundException(
-                                   String.format("Пользователь с id=%d не найден", id)));
-        User friend = storage.findById(friendId)
-                             .orElseThrow(() -> new UserNotFoundException(
-                                     String.format("Друг с id=%d не найден", friendId)));
+        User user = getUserOrThrow(userId);
+        User friend = getUserOrThrow(friendId);
         user.addFriendId(friend.getId());
         return friend;
+    }
+
+    @Override
+    public User deleteFriendById(String userStrId, String friendStrId) {
+        long userId = validateId(userStrId);
+        long friendId = validateId(friendStrId);
+        User user = getUserOrThrow(userId);
+        User friend = getUserOrThrow(friendId);
+        boolean friendFound = user.deleteFriendId(friend.getId());
+        if (!friendFound) {
+            throw new UserNotFoundException("Пользователь не является вашим другом");
+        } else {
+            return friend;
+        }
+    }
+
+    @Override
+    public List<User> getAllFriends(String id) {
+        long userId = validateId(id);
+        User user = getUserOrThrow(userId);
+        return storage.findAllById(user.getFriends());
+    }
+
+    private static void validateInstance(User user) {
+        if (user.getName() == null || user.getName()
+                .isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 
     private static long validateId(String stringId) {
@@ -84,6 +95,12 @@ public class UserServiceImpl implements UserService {
         } catch (NumberFormatException e) {
             throw new IncorrectParameterException("id", "Идентификатор не числовой");
         }
+    }
+
+    private User getUserOrThrow(long id) {
+        return storage.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("Пользователь с id=%d не найден", id)));
     }
 
 }

@@ -9,5 +9,6 @@ public interface UserStorage {
     User save(User user);
     Optional<User> findById(long id);
     List<User> findAll();
+    List<User> findAllById(Iterable<Long> ids);
 
 }

@@ -11,5 +11,7 @@ public interface UserService {
     List<User> getAll();
     User getById(String id);
     User addFriend(String id, String friendId);
+    User deleteFriendById(String userId, String friendId);
+    List<User> getAllFriends(String id);
 
 }

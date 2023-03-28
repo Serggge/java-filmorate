@@ -8,12 +8,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.BDDMockito.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.service.film.FilmServiceImpl;
@@ -92,7 +93,7 @@ class FilmServiceTest {
     @Test
     void givenFilmId_whenReturnById_thenReturnFilmObject() {
         final Film film = firstFilm;
-        final int randomInt = new Random().nextInt();
+        final int randomInt = new Random().nextInt(32) + 1;
         film.setId(randomInt);
         given(storage.findById(randomInt)).willReturn(Optional.of(film));
 
@@ -104,18 +105,56 @@ class FilmServiceTest {
     }
 
     @Test
-    void givenFilmId_whenReturnById_thenReturnNotFoundException() {
-        given(storage.findById(anyLong())).willReturn(Optional.empty());
+    void givenFilmId_whenReturnById_thenThrowNotFoundException() {
+        final int randomInt = new Random().nextInt(32) + 1;
         final Film[] returned = new Film[1];
+        given(storage.findById(randomInt)).willReturn(Optional.empty());
 
-        FilmNotFoundException exception = assertThrows(FilmNotFoundException.class, () -> {
-           returned[0] = service.getById(String.valueOf(anyLong()));
+        Throwable exception = assertThrows(FilmNotFoundException.class, () -> {
+           returned[0] = service.getById(String.valueOf(randomInt));
         });
 
-        verify(storage).findById(anyLong());
+        verify(storage).findById(randomInt);
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(FilmNotFoundException.class);
+        assertThat(exception.getMessage()).isEqualTo(String.format("Фильм с id=%d не найден", randomInt));
         assertThat(returned[0]).isNull();
+    }
+
+    @Test
+    void givenFilmIdNotNumberType_whenReturnById_thenThrowIncorrectParameterException() {
+        final Film[] returned = new Film[1];
+        final String id = "s";
+        lenient().when(storage.findById(anyLong())).thenReturn(Optional.empty());
+
+        IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, () -> {
+            returned[0] = service.getById(id);
+        });
+
+        verify(storage, never()).findById(anyLong());
+        assertThat(returned[0]).isNull();
+        assertThat(exception).isNotNull();
+        assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
+        assertThat(exception.getParam()).isEqualTo("id");
+        assertThat(exception.getDescription()).isEqualTo("Идентификатор не числовой");
+    }
+
+    @Test
+    void givenFilmIdEqualToZero_whenReturnById_thenThrowIncorrectParameterException() {
+        final Film[] returned = new Film[1];
+        final String id = "0";
+        lenient().when(storage.findById(anyLong())).thenReturn(Optional.empty());
+
+        IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, () -> {
+           returned[0] = service.getById(id);
+        });
+
+        verify(storage, never()).findById(anyLong());
+        assertThat(returned[0]).isNull();
+        assertThat(exception).isNotNull();
+        assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
+        assertThat(exception.getParam()).isEqualTo("id");
+        assertThat(exception.getMessage()).isEqualTo("Идентификатор должен быть больше 0");
     }
 
 }

@@ -29,4 +29,14 @@ public class InMemoryUserStorage implements UserStorage {
         return new ArrayList<>(users.values());
     }
 
+    @Override
+    public List<User> findAllById(Iterable<Long> ids) {
+        List<User> result = new ArrayList<>();
+        for (Long id : ids) {
+            if (users.containsKey(id)) {
+                result.add(users.get(id));
+            }
+        }
+        return result;
+    }
 }

@@ -2,16 +2,17 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
 @Builder
-@FieldDefaults(makeFinal=false, level=AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -31,6 +32,14 @@ public class User {
 
     public void addFriendId(Long id) {
         friends.add(id);
+    }
+
+    public boolean deleteFriendId(long id) {
+        return friends.remove(id);
+    }
+
+    public List<Long> getFriends() {
+        return new ArrayList<>(friends);
     }
 
 }
