@@ -4,12 +4,14 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
 @Builder
-@FieldDefaults(makeFinal=false, level=AccessLevel.PRIVATE)
+@FieldDefaults(level=AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Film {
@@ -25,5 +27,17 @@ public class Film {
     LocalDate releaseDate;
     @Positive
     int duration;
+
+    public List<Long> getLikes() {
+        return new ArrayList<>(likes);
+    }
+
+    public void addLike(long id) {
+        likes.add(id);
+    }
+
+    public boolean removeLike(long id) {
+        return likes.remove(id);
+    }
 
 }

@@ -6,10 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.ErrorMessage;
 
 import java.time.Instant;
@@ -59,6 +56,17 @@ public class ErrorHandler {
                            )
                            .description(e.getDescription())
                            .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+    public ErrorMessage handleDataUpdateException(DataUpdateException e) {
+        return ErrorMessage.builder()
+                .statusCode(406)
+                .httpStatus(HttpStatus.NOT_ACCEPTABLE)
+                .timeStamp(Instant.now())
+                .message(e.getMessage())
+                .build();
     }
 
     private static ErrorMessage defaultNotFoundMessage(Exception exception) {

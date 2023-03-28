@@ -30,7 +30,7 @@ public class User {
     @PastOrPresent
     LocalDate birthday;
 
-    public void addFriendId(Long id) {
+    public void addFriendId(long id) {
         friends.add(id);
     }
 

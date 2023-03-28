@@ -1,32 +1,43 @@
 package ru.yandex.practicum.filmorate.service.film;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-
-import java.time.LocalDate;
+import static ru.yandex.practicum.filmorate.service.Validator.*;
 import java.util.List;
 import java.util.Optional;
-
-import static ru.yandex.practicum.filmorate.Constants.FIRST_FILM;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class FilmServiceImpl implements FilmService {
 
     private static int count;
     private final FilmStorage storage;
+    private UserService userService;
+
+    @Autowired
+    public FilmServiceImpl(FilmStorage storage) {
+        this.storage = storage;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public Film create(Film film) {
+        validateFilm(film);
         film.setId(++count);
-        validateInstance(film);
         log.info("Добавлен фильм: {}", film);
         return storage.save(film);
     }
@@ -35,7 +46,7 @@ public class FilmServiceImpl implements FilmService {
     public Film update(Film film) {
         Optional<Film> existingFilm = storage.findById(film.getId());
         if (existingFilm.isPresent()) {
-            validateInstance(film);
+            validateFilm(film);
             film = storage.save(film);
             log.info("Обновлён фильм: {}", film);
         } else {
@@ -53,19 +64,50 @@ public class FilmServiceImpl implements FilmService {
     public Film getById(String stringId) {
         try {
             final long longId = Long.parseLong(stringId);
-            return storage.findById(longId).orElseThrow(() -> new FilmNotFoundException(
-                    String.format("Фильм с id=%d не найден", longId))
-                    );
+            return storage.findById(longId)
+                          .orElseThrow(
+                                  () -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", longId)));
         } catch (NumberFormatException e) {
             throw new IncorrectParameterException("id", "Идентификатор не числовой");
         }
     }
 
-    private static void validateInstance(Film film) {
-        LocalDate releaseDate = film.getReleaseDate();
-        if (releaseDate.isBefore(FIRST_FILM)) {
-            throw new ValidationException(String.format("Дата релиза фильма раньше %s", FIRST_FILM));
+    @Override
+    public Film setLike(String filmStrId, String userId) {
+        //long filmId = validateId(filmStrId);
+        Film film = getFilmOrThrow(Long.parseLong(filmStrId));
+        User user = userService.getById(userId);
+        film.addLike(user.getId());
+        return film;
+    }
+
+    @Override
+    public Film deleteLike(String filmStrId, String userId) {
+        //long filmId = validateId(filmStrId);
+        Film film = getFilmOrThrow(Long.parseLong(filmStrId));
+        User user = userService.getById(userId);
+        boolean isSuccess = film.removeLike(user.getId());
+        if (!isSuccess) {
+            throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
+        return film;
+    }
+
+    @Override
+    public List<Film> getPopular(String count) {
+        //long size = validateId(count);
+        return storage.findAll()
+                      .stream()
+                      .sorted((film1, film2) -> film2.getLikes()
+                                                     .size() - film1.getLikes()
+                                                                    .size())
+                      .limit(Long.parseLong(count))
+                      .collect(Collectors.toList());
+    }
+
+    private Film getFilmOrThrow(long id) {
+        return storage.findById(id)
+                      .orElseThrow(() -> new UserNotFoundException(String.format("Фильм с id=%d не найден", id)));
     }
 
 }

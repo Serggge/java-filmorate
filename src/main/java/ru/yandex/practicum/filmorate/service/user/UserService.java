@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service.user;
 
-import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.model.User;
 import java.util.List;
 
@@ -13,5 +12,6 @@ public interface UserService {
     User addFriend(String id, String friendId);
     User deleteFriendById(String userId, String friendId);
     List<User> getAllFriends(String id);
+    List<User> getMutualFriends(String id, String otherId);
 
 }

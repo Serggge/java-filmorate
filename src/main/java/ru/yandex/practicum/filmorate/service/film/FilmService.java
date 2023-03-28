@@ -9,5 +9,8 @@ public interface FilmService {
     Film update(Film film);
     List<Film> getAll();
     Film getById(String id);
+    Film setLike(String filmId, String userId);
+    Film deleteLike(String filmId, String userId);
+    List<Film> getPopular(String count);
 
 }
