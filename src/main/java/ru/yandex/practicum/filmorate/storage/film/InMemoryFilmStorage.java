@@ -31,4 +31,8 @@ public class InMemoryFilmStorage implements FilmStorage {
         return new ArrayList<>(films.values());
     }
 
+    @Override
+    public Set<Long> findAllId() {
+        return films.keySet();
+    }
 }

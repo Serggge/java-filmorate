@@ -348,8 +348,6 @@ class UserServiceTest {
         assertThat(user.getFriends().size()).isEqualTo(0);
     }
 
-    private void setInitialValueForUsersId() {
 
-    }
 
 }

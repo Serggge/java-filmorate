@@ -15,11 +15,7 @@ public final class Validator {
 
     public static long validateId(String stringId) {
         try {
-            final long longId = Long.parseLong(stringId);
-            if (longId <= 0) {
-                throw new IncorrectParameterException("id", "Идентификатор должен быть больше 0");
-            }
-            return longId;
+            return Long.parseLong(stringId);
         } catch (NumberFormatException e) {
             throw new IncorrectParameterException("id", "Идентификатор не числовой");
         }

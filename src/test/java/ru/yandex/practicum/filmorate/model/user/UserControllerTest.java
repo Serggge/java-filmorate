@@ -33,18 +33,21 @@ class UserControllerTest {
     ObjectMapper mapper;
     @MockBean
     UserService service;
-    User firsUser;
-    User secondUser;
+    User user;
+    User friend;
+    User mutual;
 
     @BeforeEach
     public void beforeEach() {
-        firsUser = User.builder()
+        user = User.builder()
+                .id(new Random().nextInt(32) + 1)
                 .email("ivan2000@yandex.ru")
                 .login("Ivan2000")
                 .name("Ivan")
                 .birthday(LocalDate.of(2000, 1, 1))
                 .build();
-        secondUser = User.builder()
+        friend = User.builder()
+                .id(user.getId() + 1)
                 .email("peter666@google.com")
                 .login("Peter666")
                 .name("Peter")
@@ -54,68 +57,69 @@ class UserControllerTest {
 
     @Test
     void handlePostUsers_addNewUser_returnAdded() throws Exception {
-        when(service.create(any(User.class))).thenReturn(firsUser);
+        when(service.create(any(User.class))).thenReturn(user);
 
         final var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(firsUser))
+                .content(mapper.writeValueAsString(user))
                 .accept(MediaType.APPLICATION_JSON);
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.email", is("ivan2000@yandex.ru")))
-                .andExpect(jsonPath("$.login", is("Ivan2000")))
-                .andExpect(jsonPath("$.name", is("Ivan")))
-                .andExpect(jsonPath("$.birthday", is("2000-01-01")));
+                .andExpect(content().json(mapper.writeValueAsString(user)))
+                .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$.id", is((int) user.getId())))
+                .andExpect(jsonPath("$.email", is(user.getEmail())))
+                .andExpect(jsonPath("$.login", is(user.getLogin())))
+                .andExpect(jsonPath("$.name", is(user.getName())))
+                .andExpect(jsonPath("$.birthday", is(user.getBirthday().toString())));
     }
 
     @Test
     void handlePutUsers_updateIncomingUser_returnUpdated() throws Exception {
-        secondUser.setId(1);
-        when(service.update(any(User.class))).thenReturn(secondUser);
+        when(service.update(any(User.class))).thenReturn(friend);
 
         final var mvcRequest = put("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(secondUser))
+                .content(mapper.writeValueAsString(friend))
                 .accept(MediaType.APPLICATION_JSON);
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.email", is("peter666@google.com")))
-                .andExpect(jsonPath("$.login", is("Peter666")))
-                .andExpect(jsonPath("$.name", is("Peter")))
-                .andExpect(jsonPath("$.birthday", is("2002-02-02")))
-                .andExpect(jsonPath("$.id", is(1)));
+                .andExpect(content().json(mapper.writeValueAsString(friend)))
+                .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$.email", is(friend.getEmail())))
+                .andExpect(jsonPath("$.login", is(friend.getLogin())))
+                .andExpect(jsonPath("$.name", is(friend.getName())))
+                .andExpect(jsonPath("$.birthday", is(friend.getBirthday().toString())))
+                .andExpect(jsonPath("$.id", is((int) user.getId())));
     }
 
     @Test
     void handleGetUsers_returnAllUsers() throws Exception {
-        firsUser.setId(1);
-        secondUser.setId(2);
-        when(service.getAll()).thenReturn(List.of(firsUser, secondUser));
+        when(service.getAll()).thenReturn(List.of(user, friend));
 
         final var mvcRequest = get("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(List.of(firsUser, secondUser)))
+                .content(mapper.writeValueAsString(List.of(user, friend)))
                 .accept(MediaType.APPLICATION_JSON);
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(mapper.writeValueAsString(List.of(user, friend))))
+                .andExpect(jsonPath("$", notNullValue()))
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].email", contains("ivan2000@yandex.ru", "peter666@google.com")))
-                .andExpect(jsonPath("$[*].login", contains("Ivan2000", "Peter666")))
-                .andExpect(jsonPath("$[*].name", contains("Ivan", "Peter")))
-                .andExpect(jsonPath("$[*].birthday", contains("2000-01-01", "2002-02-02")))
-                .andExpect(jsonPath("$[*].id", contains(1, 2)));
+                .andExpect(jsonPath("$[*].email", contains(user.getEmail(), friend.getEmail())))
+                .andExpect(jsonPath("$[*].login", contains(user.getLogin(), friend.getLogin())))
+                .andExpect(jsonPath("$[*].name", contains(user.getName(), friend.getName())))
+                .andExpect(jsonPath("$[*].birthday", contains(user.getBirthday().toString(),
+                        friend.getBirthday().toString())))
+                .andExpect(jsonPath("$[*].id", contains((int) user.getId(), (int) friend.getId())));
     }
 
     @Test
     void handleReturnById_returnUserObject() throws Exception {
-        final User user = firsUser;
-        final int randomInt = new Random().nextInt();
-        user.setId(randomInt);
-        final String id = String.valueOf(randomInt);
-        final String jsonString = mapper.writeValueAsString(user);
+        String id = String.valueOf(user.getId());
         when(service.getById(id)).thenReturn(user);
 
         final var mvcRequest = get("/users/" + id).accept(MediaType.APPLICATION_JSON);
@@ -123,9 +127,9 @@ class UserControllerTest {
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(jsonString))
+                .andExpect(content().json(mapper.writeValueAsString(user)))
                 .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.id", is(randomInt)))
+                .andExpect(jsonPath("$.id", is((int) user.getId())))
                 .andExpect(jsonPath("$.email", is(user.getEmail())))
                 .andExpect(jsonPath("$.login", is(user.getLogin())))
                 .andExpect(jsonPath("$.name", is(user.getName())))
@@ -135,23 +139,16 @@ class UserControllerTest {
 
     @Test
     void handleInviteFriend_returnFriend() throws Exception {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32) + 1;
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        final String jsonString = mapper.writeValueAsString(friend);
-        when(service.addFriend(String.valueOf(userId), String.valueOf(friendId))).thenReturn(friend);
+        when(service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()))).thenReturn(friend);
 
-        final var mvcRequest = put(String.format("/users/%d/friends/%d", userId, friendId));
+        final var mvcRequest = put(String.format("/users/%d/friends/%d", user.getId(), friend.getId()));
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(jsonString))
+                .andExpect(content().json(mapper.writeValueAsString(friend)))
                 .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.id", is(friendId)))
+                .andExpect(jsonPath("$.id", is((int) friend.getId())))
                 .andExpect(jsonPath("$.email", is(friend.getEmail())))
                 .andExpect(jsonPath("$.login", is(friend.getLogin())))
                 .andExpect(jsonPath("$.name", is(friend.getName())))
@@ -161,26 +158,59 @@ class UserControllerTest {
 
     @Test
     void handleRemoveFromFriends_returnFriend() throws Exception {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32) + 1;
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        final String jsonString = mapper.writeValueAsString(friend);
         when(service.deleteFriendById(anyString(), anyString())).thenReturn(friend);
 
-        final var mvcRequest = delete(String.format("/users/%d/friends/%d", userId, friendId));
+        final var mvcRequest = delete(String.format("/users/%d/friends/%d", user.getId(), friend.getId()));
 
         mvc.perform(mvcRequest).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(jsonString))
+                .andExpect(content().json(mapper.writeValueAsString(friend)))
                 .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.id", is(friendId)))
+                .andExpect(jsonPath("$.id", is((int) friend.getId())))
                 .andExpect(jsonPath("$.email", is(friend.getEmail())))
                 .andExpect(jsonPath("$.login", is(friend.getLogin())))
                 .andExpect(jsonPath("$.name", is(friend.getName())))
                 .andExpect(jsonPath("$.birthday", is(friend.getBirthday().toString())));
+    }
+
+    @Test
+    void handleReturnAllFriends_returnFriends() throws Exception {
+        final List<User> friends = List.of(friend);
+        when(service.getAllFriends(String.valueOf(user.getId()))).thenReturn(friends);
+
+        var mvcRequest = get(String.format("/users/%d/friends", user.getId())).accept(MediaType.APPLICATION_JSON);
+
+        mvc.perform(mvcRequest).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(mapper.writeValueAsString(friends)))
+                .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$", hasSize(friends.size())))
+                .andExpect(jsonPath("$[0].id", is((int) friend.getId())))
+                .andExpect(jsonPath("$[0].email", is(friend.getEmail())))
+                .andExpect(jsonPath("$[0].login", is(friend.getLogin())))
+                .andExpect(jsonPath("$[0].name", is(friend.getName())))
+                .andExpect(jsonPath("$[0].birthday", is(friend.getBirthday().toString())));
+    }
+
+    @Test
+    void handleReturnMutualFriends_returnMutualFriends() throws Exception {
+        User mutualFriend = User.builder().id(friend.getId() + 1).email("dima07@mailbox.org").name("Dmitry")
+                .login("DmitryDima").birthday(LocalDate.of(1980, 9, 26)).build();
+        when(service.getMutualFriends(String.valueOf(user.getId()), String.valueOf(friend.getId())))
+                .thenReturn(List.of(mutualFriend));
+
+        var mvcRequest = get(String.format("/users/%d/friends/common/%d", user.getId(), friend.getId()));
+
+        mvc.perform(mvcRequest).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(mapper.writeValueAsString(List.of(mutualFriend))))
+                .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is((int) mutualFriend.getId())))
+                .andExpect(jsonPath("$[0].email", is(mutualFriend.getEmail())))
+                .andExpect(jsonPath("$[0].login", is(mutualFriend.getLogin())))
+                .andExpect(jsonPath("$[0].name", is(mutualFriend.getName())))
+                .andExpect(jsonPath("$[0].birthday", is(mutualFriend.getBirthday().toString())));
     }
 
 }

@@ -18,12 +18,14 @@ public class ErrorHandler {
     @ExceptionHandler({UserNotFoundException.class, FilmNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorMessage userNotFoundException(RuntimeException exception) {
+        log(exception);
         return defaultNotFoundMessage(exception);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorMessage validationException(ValidationException exception) {
+        log(exception);
         return ErrorMessage.builder()
                            .statusCode(400)
                            .httpStatus(HttpStatus.BAD_REQUEST)
@@ -35,6 +37,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorMessage argumentNotValidException(MethodArgumentNotValidException exception) {
+        log(exception);
         return ErrorMessage.builder()
                            .statusCode(400)
                            .httpStatus(HttpStatus.BAD_REQUEST)
@@ -46,26 +49,28 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage handleIncorrectParam(IncorrectParameterException e) {
+    public ErrorMessage handleIncorrectParam(IncorrectParameterException exception) {
+        log(exception);
         return ErrorMessage.builder()
                            .statusCode(400)
                            .httpStatus(HttpStatus.BAD_REQUEST)
                            .timeStamp(Instant.now())
                            .message(
-                                   String.format("Некорректный параметр %s", e.getParam())
+                                   String.format("Некорректный параметр %s", exception.getParam())
                            )
-                           .description(e.getDescription())
+                           .description(exception.getDescription())
                            .build();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-    public ErrorMessage handleDataUpdateException(DataUpdateException e) {
+    public ErrorMessage handleDataUpdateException(DataUpdateException exception) {
+        log(exception);
         return ErrorMessage.builder()
                 .statusCode(406)
                 .httpStatus(HttpStatus.NOT_ACCEPTABLE)
                 .timeStamp(Instant.now())
-                .message(e.getMessage())
+                .message(exception.getMessage())
                 .build();
     }
 
@@ -76,6 +81,10 @@ public class ErrorHandler {
                            .timeStamp(Instant.now())
                            .message(exception.getMessage())
                            .build();
+    }
+
+    private void log(Exception e) {
+        log.warn("{} : {}", e.getClass().getSimpleName(), e.getMessage());
     }
 
 }

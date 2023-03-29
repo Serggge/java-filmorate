@@ -39,4 +39,10 @@ public class InMemoryUserStorage implements UserStorage {
         }
         return result;
     }
+
+    @Override
+    public Set<Long> findAllId() {
+        return users.keySet();
+    }
+
 }

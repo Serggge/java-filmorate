@@ -21,8 +21,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User create(User user) {
-        user.setId(++count);
         validateUser(user);
+        user.setId(++count);
         log.info("Создан пользователь: {}", user);
         return storage.save(user);
     }
@@ -30,10 +30,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public User update(User user) {
         validateUser(user);
-        getUserOrThrow(user.getId());
-        storage.save(user);
-        log.info("Пользователь обновлён: {}", user);
-        return user;
+        if (storage.findAllId().contains(user.getId())) {
+            log.info("Пользователь обновлён: {}", user);
+            return storage.save(user);
+        } else {
+            throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", user.getId()));
+        }
     }
 
     @Override
@@ -42,57 +44,56 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getById(String stringId) {
-        //long id = validateId(stringId);
-        return getUserOrThrow(Long.parseLong(stringId));
+    public User getById(String id) {
+        long userId = validateId(id);
+        return getUserOrThrow(userId);
     }
 
     @Override
-    public User addFriend(String stringId, String stringFriendId) {
-/*        long userId = validateId(stringId);
-        long friendId = validateId(stringFriendId);
+    public User addFriend(String id, String otherId) {
+        long userId = validateId(id);
+        long friendId = validateId(otherId);
         User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);*/
-        User user = getUserOrThrow(Long.parseLong(stringId));
-        User friend = getUserOrThrow(Long.parseLong(stringFriendId));
-        user.addFriendId(friend.getId());
-        friend.addFriendId(user.getId());
-        return friend;
+        User friend = getUserOrThrow(friendId);
+        if (user.getFriends().contains(friendId)) {
+            throw new DataUpdateException("Пользователи уже являются друзьями");
+        } else {
+            user.addFriendId(friendId);
+            friend.addFriendId(userId);
+            log.info("Пользователь id={} добавил в друзья пользователя id={}", userId, friendId);
+            return friend;
+        }
     }
 
     @Override
-    public User deleteFriendById(String userStrId, String friendStrId) {
-/*        long userId = validateId(userStrId);
-        long friendId = validateId(friendStrId);
+    public User deleteFriendById(String id, String otherId) {
+        long userId = validateId(id);
+        long friendId = validateId(otherId);
         User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);*/
-        User user = getUserOrThrow(Long.parseLong(userStrId));
-        User friend = getUserOrThrow(Long.parseLong(friendStrId));
-        boolean friendFound = user.deleteFriendId(friend.getId());
+        User friend = getUserOrThrow(friendId);
+        boolean friendFound = user.deleteFriendId(friendId);
         if (!friendFound) {
             throw new DataUpdateException("Пользователь не является вашим другом");
         } else {
-            friend.deleteFriendId(user.getId());
+            friend.deleteFriendId(userId);
+            log.info("Пользователь id={} удалил из друзей пользователя id={}", userId, friendId);
             return friend;
         }
     }
 
     @Override
     public List<User> getAllFriends(String id) {
-/*        long userId = validateId(id);
-        User user = getUserOrThrow(userId);*/
-        User user = getUserOrThrow(Long.parseLong(id));
+        long userId = validateId(id);
+        User user = getUserOrThrow(userId);
         return storage.findAllById(user.getFriends());
     }
 
     @Override
     public List<User> getMutualFriends(String id, String otherId) {
-/*        long userId = validateId(id);
+        long userId = validateId(id);
         long otherUserId = validateId(otherId);
         User user = getUserOrThrow(userId);
-        User otherUser = getUserOrThrow(otherUserId);*/
-        User user = getUserOrThrow(Long.parseLong(id));
-        User otherUser = getUserOrThrow(Long.parseLong(otherId));
+        User otherUser = getUserOrThrow(otherUserId);
         List<Long> userFriends = user.getFriends();
         List<Long> otherUserFriends = otherUser.getFriends();
         return storage.findAllById(userFriends.stream()
