@@ -23,7 +23,7 @@ public class User {
     @NotEmpty
     String email;
     @NotBlank
-    @Pattern(regexp = "^[^ ]+$")
+    @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы")
     String login;
     String name;
     @NotNull
@@ -40,6 +40,10 @@ public class User {
 
     public List<Long> getFriends() {
         return new ArrayList<>(friends);
+    }
+
+    public void clearFriendList() {
+        friends.clear();
     }
 
 }

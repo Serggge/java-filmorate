@@ -88,11 +88,11 @@ class UserControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(mapper.writeValueAsString(friend)))
                 .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$.id", is((int) friend.getId())))
                 .andExpect(jsonPath("$.email", is(friend.getEmail())))
                 .andExpect(jsonPath("$.login", is(friend.getLogin())))
                 .andExpect(jsonPath("$.name", is(friend.getName())))
-                .andExpect(jsonPath("$.birthday", is(friend.getBirthday().toString())))
-                .andExpect(jsonPath("$.id", is((int) user.getId())));
+                .andExpect(jsonPath("$.birthday", is(friend.getBirthday().toString())));
     }
 
     @Test
@@ -109,12 +109,12 @@ class UserControllerTest {
                 .andExpect(content().json(mapper.writeValueAsString(List.of(user, friend))))
                 .andExpect(jsonPath("$", notNullValue()))
                 .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].id", contains((int) user.getId(), (int) friend.getId())))
                 .andExpect(jsonPath("$[*].email", contains(user.getEmail(), friend.getEmail())))
                 .andExpect(jsonPath("$[*].login", contains(user.getLogin(), friend.getLogin())))
                 .andExpect(jsonPath("$[*].name", contains(user.getName(), friend.getName())))
                 .andExpect(jsonPath("$[*].birthday", contains(user.getBirthday().toString(),
-                        friend.getBirthday().toString())))
-                .andExpect(jsonPath("$[*].id", contains((int) user.getId(), (int) friend.getId())));
+                        friend.getBirthday().toString())));
     }
 
     @Test

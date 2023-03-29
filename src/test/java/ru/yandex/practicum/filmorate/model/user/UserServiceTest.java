@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model.user;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,10 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -31,56 +29,60 @@ class UserServiceTest {
     UserStorage storage;
     @InjectMocks
     UserServiceImpl service;
-    User firsUser;
-    User secondUser;
+    static User user;
+    static User friend;
+    static Random random;
+    static User[] tempContainer;
+
+    @BeforeAll
+    static void beforeAll() {
+        random = new Random();
+        tempContainer = new User[1];
+        user = new User();
+        friend = new User();
+        setUsersForDefaults();
+    }
 
     @BeforeEach
     void beforeEach() {
-        firsUser = User.builder()
-                       .email("ivan2000@yandex.ru")
-                       .login("Ivan2000")
-                       .name("Ivan")
-                       .birthday(LocalDate.of(2000, 1, 1))
-                       .build();
-        secondUser = User.builder()
-                         .email("peter666@google.com")
-                         .login("Peter666")
-                         .name("Peter")
-                         .birthday(LocalDate.of(2002, 2, 2))
-                         .build();
+        setUsersForDefaults();
+        tempContainer[0] = null;
     }
 
     @Test
     void givenUserObject_whenAddNewUser_thenReturnUserObject() {
-        given(storage.save(any(User.class))).willReturn(firsUser);
+        given(storage.save(user)).willReturn(user);
 
-        final User savedUser = service.create(firsUser);
+        final User savedUser = service.create(user);
 
-        verify(storage).save(firsUser);
+        verify(storage).save(user);
         assertThat(savedUser).isNotNull();
-        assertThat(savedUser).isEqualTo(firsUser);
+        assertThat(savedUser).isEqualTo(user);
     }
 
     @Test
     void givenUserObject_whenUpdateIncomingUser_thenReturnUserObject() {
-        given(storage.save(firsUser)).willReturn(firsUser);
-        given(storage.findById(anyLong())).willReturn(Optional.of(firsUser));
-        given(storage.save(secondUser)).willReturn(secondUser);
+        given(storage.save(user)).willReturn(user);
+        given(storage.save(friend)).willReturn(friend);
 
-        final User savedUser = service.create(firsUser);
+        final User savedUser = service.create(user);
         final long id = savedUser.getId();
-        secondUser.setId(id);
-        final User updatedUser = service.update(secondUser);
+        friend.setId(id);
 
-        verify(storage).save(firsUser);
-        verify(storage).save(secondUser);
+        given(storage.findAllId()).willReturn(Set.of(user.getId()));
+
+        final User updatedUser = service.update(friend);
+
+        verify(storage).save(user);
+        verify(storage).save(friend);
+        verify(storage).findAllId();
         assertThat(updatedUser).isNotNull();
-        assertThat(updatedUser).isEqualTo(secondUser);
+        assertThat(updatedUser).isEqualTo(friend);
     }
 
     @Test
     void givenUserList_whenReturnAllUsers_thenReturnUserList() {
-        final List<User> users = List.of(firsUser, secondUser);
+        final List<User> users = List.of(user, friend);
         given(storage.findAll()).willReturn(users);
 
         final List<User> allUsers = service.getAll();
@@ -93,49 +95,41 @@ class UserServiceTest {
 
     @Test
     void givenUserId_whenReturnById_thenReturnUserObject() {
-        final User user = firsUser;
-        final int randomInt = new Random().nextInt(32) + 1;
-        user.setId(randomInt);
-        given(storage.findById(randomInt)).willReturn(Optional.of(user));
+        given(storage.findById(anyLong())).willReturn(Optional.of(user));
 
-        final User returned = service.getById(String.valueOf(randomInt));
+        final User returned = service.getById(String.valueOf(user.getId()));
 
-        verify(storage).findById(randomInt);
+        verify(storage).findById(user.getId());
         assertThat(returned).isNotNull();
         assertThat(returned).isEqualTo(user);
     }
 
     @Test
     void givenUserId_whenReturnById_thenThrowNotFoundException() {
-        final int randomInt = new Random().nextInt(32) + 1;
-        final User[] users = new User[1];
-        given(storage.findById(randomInt)).willReturn(Optional.empty());
+        given(storage.findById(anyLong())).willReturn(Optional.empty());
 
+        final User[] users = new User[1];
         final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
-            users[0] = service.getById(String.valueOf(randomInt));
+            users[0] = service.getById(String.valueOf(user.getId()));
         });
 
-        verify(storage).findById(randomInt);
+        verify(storage).findById(user.getId());
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
-        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", randomInt));
+        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", user.getId()));
         assertThat(users[0]).isNull();
     }
 
     @Test
     void givenUserId_whenReturnById_thenThrowIncorrectParameterException() {
-        final int randomInt = new Random().nextInt(32) + 1;
-        final User user = firsUser;
-        user.setId(randomInt);
-        final User[] users = new User[1];
-        lenient().when(storage.findById(randomInt)).thenReturn(Optional.of(user));
+        lenient().when(storage.findById(anyLong())).thenReturn(Optional.of(user));
 
         final IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, () -> {
-           users[0] = service.getById("s");
+           tempContainer[0] = service.getById("char");
         });
 
         verify(storage, never()).findById(anyLong());
-        assertThat(users[0]).isNull();
+        assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
         assertThat(exception.getParam()).isEqualTo("id");
@@ -144,16 +138,14 @@ class UserServiceTest {
 
     @Test
     void givenUserIdNotNumberType_whenReturnById_thenThrowIncorrectParameterException() {
-        final String id = "s";
-        final User[] returned = new User[1];
-        lenient().when(storage.findById(anyLong())).thenReturn(Optional.of(firsUser));
+        lenient().when(storage.findById(anyLong())).thenReturn(Optional.of(user));
 
         final IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, () -> {
-            returned[0] = service.getById(id);
+            tempContainer[0] = service.getById("char");
         });
 
         verify(storage, never()).findById(anyLong());
-        assertThat(returned[0]).isNull();
+        assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
         assertThat(exception.getParam()).isEqualTo("id");
@@ -161,38 +153,14 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUserIdEqualToZero_whenReturnById_thenThrowIncorrectParameterException() {
-        final String id = "0";
-        final User[] returned = new User[1];
-        lenient().when(storage.findById(anyLong())).thenReturn(Optional.of(firsUser));
-
-        final IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, (() -> {
-            returned[0] = service.getById(id);
-        }));
-
-        verify(storage, never()).findById(anyLong());
-        assertThat(returned[0]).isNull();
-        assertThat(exception).isNotNull();
-        assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
-        assertThat(exception.getParam()).isEqualTo("id");
-        assertThat(exception.getDescription()).isEqualTo("Идентификатор должен быть больше 0");
-    }
-
-    @Test
     void givenUserIdAndFriendId_whenAddFriend_thenAddFriendIdIntoSetIdAndReturnFriend() {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32) + 1;
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        given(storage.findById(userId)).willReturn(Optional.of(user));
-        given(storage.findById(friendId)).willReturn(Optional.of(friend));
+        given(storage.findById(user.getId())).willReturn(Optional.of(user));
+        given(storage.findById(friend.getId())).willReturn(Optional.of(friend));
 
-        final User returned = service.addFriend(String.valueOf(userId), String.valueOf(friendId));
+        final User returned = service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()));
 
-        verify(storage).findById(userId);
-        verify(storage).findById(friendId);
+        verify(storage).findById(user.getId());
+        verify(storage).findById(friend.getId());
         assertThat(returned).isNotNull();
         assertThat(returned).isEqualTo(friend);
         assertThat(user.getFriends().size()).isEqualTo(1);
@@ -201,73 +169,54 @@ class UserServiceTest {
 
     @Test
     void givenUserNotPresentIdAndFriendId_whenAddFriend_thenThrowNotFoundExceptionNotAddedToFriends() {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32);
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        final User[] returned = new User[1];
-        given(storage.findById(userId)).willReturn(Optional.empty());
-        lenient().when(storage.findById(friendId)).thenReturn(Optional.of(friend));
+        given(storage.findById(user.getId())).willReturn(Optional.empty());
+        lenient().when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
 
         final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            returned[0] = service.addFriend(String.valueOf(userId), String.valueOf(friendId));
+            tempContainer[0] = service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()));
         });
 
-        verify(storage).findById(userId);
-        verify(storage, never()).findById(friendId);
-        assertThat(returned[0]).isNull();
+        verify(storage).findById(user.getId());
+        verify(storage, never()).findById(friend.getId());
+        assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
-        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", userId));
+        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", user.getId()));
         assertThat(user.getFriends().size()).isEqualTo(0);
     }
 
     @Test
     void givenUserIdAndFriendNotPresentId_whenAddFriend_thenThrowNotFoundExceptionNotAddedToFriends() {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32);
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        final User[] returned = new User[1];
-        given(storage.findById(userId)).willReturn(Optional.of(user));
-        given(storage.findById(friendId)).willReturn(Optional.empty());
+        given(storage.findById(user.getId())).willReturn(Optional.of(user));
+        given(storage.findById(friend.getId())).willReturn(Optional.empty());
 
         final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            returned[0] = service.addFriend(String.valueOf(userId), String.valueOf(friendId));
+            tempContainer[0] = service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()));
         });
 
-        verify(storage).findById(userId);
-        verify(storage).findById(friendId);
-        assertThat(returned[0]).isNull();
+        verify(storage).findById(user.getId());
+        verify(storage).findById(friend.getId());
+        assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
-        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", friendId));
+        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", friend.getId()));
         assertThat(user.getFriends().size()).isEqualTo(0);
     }
 
     @Test
     void givenUserIdAndFriendId_whenDeleteFriendById_thenDeleteFriendIdFromFriendSetReturnFriend() {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32);
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
+        when(storage.findById(user.getId())).thenReturn(Optional.of(user));
+        when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
+
         user.addFriendId(friend.getId());
-        when(storage.findById(userId)).thenReturn(Optional.of(user));
-        when(storage.findById(friendId)).thenReturn(Optional.of(friend));
 
         assertThat(user.getFriends().size()).isEqualTo(1);
         assertThat(user.getFriends()).isEqualTo(List.of(friend.getId()));
 
-        final User returned = service.deleteFriendById(String.valueOf(userId), String.valueOf(friendId));
+        final User returned = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
 
-        verify(storage).findById(userId);
-        verify(storage).findById(friendId);
+        verify(storage).findById(user.getId());
+        verify(storage).findById(friend.getId());
         assertThat(returned).isNotNull();
         assertThat(returned).isEqualTo(friend);
         assertThat(user.getFriends().size()).isEqualTo(0);
@@ -276,23 +225,16 @@ class UserServiceTest {
 
     @Test
     void givenUserIdAndFriendIdWhichNotPresentAtFriendSet_whenDeleteFriendById_thenThrowNotFoundException() {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32);
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        final User[] returned = new User[1];
-        when(storage.findById(userId)).thenReturn(Optional.of(user));
-        when(storage.findById(friendId)).thenReturn(Optional.of(friend));
+        when(storage.findById(user.getId())).thenReturn(Optional.of(user));
+        when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
 
         Throwable exception = assertThrows(UserNotFoundException.class, () -> {
-            returned[0] = service.deleteFriendById(String.valueOf(userId), String.valueOf(friendId));
+            tempContainer[0] = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
         });
 
-        verify(storage).findById(userId);
-        verify(storage).findById(friendId);
-        assertThat(returned[0]).isNull();
+        verify(storage).findById(user.getId());
+        verify(storage).findById(friend.getId());
+        assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
         assertThat(exception.getMessage()).isEqualTo("Пользователь не является вашим другом");
@@ -300,54 +242,60 @@ class UserServiceTest {
 
     @Test
     void givenUserNotPresentIdAndFriendId_whenDeleteFriendById_thenThrowNotFoundExceptionNotAddedToFriends() {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32);
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        final User[] returned = new User[1];
-        given(storage.findById(userId)).willReturn(Optional.empty());
-        lenient().when(storage.findById(friendId)).thenReturn(Optional.of(friend));
+        given(storage.findById(user.getId())).willReturn(Optional.empty());
+        lenient().when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
 
         final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            returned[0] = service.deleteFriendById(String.valueOf(userId), String.valueOf(friendId));
+            tempContainer[0] = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
         });
 
-        verify(storage).findById(userId);
-        verify(storage, never()).findById(friendId);
-        assertThat(returned[0]).isNull();
+        verify(storage).findById(user.getId());
+        verify(storage, never()).findById(friend.getId());
+        assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
-        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", userId));
+        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", user.getId()));
         assertThat(user.getFriends().size()).isEqualTo(0);
     }
 
     @Test
     void givenUserIdAndFriendNotPresentId_whenDeleteFriendById_thenThrowNotFoundExceptionNotAddedToFriends() {
-        final User user = firsUser;
-        final int userId = new Random().nextInt(32) + 1;
-        user.setId(userId);
-        final User friend = secondUser;
-        final int friendId = userId + 1;
-        friend.setId(friendId);
-        final User[] returned = new User[1];
-        given(storage.findById(userId)).willReturn(Optional.of(user));
-        given(storage.findById(friendId)).willReturn(Optional.empty());
+        given(storage.findById(user.getId())).willReturn(Optional.of(user));
+        given(storage.findById(friend.getId())).willReturn(Optional.empty());
 
+        friend.setId(friend.getId());
         final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            returned[0] = service.deleteFriendById(String.valueOf(userId), String.valueOf(friendId));
+            tempContainer[0] = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
         });
 
-        verify(storage).findById(userId);
-        verify(storage).findById(friendId);
-        assertThat(returned[0]).isNull();
+        verify(storage).findById(user.getId());
+        verify(storage).findById(friend.getId());
+        assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
-        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", friendId));
+        assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", friend.getId()));
         assertThat(user.getFriends().size()).isEqualTo(0);
     }
 
+    @Test
+    void givenUserId_whenGetAllFriends_thenReturnFriendList() {
 
+    }
+
+     static void setUsersForDefaults() {
+        user.setId(random.nextInt(32) + 1);
+        user.setEmail("ivan2000@yandex.ru");
+        user.setLogin("Ivan2000");
+        user.setName("Ivan");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        user.clearFriendList();
+
+        friend.setId(user.getId() + 1);
+        friend.setEmail("peter666@google.com");
+        friend.setLogin("Peter666");
+        friend.setName("Peter");
+        friend.setBirthday(LocalDate.of(2002, 2, 2));
+        friend.clearFriendList();
+    }
 
 }

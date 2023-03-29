@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private static int count;
+    private static long count;
     private final UserStorage storage;
 
     @Override
@@ -30,7 +31,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public User update(User user) {
         validateUser(user);
-        if (storage.findAllId().contains(user.getId())) {
+        if (storage.findAllId()
+                   .contains(user.getId())) {
             log.info("Пользователь обновлён: {}", user);
             return storage.save(user);
         } else {
@@ -55,7 +57,8 @@ public class UserServiceImpl implements UserService {
         long friendId = validateId(otherId);
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
-        if (user.getFriends().contains(friendId)) {
+        if (user.getFriends()
+                .contains(friendId)) {
             throw new DataUpdateException("Пользователи уже являются друзьями");
         } else {
             user.addFriendId(friendId);
@@ -73,7 +76,7 @@ public class UserServiceImpl implements UserService {
         User friend = getUserOrThrow(friendId);
         boolean friendFound = user.deleteFriendId(friendId);
         if (!friendFound) {
-            throw new DataUpdateException("Пользователь не является вашим другом");
+            throw new UserNotFoundException("Пользователь не является вашим другом");
         } else {
             friend.deleteFriendId(userId);
             log.info("Пользователь id={} удалил из друзей пользователя id={}", userId, friendId);
@@ -103,8 +106,7 @@ public class UserServiceImpl implements UserService {
 
     private User getUserOrThrow(long id) {
         return storage.findById(id)
-                      .orElseThrow(
-                              () -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
+                      .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
     }
 
 }

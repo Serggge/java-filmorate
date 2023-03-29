@@ -40,4 +40,8 @@ public class Film {
         return likes.remove(id);
     }
 
+    public void clearLikes() {
+        likes.clear();
+    }
+
 }

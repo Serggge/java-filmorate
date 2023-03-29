@@ -57,8 +57,8 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public Film getById(String id) {
-        final long filmId = validateId(id);
-        return  getFilmOrThrow(filmId);
+        long filmId = validateId(id);
+        return getFilmOrThrow(filmId);
     }
 
     @Override

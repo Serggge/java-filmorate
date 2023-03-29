@@ -1,17 +1,15 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import java.time.Instant;
 
 @Builder
-@FieldDefaults(makeFinal=true, level= AccessLevel.PRIVATE)
-@Getter
+@Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
+@NoArgsConstructor
 public class ErrorMessage {
 
     int statusCode;
