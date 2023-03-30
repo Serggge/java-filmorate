@@ -67,7 +67,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorMessage handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException exception) {
         String message = String.format("The parameter '%s' of value '%s' could not be converted to type '%s'",
-                exception.getName(), exception.getValue(), exception.getRequiredType());
+                                        exception.getName(), exception.getValue(), exception.getRequiredType());
         errorMessage.setParams(message, exception.getMessage());
         log(exception);
         return errorMessage;
@@ -90,8 +90,8 @@ public class ErrorHandler {
     }
 
     private void log(Exception e) {
-        log.warn("{} : {} >> {}", e.getClass()
-                             .getSimpleName(), errorMessage.getMessage(), errorMessage.getDescription());
+        log.warn("{} : {} >> {}", e.getClass().getSimpleName(),
+                errorMessage.getMessage(), errorMessage.getDescription());
     }
 
 }

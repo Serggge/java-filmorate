@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,18 +12,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
-
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.mockito.ArgumentMatchers.any;
-
+import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
-
-import static org.mockito.Mockito.when;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -33,26 +31,21 @@ class UserControllerTest {
     ObjectMapper mapper;
     @MockBean
     UserService service;
-    User user;
-    User friend;
-    User mutual;
+    static User user;
+    static User friend;
+    static Random random;
+
+    @BeforeAll
+    public static void beforeAll() {
+        random = new Random();
+        user = new User();
+        friend = new User();
+        setUsersForDefaults();
+    }
 
     @BeforeEach
     public void beforeEach() {
-        user = User.builder()
-                .id(new Random().nextInt(32) + 1)
-                .email("ivan2000@yandex.ru")
-                .login("Ivan2000")
-                .name("Ivan")
-                .birthday(LocalDate.of(2000, 1, 1))
-                .build();
-        friend = User.builder()
-                .id(user.getId() + 1)
-                .email("peter666@google.com")
-                .login("Peter666")
-                .name("Peter")
-                .birthday(LocalDate.of(2002, 2, 2))
-                .build();
+        setUsersForDefaults();
     }
 
     @Test
@@ -60,8 +53,7 @@ class UserControllerTest {
         when(service.create(any(User.class))).thenReturn(user);
 
         final var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(user))
-                .accept(MediaType.APPLICATION_JSON);
+                                                       .content(mapper.writeValueAsString(user));
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isCreated())
@@ -80,8 +72,7 @@ class UserControllerTest {
         when(service.update(any(User.class))).thenReturn(friend);
 
         final var mvcRequest = put("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(friend))
-                .accept(MediaType.APPLICATION_JSON);
+                                                      .content(mapper.writeValueAsString(friend));
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
@@ -100,8 +91,7 @@ class UserControllerTest {
         when(service.getAll()).thenReturn(List.of(user, friend));
 
         final var mvcRequest = get("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(List.of(user, friend)))
-                .accept(MediaType.APPLICATION_JSON);
+                                                      .content(mapper.writeValueAsString(List.of(user, friend)));
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
@@ -114,7 +104,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[*].login", contains(user.getLogin(), friend.getLogin())))
                 .andExpect(jsonPath("$[*].name", contains(user.getName(), friend.getName())))
                 .andExpect(jsonPath("$[*].birthday", contains(user.getBirthday().toString(),
-                        friend.getBirthday().toString())));
+                                                                        friend.getBirthday().toString())));
     }
 
     @Test
@@ -122,7 +112,7 @@ class UserControllerTest {
         String id = String.valueOf(user.getId());
         when(service.getById(id)).thenReturn(user);
 
-        final var mvcRequest = get("/users/" + id).accept(MediaType.APPLICATION_JSON);
+        final var mvcRequest = get("/users/" + id);
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
@@ -133,8 +123,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email", is(user.getEmail())))
                 .andExpect(jsonPath("$.login", is(user.getLogin())))
                 .andExpect(jsonPath("$.name", is(user.getName())))
-                .andExpect(jsonPath("$.birthday", is(user.getBirthday()
-                        .toString())));
+                .andExpect(jsonPath("$.birthday", is(user.getBirthday().toString())));
     }
 
     @Test
@@ -152,8 +141,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email", is(friend.getEmail())))
                 .andExpect(jsonPath("$.login", is(friend.getLogin())))
                 .andExpect(jsonPath("$.name", is(friend.getName())))
-                .andExpect(jsonPath("$.birthday", is(friend.getBirthday()
-                        .toString())));
+                .andExpect(jsonPath("$.birthday", is(friend.getBirthday().toString())));
     }
 
     @Test
@@ -178,7 +166,7 @@ class UserControllerTest {
         final List<User> friends = List.of(friend);
         when(service.getAllFriends(String.valueOf(user.getId()))).thenReturn(friends);
 
-        var mvcRequest = get(String.format("/users/%d/friends", user.getId())).accept(MediaType.APPLICATION_JSON);
+        var mvcRequest = get(String.format("/users/%d/friends", user.getId()));
 
         mvc.perform(mvcRequest).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -197,7 +185,7 @@ class UserControllerTest {
         User mutualFriend = User.builder().id(friend.getId() + 1).email("dima07@mailbox.org").name("Dmitry")
                 .login("DmitryDima").birthday(LocalDate.of(1980, 9, 26)).build();
         when(service.getMutualFriends(String.valueOf(user.getId()), String.valueOf(friend.getId())))
-                .thenReturn(List.of(mutualFriend));
+                                                                  .thenReturn(List.of(mutualFriend));
 
         var mvcRequest = get(String.format("/users/%d/friends/common/%d", user.getId(), friend.getId()));
 
@@ -211,6 +199,22 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[0].login", is(mutualFriend.getLogin())))
                 .andExpect(jsonPath("$[0].name", is(mutualFriend.getName())))
                 .andExpect(jsonPath("$[0].birthday", is(mutualFriend.getBirthday().toString())));
+    }
+
+    static void setUsersForDefaults() {
+        user.setId(random.nextInt(32) + 1);
+        user.setEmail("ivan2000@yandex.ru");
+        user.setLogin("Ivan2000");
+        user.setName("Ivan");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        user.clearFriendList();
+
+        friend.setId(user.getId() + 1);
+        friend.setEmail("peter666@google.com");
+        friend.setLogin("Peter666");
+        friend.setName("Peter");
+        friend.setBirthday(LocalDate.of(2002, 2, 2));
+        friend.clearFriendList();
     }
 
 }

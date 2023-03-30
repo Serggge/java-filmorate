@@ -11,32 +11,31 @@ import javax.validation.ValidatorFactory;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Random;
 
 public class FilmValidatorTest {
 
     static Validator validator;
-    Film validFilm;
+    static Film film;
+    static Random random;
 
     @BeforeAll
     public static void beforeAll() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+        random = new Random();
+        film = new Film();
+        setFilmForDefaults();
     }
 
     @BeforeEach
     public void beforeEach() {
-        validFilm = Film.builder()
-                        .name("DefaultName")
-                        .description("DefaultDescription")
-                        .releaseDate(LocalDate.of(2000, 1, 1))
-                        .duration(120)
-                        .build();
+        setFilmForDefaults();
     }
 
     @Test
     @DisplayName("name is blank")
     public void mustGenerateErrorWhenFilmNameIsBlank() {
-        Film film = validFilm;
         film.setName("");
         var violations = validator.validate(film);
 
@@ -46,7 +45,6 @@ public class FilmValidatorTest {
     @Test
     @DisplayName("name is null")
     public void mustGenerateErrorWhenFilmNameIsNull() {
-        Film film = validFilm;
         film.setName(null);
         var violations = validator.validate(film);
 
@@ -56,7 +54,6 @@ public class FilmValidatorTest {
     @Test
     @DisplayName("description is null")
     public void mustGenerateErrorWhenFilmDescriptionIsNull() {
-        Film film = validFilm;
         film.setDescription(null);
         var violations = validator.validate(film);
 
@@ -69,7 +66,6 @@ public class FilmValidatorTest {
         final char[] symbolArray = new char[201];
         Arrays.fill(symbolArray, 'a');
         final String longDescription = String.valueOf(symbolArray);
-        Film film = validFilm;
         film.setDescription(longDescription);
         var violations = validator.validate(film);
 
@@ -79,7 +75,6 @@ public class FilmValidatorTest {
     @Test
     @DisplayName("releaseDate before first film")
     public void mustGenerateErrorWhenFilmReleaseDateEarlyThanFirstFilmRelease() {
-        Film film = validFilm;
         film.setName(null);
         var violations = validator.validate(film);
 
@@ -89,11 +84,19 @@ public class FilmValidatorTest {
     @Test
     @DisplayName("duration not positive")
     public void mustGenerateErrorWhenFilmDurationNotPositive() {
-        Film film = validFilm;
         film.setDuration(0);
         var violations = validator.validate(film);
 
         assertFalse(violations.isEmpty(), "Продолжительность фильма отрицательная или 0");
+    }
+
+    static void setFilmForDefaults() {
+        film.setId(random.nextInt(32) + 1);
+        film.setName("First film");
+        film.setDescription("Description first");
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film.setDuration(120);
+        film.clearLikes();
     }
 
 }

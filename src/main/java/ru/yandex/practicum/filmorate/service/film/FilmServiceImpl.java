@@ -88,9 +88,7 @@ public class FilmServiceImpl implements FilmService {
         long size = validateId(count);
         return storage.findAll()
                       .stream()
-                      .sorted((film1, film2) -> film2.getLikes()
-                                                     .size() - film1.getLikes()
-                                                                    .size())
+                      .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                       .limit(size)
                       .collect(Collectors.toList());
     }

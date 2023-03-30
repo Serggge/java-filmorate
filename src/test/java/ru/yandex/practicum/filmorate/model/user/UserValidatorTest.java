@@ -9,34 +9,32 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-
 import java.time.LocalDate;
+import java.util.Random;
 
 public class UserValidatorTest {
 
     static Validator validator;
-    User validUser;
+    static User user;
+    static Random random;
 
     @BeforeAll
     public static void beforeAll() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+        random = new Random();
+        user = new User();
+        setUserForDefaults();
     }
 
     @BeforeEach
     public void beforeEach() {
-        validUser = User.builder()
-                        .email("ivan@yandex.ru")
-                        .login("ivan2000")
-                        .name("Ivan")
-                        .birthday(LocalDate.of(2005, 5, 5))
-                        .build();
+        setUserForDefaults();
     }
 
     @Test
     @DisplayName("Email is blank")
     public void mustGenerateErrorWhenUserEmailIsBlank() {
-        User user = validUser;
         user.setEmail("");
         var violations = validator.validate(user);
 
@@ -46,7 +44,6 @@ public class UserValidatorTest {
     @Test
     @DisplayName("Email without @")
     public void mustGenerateErrorWhenEmailNotContainsSymbolAt() {
-        User user = validUser;
         user.setEmail(user.getEmail().replace("@", ""));
         var violations = validator.validate(user);
 
@@ -56,7 +53,6 @@ public class UserValidatorTest {
     @Test
     @DisplayName("BirthDay in future")
     public void mustGenerateErrorWhenUserBirthDayInFuture() {
-        User user = validUser;
         user.setBirthday(LocalDate.now().plusDays(1));
         var violations = validator.validate(user);
 
@@ -66,7 +62,6 @@ public class UserValidatorTest {
     @Test
     @DisplayName("Login is blank")
     public void mustGenerateErrorWhenLoginIsBlank() {
-        User user = validUser;
         user.setLogin("");
         var violations = validator.validate(user);
 
@@ -76,7 +71,6 @@ public class UserValidatorTest {
     @Test
     @DisplayName("Login is null")
     public void mustGenerateErrorWhenLoginIsNull() {
-        User user = validUser;
         user.setLogin(null);
         var violations = validator.validate(user);
 
@@ -86,11 +80,19 @@ public class UserValidatorTest {
     @Test
     @DisplayName("Login contains space")
     public void mustGenerateErrorWhenLoginContainsSpace() {
-        User user = validUser;
-        user.setLogin("o o");
+        user.setLogin("o . o");
         var violations = validator.validate(user);
 
         assertFalse(violations.isEmpty(), "Логин содержит пробел");
+    }
+
+    static void setUserForDefaults() {
+        user.setId(random.nextInt(32) + 1);
+        user.setEmail("ivan2000@yandex.ru");
+        user.setLogin("Ivan2000");
+        user.setName("Ivan");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        user.clearFriendList();
     }
 
 }

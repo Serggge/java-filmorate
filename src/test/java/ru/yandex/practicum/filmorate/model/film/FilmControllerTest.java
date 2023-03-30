@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model.film;
 
+import org.junit.jupiter.api.BeforeAll;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
@@ -26,32 +27,24 @@ class FilmControllerTest {
 
     @Autowired
     MockMvc mvc;
-
     @Autowired
     ObjectMapper mapper;
-
     @MockBean
     FilmService service;
-    Film firstFilm;
-    Film secondFilm;
+    static Film firstFilm;
+    static Film secondFilm;
     static Random random = new Random();
+
+    @BeforeAll
+    public static void beforeAll() {
+        firstFilm = new Film();
+        secondFilm = new Film();
+        setFilmsForDefaults();
+    }
 
     @BeforeEach
     public void beforeEach() {
-        firstFilm = Film.builder()
-                        .id(random.nextInt(32) + 1)
-                        .name("First film")
-                        .description("Description first")
-                        .releaseDate(LocalDate.of(2000, 1, 1))
-                        .duration(120)
-                        .build();
-        secondFilm = Film.builder()
-                        .id(firstFilm.getId() + 1)
-                        .name("Second film")
-                        .description("Description second")
-                        .releaseDate(LocalDate.of(2020, 2, 2))
-                        .duration(200)
-                        .build();
+        setFilmsForDefaults();
     }
 
     @Test
@@ -178,6 +171,22 @@ class FilmControllerTest {
                         secondFilm.getReleaseDate().toString())))
                 .andExpect(jsonPath("$[*].duration", contains(firstFilm.getDuration(),
                         secondFilm.getDuration())));
+    }
+
+    static void setFilmsForDefaults() {
+        firstFilm.setId(random.nextInt(32) + 1);
+        firstFilm.setName("First film");
+        firstFilm.setDescription("Description first");
+        firstFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
+        firstFilm.setDuration(120);
+        firstFilm.clearLikes();
+
+        secondFilm.setId(firstFilm.getId() + 1);
+        secondFilm.setName("Second film");
+        secondFilm.setDescription("Description second");
+        secondFilm.setReleaseDate(LocalDate.of(2020, 2, 2));
+        secondFilm.setDuration(200);
+        secondFilm.clearLikes();
     }
 
 }

@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,8 +30,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User update(User user) {
         validateUser(user);
-        if (storage.findAllId()
-                   .contains(user.getId())) {
+        if (storage.findAllId().contains(user.getId())) {
             log.info("Пользователь обновлён: {}", user);
             return storage.save(user);
         } else {
@@ -59,8 +57,7 @@ public class UserServiceImpl implements UserService {
         long friendId = validateId(otherId);
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
-        if (user.getFriends()
-                .contains(friendId)) {
+        if (user.getFriends().contains(friendId)) {
             throw new DataUpdateException("Пользователи уже являются друзьями");
         } else {
             user.addFriendId(friendId);
