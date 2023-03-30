@@ -1,16 +1,18 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.ErrorMessage;
-
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,28 +20,20 @@ import java.util.Map;
 @Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler({UserNotFoundException.class, FilmNotFoundException.class})
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorMessage handleNotFoundException(RuntimeException exception) {
+    private static final ErrorMessage errorMessage = new ErrorMessage();
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ErrorMessage handleHttpMessageNotReadable(HttpMessageNotReadableException exception,
+                                                   HttpHeaders headers, HttpStatus status, WebRequest request) {
+        errorMessage.setParams("Получен некорректный формат JSON", exception.getMessage());
         log(exception);
-        return defaultNotFoundMessage(exception);
+        return errorMessage;
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage handleValidationException(ValidationException exception) {
-        log(exception);
-        return ErrorMessage.builder()
-                           .statusCode(400)
-                           .httpStatus(HttpStatus.BAD_REQUEST)
-                           .timeStamp(Instant.now())
-                           .message(exception.getMessage())
-                           .build();
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage HandleArgumentNotValidException(MethodArgumentNotValidException exception) {
+    protected ErrorMessage handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
         Map<String, String> errorReport = new HashMap<>();
         exception.getBindingResult()
                  .getAllErrors()
@@ -48,54 +42,56 @@ public class ErrorHandler {
                      String message = error.getDefaultMessage();
                      errorReport.put(fieldName, message);
                  });
-        log.warn("{} : Ошибка в параметрах: {}. {}", ValidationException.class.getSimpleName(),
-                    errorReport.keySet(), errorReport.values());
-        return ErrorMessage.builder()
-                           .statusCode(400)
-                           .httpStatus(HttpStatus.BAD_REQUEST)
-                           .timeStamp(Instant.now())
-                           .message(String.format("Ошибка в параметре: %s", errorReport.keySet()))
-                           .description(errorReport.values().toString())
-                           .build();
+        errorMessage.setParams(errorReport.keySet().toString(), errorReport.values().toString());
+        log(exception);
+        return errorMessage;
+    }
+
+    @ExceptionHandler({UserNotFoundException.class, FilmNotFoundException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleNotFoundException(RuntimeException exception) {
+        errorMessage.setParams(exception.getMessage(), "");
+        log(exception);
+        return errorMessage;
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage handleIncorrectParam(IncorrectParameterException exception) {
+    public ErrorMessage handleValidationException(ValidationException exception) {
+        errorMessage.setParams(exception.getMessage(), "");
         log(exception);
-        return ErrorMessage.builder()
-                           .statusCode(400)
-                           .httpStatus(HttpStatus.BAD_REQUEST)
-                           .timeStamp(Instant.now())
-                           .message(String.format("Некорректный параметр %s", exception.getParam()))
-                           .description(exception.getDescription())
-                           .build();
+        return errorMessage;
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException exception) {
+        String message = String.format("The parameter '%s' of value '%s' could not be converted to type '%s'",
+                exception.getName(), exception.getValue(), exception.getRequiredType());
+        errorMessage.setParams(message, exception.getMessage());
+        log(exception);
+        return errorMessage;
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleIncorrectParamException(IncorrectParameterException exception) {
+        errorMessage.setParams(exception.getParam(), exception.getDescription());
+        log(exception);
+        return errorMessage;
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
     public ErrorMessage handleDataUpdateException(DataUpdateException exception) {
+        errorMessage.setParams(exception.getMessage(), "");
         log(exception);
-        return ErrorMessage.builder()
-                           .statusCode(406)
-                           .httpStatus(HttpStatus.NOT_ACCEPTABLE)
-                           .timeStamp(Instant.now())
-                           .message(exception.getMessage())
-                           .build();
-    }
-
-    private static ErrorMessage defaultNotFoundMessage(Exception exception) {
-        return ErrorMessage.builder()
-                           .statusCode(404)
-                           .httpStatus(HttpStatus.NOT_FOUND)
-                           .timeStamp(Instant.now())
-                           .message(exception.getMessage())
-                           .build();
+        return errorMessage;
     }
 
     private void log(Exception e) {
-        log.warn("{} : {}", e.getClass()
-                             .getSimpleName(), e.getMessage());
+        log.warn("{} : {} >> {}", e.getClass()
+                             .getSimpleName(), errorMessage.getMessage(), errorMessage.getDescription());
     }
 
 }
