@@ -36,17 +36,19 @@ public class UserServiceImpl implements UserService {
             log.info("Пользователь обновлён: {}", user);
             return storage.save(user);
         } else {
-            throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", user.getId()));
+            throw new UserNotFoundException(String.format("Пользователь: id=%d не найден", user.getId()));
         }
     }
 
     @Override
     public List<User> getAll() {
+        log.debug("Запрошен список всех пользователей");
         return storage.findAll();
     }
 
     @Override
     public User getById(String id) {
+        log.debug("Запрошен пользователь: id={}", id);
         long userId = validateId(id);
         return getUserOrThrow(userId);
     }
@@ -63,7 +65,7 @@ public class UserServiceImpl implements UserService {
         } else {
             user.addFriendId(friendId);
             friend.addFriendId(userId);
-            log.info("Пользователь id={} добавил в друзья пользователя id={}", userId, friendId);
+            log.info("Пользователь: id={} добавил в друзья пользователя: id={}", userId, friendId);
             return friend;
         }
     }
@@ -79,13 +81,14 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("Пользователь не является вашим другом");
         } else {
             friend.deleteFriendId(userId);
-            log.info("Пользователь id={} удалил из друзей пользователя id={}", userId, friendId);
+            log.info("Пользователь: id={} удалил из друзей пользователя: id={}", userId, friendId);
             return friend;
         }
     }
 
     @Override
     public List<User> getAllFriends(String id) {
+        log.debug("Запрос списка друзей для пользователя: id={}", id);
         long userId = validateId(id);
         User user = getUserOrThrow(userId);
         return storage.findAllById(user.getFriends());
@@ -93,6 +96,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getMutualFriends(String id, String otherId) {
+        log.debug("Запрос общих друзей для пользователей: id={} и id={}", id, otherId);
         long userId = validateId(id);
         long otherUserId = validateId(otherId);
         User user = getUserOrThrow(userId);

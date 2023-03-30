@@ -17,6 +17,8 @@ import static org.mockito.Mockito.*;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.service.film.FilmServiceImpl;
 import java.time.LocalDate;
@@ -30,8 +32,10 @@ class FilmServiceTest {
 
     @Mock
     FilmStorage storage;
+    @Mock
+    UserService userService;
     @InjectMocks
-    FilmServiceImpl service;
+    FilmServiceImpl filmService;
     static Film firstFilm;
     static Film secondFilm;
     static Random random;
@@ -56,7 +60,7 @@ class FilmServiceTest {
     void givenFilmObject_whenAddNewFilm_thenReturnFilmObject() {
         given(storage.save(any(Film.class))).willReturn(firstFilm);
 
-        Film savedFilm = service.create(firstFilm);
+        Film savedFilm = filmService.create(firstFilm);
 
         verify(storage).save(firstFilm);
         assertThat(savedFilm).isNotNull();
@@ -68,12 +72,12 @@ class FilmServiceTest {
         given(storage.save(firstFilm)).willReturn(firstFilm);
         given(storage.save(secondFilm)).willReturn(secondFilm);
 
-        Film savedFilm = service.create(firstFilm);
+        Film savedFilm = filmService.create(firstFilm);
         secondFilm.setId(savedFilm.getId());
 
         given(storage.findAllId()).willReturn(Set.of(savedFilm.getId()));
 
-        Film updatedFilm = service.update(secondFilm);
+        Film updatedFilm = filmService.update(secondFilm);
 
         verify(storage).save(firstFilm);
         verify(storage).save(secondFilm);
@@ -83,11 +87,11 @@ class FilmServiceTest {
     }
 
     @Test
-    void givenFilmList_whenReturnAllFilms_thenReturnFilmList() {
+    void givenFilmList_whenGetAllFilms_thenReturnFilmList() {
         List<Film> films = List.of(firstFilm, secondFilm);
         given(storage.findAll()).willReturn(films);
 
-        List<Film> allFilms = service.getAll();
+        List<Film> allFilms = filmService.getAll();
 
         verify(storage).findAll();
         assertThat(allFilms).isNotNull();
@@ -96,10 +100,10 @@ class FilmServiceTest {
     }
 
     @Test
-    void givenFilmId_whenReturnById_thenReturnFilmObject() {
+    void givenFilmId_whenGetFilmById_thenReturnFilmObject() {
         given(storage.findById(firstFilm.getId())).willReturn(Optional.of(firstFilm));
 
-        Film returned = service.getById(String.valueOf(firstFilm.getId()));
+        Film returned = filmService.getById(String.valueOf(firstFilm.getId()));
 
         verify(storage).findById(firstFilm.getId());
         assertThat(returned).isNotNull();
@@ -107,11 +111,11 @@ class FilmServiceTest {
     }
 
     @Test
-    void givenFilmId_whenReturnById_thenThrowNotFoundException() {
+    void givenFilmId_whenGetFilmById_thenThrowNotFoundException() {
         given(storage.findById(firstFilm.getId())).willReturn(Optional.empty());
 
         Throwable exception = assertThrows(FilmNotFoundException.class, () -> {
-           tempContainer[0] = service.getById(String.valueOf(firstFilm.getId()));
+           tempContainer[0] = filmService.getById(String.valueOf(firstFilm.getId()));
         });
 
         verify(storage).findById(firstFilm.getId());
@@ -122,11 +126,11 @@ class FilmServiceTest {
     }
 
     @Test
-    void givenFilmIdNotNumberType_whenReturnById_thenThrowIncorrectParameterException() {
+    void givenFilmIdNotNumberType_whenGetFilmById_thenThrowIncorrectParameterException() {
         lenient().when(storage.findById(anyLong())).thenReturn(Optional.empty());
 
         IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, () -> {
-            tempContainer[0] = service.getById("char");
+            tempContainer[0] = filmService.getById("char");
         });
 
         verify(storage, never()).findById(anyLong());
@@ -135,6 +139,21 @@ class FilmServiceTest {
         assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
         assertThat(exception.getParam()).isEqualTo("id");
         assertThat(exception.getDescription()).isEqualTo("Идентификатор не числовой");
+    }
+
+    @Test
+    void givenFilmIdAndUserId_whenSetLike_thenReturnFilm() {
+        User user = User.builder().id(random.nextInt(32) + 1).email("dima07@mailbox.org").name("Dmitry")
+                .login("DmitryDima").birthday(LocalDate.of(1980, 9, 26)).build();
+        given(storage.findById(firstFilm.getId())).willReturn(Optional.of(firstFilm));
+        given(userService.getById(anyString())).willReturn(user);
+
+        final Film returned = filmService.setLike(String.valueOf(firstFilm.getId()), String.valueOf(user.getId()));
+
+        verify(storage).findById(firstFilm.getId());
+        verify(userService).getById(anyString());
+        assertThat(returned).isNotNull();
+        assertThat(returned).isEqualTo(firstFilm);
     }
 
 

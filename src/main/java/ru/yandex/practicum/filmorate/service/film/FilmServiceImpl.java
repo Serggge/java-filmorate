@@ -19,15 +19,11 @@ public class FilmServiceImpl implements FilmService {
 
     private static int count;
     private final FilmStorage storage;
-    private UserService userService;
+    private final UserService userService;
 
     @Autowired
-    public FilmServiceImpl(FilmStorage storage) {
+    public FilmServiceImpl(FilmStorage storage, UserService userService) {
         this.storage = storage;
-    }
-
-    @Autowired
-    public void setUserService(UserService userService) {
         this.userService = userService;
     }
 
@@ -46,17 +42,19 @@ public class FilmServiceImpl implements FilmService {
             log.info("Обновлён фильм: {}", film);
             return storage.save(film);
         } else {
-            throw new FilmNotFoundException(String.format("Фильм с id=%d не найден", film.getId()));
+            throw new FilmNotFoundException(String.format("Фильм: id=%d не найден", film.getId()));
         }
     }
 
     @Override
     public List<Film> getAll() {
+        log.debug("Запрос списка всех фильмов");
         return storage.findAll();
     }
 
     @Override
     public Film getById(String id) {
+        log.debug("Запрошен фильм: id={}", id);
         long filmId = validateId(id);
         return getFilmOrThrow(filmId);
     }
@@ -67,7 +65,7 @@ public class FilmServiceImpl implements FilmService {
         Film film = getFilmOrThrow(filmId);
         User user = userService.getById(userId);
         film.addLike(user.getId());
-        log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
+        log.info("Пользователь: id={} поставил лайк фильму: id={}", userId, filmId);
         return film;
     }
 
@@ -80,12 +78,13 @@ public class FilmServiceImpl implements FilmService {
         if (!isSuccess) {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
-        log.info("Пользователь id={} убрал лайк фильму id={}", userId, filmId);
+        log.info("Пользователь: id={} убрал лайк фильму: id={}", userId, filmId);
         return film;
     }
 
     @Override
     public List<Film> getPopular(String count) {
+        log.debug("Запрошен список самых популярных фильмов");
         long size = validateId(count);
         return storage.findAll()
                       .stream()
