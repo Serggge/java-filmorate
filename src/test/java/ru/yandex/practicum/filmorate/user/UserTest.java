@@ -1,13 +1,16 @@
-package ru.yandex.practicum.filmorate.model.user;
+package ru.yandex.practicum.filmorate.user;
 
 import org.junit.jupiter.api.*;
 import ru.yandex.practicum.filmorate.model.User;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserTest {
 
@@ -16,7 +19,7 @@ public class UserTest {
     static Random random;
 
     @BeforeAll
-    public static void beforeAll() {
+    static void beforeAll() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
         random = new Random();
@@ -26,13 +29,13 @@ public class UserTest {
     }
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         setUserForDefaults();
     }
 
     @Test
     @DisplayName("Email is blank")
-    public void mustGenerateErrorWhenUserEmailIsBlank() {
+    void mustGenerateErrorWhenUserEmailIsBlank() {
         user.setEmail("");
         var violations = validator.validate(user);
 
@@ -41,7 +44,7 @@ public class UserTest {
 
     @Test
     @DisplayName("Email without @")
-    public void mustGenerateErrorWhenEmailNotContainsSymbolAt() {
+    void mustGenerateErrorWhenEmailNotContainsSymbolAt() {
         user.setEmail(user.getEmail().replace("@", ""));
         var violations = validator.validate(user);
 
@@ -50,7 +53,7 @@ public class UserTest {
 
     @Test
     @DisplayName("BirthDay in future")
-    public void mustGenerateErrorWhenUserBirthDayInFuture() {
+    void mustGenerateErrorWhenUserBirthDayInFuture() {
         user.setBirthday(LocalDate.now().plusDays(1));
         var violations = validator.validate(user);
 
@@ -59,7 +62,7 @@ public class UserTest {
 
     @Test
     @DisplayName("Login is blank")
-    public void mustGenerateErrorWhenLoginIsBlank() {
+    void mustGenerateErrorWhenLoginIsBlank() {
         user.setLogin("");
         var violations = validator.validate(user);
 
@@ -68,7 +71,7 @@ public class UserTest {
 
     @Test
     @DisplayName("Login is null")
-    public void mustGenerateErrorWhenLoginIsNull() {
+    void mustGenerateErrorWhenLoginIsNull() {
         user.setLogin(null);
         var violations = validator.validate(user);
 
@@ -77,11 +80,60 @@ public class UserTest {
 
     @Test
     @DisplayName("Login contains space")
-    public void mustGenerateErrorWhenLoginContainsSpace() {
+    void mustGenerateErrorWhenLoginContainsSpace() {
         user.setLogin("o . o");
         var violations = validator.validate(user);
 
         assertFalse(violations.isEmpty(), "Логин содержит пробел");
+    }
+
+    @Test
+    void mustAddUserIdInFriendList() {
+        final long friendId = random.nextInt(32) + 1;
+        user.addFriendId(friendId);
+        final List<Long> friends = user.getFriends();
+
+        assertFalse(friends.isEmpty());
+        assertEquals(1, friends.size());
+        assertEquals(List.of(friendId), friends);
+        assertTrue(friends.contains(friendId));
+    }
+
+    @Test
+    void mustDeleteFriendIdFromFriendList() {
+        final long friendId = random.nextInt(32) + 1;
+        user.addFriendId(friendId);
+        user.deleteFriendId(friendId);
+        final List<Long> friends = user.getFriends();
+
+        assertTrue(friends.isEmpty());
+        assertEquals(Collections.emptyList(), friends);
+        assertFalse(friends.contains(friendId));
+    }
+
+    @Test
+    void mustReturnFriendList() {
+        final List<Long> expected = new ArrayList<>();
+        for (long i = 1; i <= 10; i++) {
+            user.addFriendId(i);
+            expected.add(i);
+        }
+        final List<Long> returned = user.getFriends();
+
+        assertFalse(returned.isEmpty());
+        assertEquals(expected.size(), returned.size());
+        assertEquals(expected, returned);
+        assertTrue(returned.containsAll(expected));
+    }
+
+    @Test
+    void mustDeleteAllFriends() {
+        final long friendId = random.nextInt(32) + 1;
+        user.addFriendId(friendId);
+        user.clearFriendList();
+        final List<Long> cleared = user.getFriends();
+
+        assertTrue(cleared.isEmpty());
     }
 
     static void setUserForDefaults() {

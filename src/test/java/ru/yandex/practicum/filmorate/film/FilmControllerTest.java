@@ -1,7 +1,8 @@
-package ru.yandex.practicum.filmorate.model.film;
+package ru.yandex.practicum.filmorate.film;
 
 import org.hamcrest.Matchers;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -10,21 +11,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -163,7 +159,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void handleReturnPopular_returnFilmList() throws Exception {
+    void handleReturnPopular_returnFilmListDefaultSize() throws Exception {
         when(service.getPopular(anyInt())).thenReturn(List.of(firstFilm, secondFilm));
 
         var mvcRequest = get("/films/popular");
@@ -181,13 +177,15 @@ class FilmControllerTest {
                         secondFilm.getReleaseDate().toString())))
                 .andExpect(jsonPath("$[*].duration", contains(firstFilm.getDuration(),
                         secondFilm.getDuration())));
+
+        verify(service).getPopular(10);
     }
 
     @Test
-    void handleAddNew_ThrowHttpMessageNotReadableException() throws Exception {
+    void handleAddNew_RequestBodyHasWrongJson_ThrowHttpMessageNotReadableEx_returnErrorMessage() throws Exception {
         lenient().when(service.create(any(Film.class))).thenReturn(firstFilm);
 
-        var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON).content("id: 1");
+        var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON).content("\"id\": 1");
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isBadRequest())
@@ -198,28 +196,46 @@ class FilmControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
                 .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
+
         verify(service, never()).create(any(Film.class));
     }
 
     @Test
-    void handleUpdateFilm_ThrowHttpMessageNotReadableException() throws Exception {
-        lenient().when(service.create(any(Film.class))).thenReturn(firstFilm);
+    void handleReturnById_PathVariableWrongType_ThrowMethodArgumentTypeMismatchEx_returnErrorMsg() throws Exception {
+        lenient().when(service.getById(anyLong())).thenReturn(firstFilm);
 
-        var mvcRequest = put("/films").contentType(MediaType.APPLICATION_JSON).content("id: 1");
+        var mvcRequest = get(String.format("/films/%s", firstFilm.getName()));
 
-        mvc.perform(mvcRequest)
-                .andExpect(status().isBadRequest())
+        mvc.perform(mvcRequest).andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException()
-                        instanceof HttpMessageNotReadableException))
-                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
-                        .startsWith("JSON parse error")))
+                                                        instanceof MethodArgumentTypeMismatchException))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
-                .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
-        verify(service, never()).create(any(Film.class));
+                .andExpect(jsonPath("$.message", is("The parameter 'id' of value 'First film' " +
+                        "could not be converted to type 'long'")))
+                .andExpect(jsonPath("$.description", containsString("Failed to convert " +
+                        "value of type 'java.lang.String' to required type 'long'")));
+
+        verify(service, never()).getById(anyLong());
     }
 
+    @Test
+    void handleAddNew_FilmObjectHasNotValidField_ThrowMethodArgumentNotValidEx_returnErrorMessage() throws Exception {
+        lenient().when(service.create(any(Film.class))).thenReturn(firstFilm);
+        firstFilm.setName("");
 
+        var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON)
+                                                 .content(mapper.writeValueAsString(firstFilm));
+
+        mvc.perform(mvcRequest).andExpect(status().isBadRequest())
+           .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+           .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                                                 .contains("Field error in object 'film' on field 'name'")))
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.message", containsString("name")))
+           .andExpect(jsonPath("$.description", containsString("must not be blank")));
+
+        verify(service, never()).create(any(Film.class));
+    }
 
     static void setFilmsForDefaults() {
         firstFilm.setId(random.nextInt(32) + 1);

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model.film;
+package ru.yandex.practicum.filmorate.film;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,10 +8,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FilmTest {
 
@@ -20,7 +20,7 @@ public class FilmTest {
     static Random random;
 
     @BeforeAll
-    public static void beforeAll() {
+    static void beforeAll() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
         random = new Random();
@@ -30,13 +30,13 @@ public class FilmTest {
     }
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         setFilmForDefaults();
     }
 
     @Test
     @DisplayName("name is blank")
-    public void mustGenerateErrorWhenFilmNameIsBlank() {
+    void mustGenerateErrorWhenFilmNameIsBlank() {
         film.setName("");
         var violations = validator.validate(film);
 
@@ -45,7 +45,7 @@ public class FilmTest {
 
     @Test
     @DisplayName("name is null")
-    public void mustGenerateErrorWhenFilmNameIsNull() {
+    void mustGenerateErrorWhenFilmNameIsNull() {
         film.setName(null);
         var violations = validator.validate(film);
 
@@ -54,7 +54,7 @@ public class FilmTest {
 
     @Test
     @DisplayName("description is null")
-    public void mustGenerateErrorWhenFilmDescriptionIsNull() {
+    void mustGenerateErrorWhenFilmDescriptionIsNull() {
         film.setDescription(null);
         var violations = validator.validate(film);
 
@@ -63,7 +63,7 @@ public class FilmTest {
 
     @Test
     @DisplayName("description > 200 symbols")
-    public void mustGenerateErrorWhenFilmDescriptionLengthIsMoreThan200Symbols() {
+    void mustGenerateErrorWhenFilmDescriptionLengthIsMoreThan200Symbols() {
         final char[] symbolArray = new char[201];
         Arrays.fill(symbolArray, 'a');
         final String longDescription = String.valueOf(symbolArray);
@@ -75,7 +75,7 @@ public class FilmTest {
 
     @Test
     @DisplayName("releaseDate before first film")
-    public void mustGenerateErrorWhenFilmReleaseDateEarlyThanFirstFilmRelease() {
+    void mustGenerateErrorWhenFilmReleaseDateEarlyThanFirstFilmRelease() {
         film.setName(null);
         var violations = validator.validate(film);
 
@@ -84,12 +84,63 @@ public class FilmTest {
 
     @Test
     @DisplayName("duration not positive")
-    public void mustGenerateErrorWhenFilmDurationNotPositive() {
+    void mustGenerateErrorWhenFilmDurationNotPositive() {
         film.setDuration(0);
         var violations = validator.validate(film);
 
         assertFalse(violations.isEmpty(), "Продолжительность фильма отрицательная или 0");
     }
+
+    @Test
+    void mustAddUserIdInLikeSet() {
+        final long userId = random.nextInt(32) + 1;
+        film.addLike(userId);
+        final List<Long> result = film.getLikes();
+
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+        assertEquals(List.of(userId), result);
+        assertTrue(result.contains(userId));
+    }
+
+    @Test
+    void mustRemoveUserIdFromLikeSet() {
+        final long userId = random.nextInt(32) + 1;
+        film.addLike(userId);
+        film.removeLike(userId);
+        final List<Long> result = film.getLikes();
+
+        assertTrue(result.isEmpty());
+        assertEquals(Collections.emptyList(), result);
+        assertFalse(result.contains(userId));
+    }
+
+    @Test
+    void mustReturnLikeList() {
+        final List<Long> expected = new ArrayList<>();
+        for (long i = 1; i <= 10; i++) {
+            film.addLike(i);
+            expected.add(i);
+        }
+        final List<Long> returned = film.getLikes();
+
+
+        assertFalse(returned.isEmpty());
+        assertEquals(expected.size(), returned.size());
+        assertEquals(expected, returned);
+        assertTrue(returned.containsAll(expected));
+    }
+
+    @Test
+    void mustDeleteAllLikes() {
+        final long userId = random.nextInt(32) + 1;
+        film.addLike(userId);
+        film.clearLikes();
+        final List<Long> cleared = film.getLikes();
+
+        assertTrue(cleared.isEmpty());
+    }
+
 
     static void setFilmForDefaults() {
         film.setId(random.nextInt(32) + 1);

@@ -71,14 +71,6 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage handleIncorrectParamException(IncorrectParameterException exception) {
-        errorMessage.setParams(exception.getParam(), exception.getDescription());
-        log(exception);
-        return errorMessage;
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
     public ErrorMessage handleDataUpdateException(DataUpdateException exception) {
         errorMessage.setParams(exception.getMessage(), "");
