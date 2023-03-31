@@ -12,12 +12,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.contains;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -109,10 +112,9 @@ class UserControllerTest {
 
     @Test
     void handleReturnById_returnUserObject() throws Exception {
-        String id = String.valueOf(user.getId());
-        when(service.getById(id)).thenReturn(user);
+        when(service.getById(anyLong())).thenReturn(user);
 
-        final var mvcRequest = get("/users/" + id);
+        final var mvcRequest = get("/users/" + user.getId());
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
@@ -128,7 +130,7 @@ class UserControllerTest {
 
     @Test
     void handleInviteFriend_returnFriend() throws Exception {
-        when(service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()))).thenReturn(friend);
+        when(service.addFriend(anyLong(), anyLong())).thenReturn(friend);
 
         final var mvcRequest = put(String.format("/users/%d/friends/%d", user.getId(), friend.getId()));
 
@@ -146,7 +148,7 @@ class UserControllerTest {
 
     @Test
     void handleRemoveFromFriends_returnFriend() throws Exception {
-        when(service.deleteFriendById(anyString(), anyString())).thenReturn(friend);
+        when(service.deleteFriendById(anyLong(), anyLong())).thenReturn(friend);
 
         final var mvcRequest = delete(String.format("/users/%d/friends/%d", user.getId(), friend.getId()));
 
@@ -164,7 +166,7 @@ class UserControllerTest {
     @Test
     void handleReturnAllFriends_returnFriends() throws Exception {
         final List<User> friends = List.of(friend);
-        when(service.getAllFriends(String.valueOf(user.getId()))).thenReturn(friends);
+        when(service.getAllFriends(anyLong())).thenReturn(friends);
 
         var mvcRequest = get(String.format("/users/%d/friends", user.getId()));
 
@@ -184,8 +186,7 @@ class UserControllerTest {
     void handleReturnMutualFriends_returnMutualFriends() throws Exception {
         User mutualFriend = User.builder().id(friend.getId() + 1).email("dima07@mailbox.org").name("Dmitry")
                 .login("DmitryDima").birthday(LocalDate.of(1980, 9, 26)).build();
-        when(service.getMutualFriends(String.valueOf(user.getId()), String.valueOf(friend.getId())))
-                                                                  .thenReturn(List.of(mutualFriend));
+        when(service.getMutualFriends(anyLong(), anyLong())).thenReturn(List.of(mutualFriend));
 
         var mvcRequest = get(String.format("/users/%d/friends/common/%d", user.getId(), friend.getId()));
 

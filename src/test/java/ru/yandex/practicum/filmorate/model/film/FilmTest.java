@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Random;
 
-public class FilmValidatorTest {
+public class FilmTest {
 
     static Validator validator;
     static Film film;
@@ -26,6 +26,7 @@ public class FilmValidatorTest {
         random = new Random();
         film = new Film();
         setFilmForDefaults();
+        factory.close();
     }
 
     @BeforeEach

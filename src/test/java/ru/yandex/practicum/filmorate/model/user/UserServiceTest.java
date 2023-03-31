@@ -50,7 +50,7 @@ class UserServiceTest {
 
     @Test
     void givenUserObject_whenAddNewUser_thenReturnUserObject() {
-        given(storage.save(user)).willReturn(user);
+        given(storage.save(any(User.class))).willReturn(user);
 
         final User savedUser = service.create(user);
 
@@ -96,7 +96,7 @@ class UserServiceTest {
     void givenUserId_whenReturnById_thenReturnUserObject() {
         given(storage.findById(anyLong())).willReturn(Optional.of(user));
 
-        final User returned = service.getById(String.valueOf(user.getId()));
+        final User returned = service.getById(user.getId());
 
         verify(storage).findById(user.getId());
         assertThat(returned).isNotNull();
@@ -107,48 +107,15 @@ class UserServiceTest {
     void givenUserId_whenReturnById_thenThrowNotFoundException() {
         given(storage.findById(anyLong())).willReturn(Optional.empty());
 
-        final User[] users = new User[1];
         final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
-            users[0] = service.getById(String.valueOf(user.getId()));
+            tempContainer[0] = service.getById(user.getId());
         });
 
         verify(storage).findById(user.getId());
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
         assertThat(exception.getMessage()).isEqualTo(String.format("Пользователь с id=%d не найден", user.getId()));
-        assertThat(users[0]).isNull();
-    }
-
-    @Test
-    void givenUserId_whenReturnById_thenThrowIncorrectParameterException() {
-        lenient().when(storage.findById(anyLong())).thenReturn(Optional.of(user));
-
-        final IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, () -> {
-           tempContainer[0] = service.getById("char");
-        });
-
-        verify(storage, never()).findById(anyLong());
         assertThat(tempContainer[0]).isNull();
-        assertThat(exception).isNotNull();
-        assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
-        assertThat(exception.getParam()).isEqualTo("id");
-        assertThat(exception.getDescription()).isEqualTo("Идентификатор не числовой");
-    }
-
-    @Test
-    void givenUserIdNotNumberType_whenReturnById_thenThrowIncorrectParameterException() {
-        lenient().when(storage.findById(anyLong())).thenReturn(Optional.of(user));
-
-        final IncorrectParameterException exception = assertThrows(IncorrectParameterException.class, () -> {
-            tempContainer[0] = service.getById("char");
-        });
-
-        verify(storage, never()).findById(anyLong());
-        assertThat(tempContainer[0]).isNull();
-        assertThat(exception).isNotNull();
-        assertThat(exception.getClass()).isEqualTo(IncorrectParameterException.class);
-        assertThat(exception.getParam()).isEqualTo("id");
-        assertThat(exception.getDescription()).isEqualTo("Идентификатор не числовой");
     }
 
     @Test
@@ -156,7 +123,7 @@ class UserServiceTest {
         given(storage.findById(user.getId())).willReturn(Optional.of(user));
         given(storage.findById(friend.getId())).willReturn(Optional.of(friend));
 
-        final User returned = service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()));
+        final User returned = service.addFriend(user.getId(), friend.getId());
 
         verify(storage).findById(user.getId());
         verify(storage).findById(friend.getId());
@@ -171,12 +138,12 @@ class UserServiceTest {
         given(storage.findById(user.getId())).willReturn(Optional.empty());
         lenient().when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
 
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer[0] = service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()));
+        final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
+            tempContainer[0] = service.addFriend(user.getId(), friend.getId());
         });
 
         verify(storage).findById(user.getId());
-        verify(storage, never()).findById(friend.getId());
+        verify(storage).findById(anyLong());
         assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
@@ -189,8 +156,8 @@ class UserServiceTest {
         given(storage.findById(user.getId())).willReturn(Optional.of(user));
         given(storage.findById(friend.getId())).willReturn(Optional.empty());
 
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer[0] = service.addFriend(String.valueOf(user.getId()), String.valueOf(friend.getId()));
+        final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
+            tempContainer[0] = service.addFriend(user.getId(), friend.getId());
         });
 
         verify(storage).findById(user.getId());
@@ -212,7 +179,7 @@ class UserServiceTest {
         assertThat(user.getFriends().size()).isEqualTo(1);
         assertThat(user.getFriends()).isEqualTo(List.of(friend.getId()));
 
-        final User returned = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
+        final User returned = service.deleteFriendById(user.getId(), friend.getId());
 
         verify(storage).findById(user.getId());
         verify(storage).findById(friend.getId());
@@ -228,7 +195,7 @@ class UserServiceTest {
         when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
 
         final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer[0] = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
+            tempContainer[0] = service.deleteFriendById(user.getId(), friend.getId());
         });
 
         verify(storage).findById(user.getId());
@@ -244,12 +211,12 @@ class UserServiceTest {
         given(storage.findById(user.getId())).willReturn(Optional.empty());
         lenient().when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
 
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer[0] = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
+        final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
+            tempContainer[0] = service.deleteFriendById(user.getId(), friend.getId());
         });
 
         verify(storage).findById(user.getId());
-        verify(storage, never()).findById(friend.getId());
+        verify(storage).findById(anyLong());
         assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
@@ -263,8 +230,8 @@ class UserServiceTest {
         given(storage.findById(friend.getId())).willReturn(Optional.empty());
 
         friend.setId(friend.getId());
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer[0] = service.deleteFriendById(String.valueOf(user.getId()), String.valueOf(friend.getId()));
+        final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
+            tempContainer[0] = service.deleteFriendById(user.getId(), friend.getId());
         });
 
         verify(storage).findById(user.getId());
@@ -279,12 +246,13 @@ class UserServiceTest {
     @Test
     void givenUserId_whenGetAllFriends_thenReturnFriendList() {
         given(storage.findAllById(anyIterable())).willReturn(List.of(friend));
-        given(storage.findById(user.getId())).willReturn(Optional.of(user));
+        given(storage.findById(anyLong())).willReturn(Optional.of(user));
 
         user.addFriendId(friend.getId());
-        final List<User> friendList = service.getAllFriends(String.valueOf(user.getId()));
+        final List<User> friendList = service.getAllFriends(user.getId());
 
         verify(storage).findAllById(user.getFriends());
+        verify(storage).findById(user.getId());
         assertThat(friendList).isNotNull();
         assertThat(friendList.size()).isEqualTo(1);
         assertThat(friendList).isEqualTo(List.of(friend));
@@ -292,16 +260,16 @@ class UserServiceTest {
 
     @Test
     void givenUserNotPresentId_whenGetAllFriends_thenThrowUserNotFoundException() {
+        given(storage.findById(anyLong())).willReturn(Optional.empty());
         lenient().when(storage.findAllById(anyIterable())).thenReturn(List.of(friend));
-        given(storage.findById(user.getId())).willReturn(Optional.empty());
 
         final List<User> tempContainer = new ArrayList<>();
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer.addAll(service.getAllFriends(String.valueOf(user.getId())));
+        final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
+            tempContainer.addAll(service.getAllFriends(user.getId()));
         });
 
-        verify(storage, never()).findAllById(anyIterable());
         verify(storage).findById(user.getId());
+        verify(storage, never()).findAllById(anyIterable());
         assertThat(tempContainer.size()).isEqualTo(0);
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
@@ -318,8 +286,7 @@ class UserServiceTest {
 
         user.addFriendId(mutualFriend.getId());
         friend.addFriendId(mutualFriend.getId());
-        final List<User> mutualFriendList = service.getMutualFriends(String.valueOf(user.getId()),
-                String.valueOf(friend.getId()));
+        final List<User> mutualFriendList = service.getMutualFriends(user.getId(), friend.getId());
 
         verify(storage).findAllById(anyIterable());
         verify(storage).findById(user.getId());
@@ -340,13 +307,12 @@ class UserServiceTest {
         lenient().when(storage.findById(friend.getId())).thenReturn(Optional.of(friend));
 
         final List<User> tempContainer = new ArrayList<>();
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer.addAll(service.getMutualFriends(String.valueOf(user.getId()),
-                    String.valueOf(friend.getId())));
+        final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
+            tempContainer.addAll(service.getMutualFriends(user.getId(), friend.getId()));
         });
 
         verify(storage).findById(user.getId());
-        verify(storage, never()).findById(friend.getId());
+        verify(storage).findById(anyLong());
         assertThat(tempContainer.size()).isEqualTo(0);
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
@@ -356,12 +322,11 @@ class UserServiceTest {
     @Test
     void givenUserIdAndFriendNotPresentId_whenGetMutualFriends_thenThrowUserNotFoundException() {
         given(storage.findById(user.getId())).willReturn(Optional.of(user));
-        lenient().when(storage.findById(friend.getId())).thenReturn(Optional.empty());
+        given(storage.findById(friend.getId())).willReturn(Optional.empty());
 
         final List<User> tempContainer = new ArrayList<>();
-        final UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            tempContainer.addAll(service.getMutualFriends(String.valueOf(user.getId()),
-                    String.valueOf(friend.getId())));
+        final Throwable exception = assertThrows(UserNotFoundException.class, () -> {
+            tempContainer.addAll(service.getMutualFriends(user.getId(), friend.getId()));
         });
 
         verify(storage).findById(user.getId());

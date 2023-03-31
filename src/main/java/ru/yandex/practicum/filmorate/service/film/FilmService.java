@@ -11,12 +11,12 @@ public interface FilmService {
 
     List<Film> getAll();
 
-    Film getById(String id);
+    Film getById(long id);
 
-    Film setLike(String filmId, String userId);
+    Film setLike(long filmId, long userId);
 
-    Film deleteLike(String filmId, String userId);
+    Film deleteLike(long filmId, long userId);
 
-    List<Film> getPopular(String count);
+    List<Film> getPopular(int count);
 
 }

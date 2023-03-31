@@ -53,15 +53,13 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public Film getById(String id) {
+    public Film getById(long id) {
         log.debug("Запрошен фильм: id={}", id);
-        long filmId = validateId(id);
-        return getFilmOrThrow(filmId);
+        return getFilmOrThrow(id);
     }
 
     @Override
-    public Film setLike(String id, String userId) {
-        long filmId = validateId(id);
+    public Film setLike(long filmId, long userId) {
         Film film = getFilmOrThrow(filmId);
         User user = userService.getById(userId);
         film.addLike(user.getId());
@@ -70,8 +68,7 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public Film deleteLike(String id, String userId) {
-        long filmId = validateId(id);
+    public Film deleteLike(long filmId, long userId) {
         Film film = getFilmOrThrow(filmId);
         User user = userService.getById(userId);
         boolean isSuccess = film.removeLike(user.getId());
@@ -83,13 +80,12 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public List<Film> getPopular(String count) {
+    public List<Film> getPopular(int count) {
         log.debug("Запрошен список самых популярных фильмов");
-        long size = validateId(count);
         return storage.findAll()
                       .stream()
                       .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
-                      .limit(size)
+                      .limit(count)
                       .collect(Collectors.toList());
     }
 

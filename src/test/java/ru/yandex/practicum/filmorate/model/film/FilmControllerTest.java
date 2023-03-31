@@ -1,23 +1,33 @@
 package ru.yandex.practicum.filmorate.model.film;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.hamcrest.Matchers;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.contains;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -102,7 +112,7 @@ class FilmControllerTest {
 
     @Test
     public void handleReturnFilmById_returnFilmObject() throws Exception {
-        when(service.getById(String.valueOf(firstFilm.getId()))).thenReturn(firstFilm);
+        when(service.getById(anyLong())).thenReturn(firstFilm);
 
         var mvcRequest = get("/films/" + firstFilm.getId());
 
@@ -120,7 +130,7 @@ class FilmControllerTest {
 
     @Test
     void handleAddUserLike_returnFilm() throws Exception {
-        when(service.setLike(anyString(), anyString())).thenReturn(firstFilm);
+        when(service.setLike(anyLong(), anyLong())).thenReturn(firstFilm);
 
         var mvcRequest = put(String.format("/films/%d/like/%d", firstFilm.getId(), random.nextInt()));
 
@@ -137,7 +147,7 @@ class FilmControllerTest {
 
     @Test
     void handleRemoveUserLike_returnFilm() throws Exception {
-        when(service.deleteLike(anyString(), anyString())).thenReturn(firstFilm);
+        when(service.deleteLike(anyLong(), anyLong())).thenReturn(firstFilm);
 
         var mvcRequest = delete(String.format("/films/%d/like/%d", firstFilm.getId(), random.nextInt()));
 
@@ -154,7 +164,7 @@ class FilmControllerTest {
 
     @Test
     void handleReturnPopular_returnFilmList() throws Exception {
-        when(service.getPopular(anyString())).thenReturn(List.of(firstFilm, secondFilm));
+        when(service.getPopular(anyInt())).thenReturn(List.of(firstFilm, secondFilm));
 
         var mvcRequest = get("/films/popular");
 
@@ -172,6 +182,44 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$[*].duration", contains(firstFilm.getDuration(),
                         secondFilm.getDuration())));
     }
+
+    @Test
+    void handleAddNew_ThrowHttpMessageNotReadableException() throws Exception {
+        lenient().when(service.create(any(Film.class))).thenReturn(firstFilm);
+
+        var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON).content("id: 1");
+
+        mvc.perform(mvcRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() 
+                                                        instanceof HttpMessageNotReadableException))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                                                                                .startsWith("JSON parse error")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
+                .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
+        verify(service, never()).create(any(Film.class));
+    }
+
+    @Test
+    void handleUpdateFilm_ThrowHttpMessageNotReadableException() throws Exception {
+        lenient().when(service.create(any(Film.class))).thenReturn(firstFilm);
+
+        var mvcRequest = put("/films").contentType(MediaType.APPLICATION_JSON).content("id: 1");
+
+        mvc.perform(mvcRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof HttpMessageNotReadableException))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                        .startsWith("JSON parse error")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
+                .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
+        verify(service, never()).create(any(Film.class));
+    }
+
+
 
     static void setFilmsForDefaults() {
         firstFilm.setId(random.nextInt(32) + 1);

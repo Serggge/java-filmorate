@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.model.user;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import ru.yandex.practicum.filmorate.model.User;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import javax.validation.Validation;
@@ -12,7 +9,7 @@ import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.util.Random;
 
-public class UserValidatorTest {
+public class UserTest {
 
     static Validator validator;
     static User user;
@@ -25,6 +22,7 @@ public class UserValidatorTest {
         random = new Random();
         user = new User();
         setUserForDefaults();
+        factory.close();
     }
 
     @BeforeEach

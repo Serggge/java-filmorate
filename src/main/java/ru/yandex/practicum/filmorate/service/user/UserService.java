@@ -11,14 +11,14 @@ public interface UserService {
 
     List<User> getAll();
 
-    User getById(String id);
+    User getById(long id);
 
-    User addFriend(String id, String friendId);
+    User addFriend(long userId, long friendId);
 
-    User deleteFriendById(String userId, String friendId);
+    User deleteFriendById(long userId, long friendId);
 
-    List<User> getAllFriends(String id);
+    List<User> getAllFriends(long userId);
 
-    List<User> getMutualFriends(String id, String otherId);
+    List<User> getMutualFriends(long id, long otherId);
 
 }

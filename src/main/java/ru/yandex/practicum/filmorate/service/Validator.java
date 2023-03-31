@@ -13,14 +13,6 @@ public final class Validator {
 
     }
 
-    public static long validateId(String stringId) {
-        try {
-            return Long.parseLong(stringId);
-        } catch (NumberFormatException e) {
-            throw new IncorrectParameterException("id", "Идентификатор не числовой");
-        }
-    }
-
     public static void validateUser(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
