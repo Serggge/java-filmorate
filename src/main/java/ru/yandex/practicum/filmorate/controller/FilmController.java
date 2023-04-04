@@ -1,34 +1,54 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
 import javax.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
-    @Autowired
-    private FilmService filmService;
+    private final FilmService service;
 
     @PostMapping
-    public ResponseEntity<Film> addNew(@RequestBody @Valid Film film) {
-        return new ResponseEntity<>(filmService.create(film), HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Film addNew(@RequestBody @Valid Film film) {
+        return service.create(film);
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateExisting(@RequestBody @Valid Film film) {
-        return ResponseEntity.ok(filmService.update(film));
+    public Film updateExisting(@RequestBody @Valid Film film) {
+        return service.update(film);
     }
 
     @GetMapping
-    public ResponseEntity<List<Film>> returnAll() {
-        return ResponseEntity.ok(filmService.getAll());
+    public List<Film> returnAll() {
+        return service.getAll();
+    }
+
+    @GetMapping("/{id}")
+    public Film returnById(@PathVariable String id) {
+        return service.getById(id);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public Film addUserLike(@PathVariable("id") String filmId, @PathVariable String userId) {
+        return service.setLike(filmId, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public Film removeUserLike(@PathVariable("id") String filmId, @PathVariable String userId) {
+        return service.deleteLike(filmId, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> returnPopular(@RequestParam(defaultValue = "10") String count) {
+        return service.getPopular(count);
     }
 
 }

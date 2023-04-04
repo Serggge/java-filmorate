@@ -1,15 +1,15 @@
-package ru.yandex.practicum.filmorate.repository;
+package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import java.util.*;
 
-@Repository
-public class FilmRepositoryImpl implements FilmRepository {
+@Component
+public class InMemoryFilmStorage implements FilmStorage {
 
     private final Map<Long, Film> films;
 
-    public FilmRepositoryImpl() {
+    public InMemoryFilmStorage() {
         films = new HashMap<>();
     }
 
@@ -27,6 +27,11 @@ public class FilmRepositoryImpl implements FilmRepository {
     @Override
     public List<Film> findAll() {
         return new ArrayList<>(films.values());
+    }
+
+    @Override
+    public Set<Long> findAllId() {
+        return films.keySet();
     }
 
 }
