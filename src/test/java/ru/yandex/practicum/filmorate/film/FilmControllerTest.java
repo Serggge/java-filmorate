@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.film;
 
 import org.hamcrest.Matchers;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
@@ -182,7 +183,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void handleAddNew_RequestBodyHasWrongJson_ThrowHttpMessageNotReadableEx_returnErrorMessage() throws Exception {
+    void handleCreateNew_RequestBodyHasWrongJson_ThrowHttpMessageNotReadableEx_returnErrorMessage() throws Exception {
         lenient().when(service.create(any(Film.class))).thenReturn(firstFilm);
 
         var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON).content("\"id\": 1");
@@ -235,6 +236,21 @@ class FilmControllerTest {
            .andExpect(jsonPath("$.description", containsString("must not be blank")));
 
         verify(service, never()).create(any(Film.class));
+    }
+
+    @Test
+    void testMethodNotAllowed_ThrowHttpRequestMethodNotSupportedException_returnErrorResponse() throws Exception {
+        mvc.perform(patch("/films").contentType(MediaType.APPLICATION_JSON)
+                                   .content(mapper.writeValueAsString(firstFilm)))
+           .andExpect(status().isMethodNotAllowed())
+           .andExpect(result -> assertTrue(result.getResolvedException()
+                   instanceof HttpRequestMethodNotSupportedException))
+           .andExpect(result -> assertTrue(result.getResolvedException().getMessage().matches(
+                   "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.message", matchesPattern(
+                   "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
+           .andExpect(jsonPath("$.description", matchesPattern("^(POST|PUT|PATCH|DELETE)$")));
     }
 
     static void setFilmsForDefaults() {

@@ -4,17 +4,14 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class User implements Cloneable {
 
     final Set<Long> friends = new HashSet<>();
     long id;
@@ -43,6 +40,17 @@ public class User {
 
     public void clearFriendList() {
         friends.clear();
+    }
+
+    @Override
+    public User clone() {
+        try {
+            return (User) super.clone();
+        } catch (CloneNotSupportedException e) {
+            User copy = new User(id, email, login, name, birthday);
+            copy.friends.addAll(friends);
+            return copy;
+        }
     }
 
 }

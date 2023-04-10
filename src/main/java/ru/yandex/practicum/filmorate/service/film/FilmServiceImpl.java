@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service.film;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,18 +15,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class FilmServiceImpl implements FilmService {
 
     private static int count;
     private final FilmStorage storage;
     private final UserService userService;
-
-    @Autowired
-    public FilmServiceImpl(FilmStorage storage, UserService userService) {
-        this.storage = storage;
-        this.userService = userService;
-    }
 
     @Override
     public Film create(Film film) {

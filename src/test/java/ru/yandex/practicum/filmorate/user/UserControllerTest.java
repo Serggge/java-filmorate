@@ -1,29 +1,35 @@
 package ru.yandex.practicum.filmorate.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.contains;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -200,6 +206,81 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[0].login", is(mutualFriend.getLogin())))
                 .andExpect(jsonPath("$[0].name", is(mutualFriend.getName())))
                 .andExpect(jsonPath("$[0].birthday", is(mutualFriend.getBirthday().toString())));
+    }
+
+    @Test
+    void handleAddNew_RequestBodyHasWrongJson_ThrowHttpMessageNotReadableEx_returnErrorMessage() throws Exception {
+        lenient().when(service.create(any(User.class))).thenReturn(user);
+
+        var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
+                .content("\"id\": 1");
+
+        mvc.perform(mvcRequest).andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                                                    instanceof HttpMessageNotReadableException))
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                                                      .getMessage()
+                                                      .startsWith("JSON parse error")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
+                .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
+
+        verify(service, never()).create(any(User.class));
+    }
+
+    @Test
+    void handleReturnById_PathVariableWrongType_ThrowMethodArgumentTypeMismatchEx_returnErrorMsg() throws Exception {
+        lenient().when(service.update(any(User.class))).thenReturn(user);
+
+        var mvcRequest = get(String.format("/users/%s", user.getName()));
+
+        mvc.perform(mvcRequest).andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                                                    instanceof MethodArgumentTypeMismatchException))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                                                      .contains("Failed to convert value of type")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", containsString(String.format(
+                        "The parameter 'id' of value '%s' could not be converted to type 'long'", user.getName()))))
+                .andExpect(jsonPath("$.description", containsString("Failed to convert value " +
+                                                            "of type 'java.lang.String' to required type 'long'")));
+
+        verify(service, never()).update(any(User.class));
+    }
+
+    @Test
+    void handleAddNew_UserObjectHasNotValidField_ThrowMethodArgumentNotValidEx_returnErrorMessage() throws Exception {
+        lenient().when(service.create(any(User.class))).thenReturn(user);
+
+        user.setLogin("");
+        var mvcRequest = post(String.format("/users")).contentType(MediaType.APPLICATION_JSON)
+                                                      .content(mapper.writeValueAsString(user));
+
+        mvc.perform(mvcRequest).andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                                                            instanceof MethodArgumentNotValidException))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                                                      .contains("Field error in object 'user' on field 'login'")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", containsString("login")))
+                .andExpect(jsonPath("$.description", containsString("must not be blank")));
+
+        verify(service, never()).create(any(User.class));
+    }
+
+    @Test
+    void testMethodNotAllowed_ThrowHttpRequestMethodNotSupportedException_returnErrorResponse() throws Exception {
+        mvc.perform(patch("/users").contentType(MediaType.APPLICATION_JSON)
+                                 .content(mapper.writeValueAsString(user)))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof HttpRequestMethodNotSupportedException))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage().matches(
+                        "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", matchesPattern(
+                        "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
+                .andExpect(jsonPath("$.description", matchesPattern("^(POST|PUT|PATCH|DELETE)$")));
     }
 
     static void setUsersForDefaults() {

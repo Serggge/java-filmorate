@@ -10,10 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 @Data
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-@AllArgsConstructor
 public class Film {
 
     final Set<Long> likes = new HashSet<>();
