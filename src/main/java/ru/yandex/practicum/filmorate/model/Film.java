@@ -15,6 +15,7 @@ import java.util.Set;
 public class Film {
 
     final Set<Long> likes = new HashSet<>();
+    final Set<Genre> genres = new HashSet<>();
     long id;
     @NotBlank()
     String name;
@@ -25,6 +26,8 @@ public class Film {
     LocalDate releaseDate;
     @Positive
     int duration;
+    @NotNull
+    Rating rating;
 
     public List<Long> getLikes() {
         return new ArrayList<>(likes);

@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.*;
@@ -11,23 +12,24 @@ import java.util.*;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class User implements Cloneable {
+public class User {
 
-    final Set<Long> friends = new HashSet<>();
+    final Map<Long, Boolean> friends = new HashMap<>();
     long id;
-    @Email
-    @NotEmpty
-    String email;
-    @NotBlank
-    @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы")
-    String login;
+    @Email @NotEmpty String email;
+    @NotBlank @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы") String login;
     String name;
-    @NotNull
-    @PastOrPresent
-    LocalDate birthday;
+    @NotNull @PastOrPresent LocalDate birthday;
 
     public void addFriendId(long id) {
-        friends.add(id);
+        if (friends.get(id) == null) {
+            friends.put(id, Boolean.FALSE);
+        } else if (friends.get(id).equals(Boolean.FALSE)){
+            friends.put(id, Boolean.TRUE);
+        } else {
+            throw new DataUpdateException(String.format(
+                    "Пользователь с id=%d уже в друзьях у пользователя с id=%d", id, this.id));
+        }
     }
 
     public boolean deleteFriendId(long id) {
@@ -35,22 +37,11 @@ public class User implements Cloneable {
     }
 
     public List<Long> getFriends() {
-        return new ArrayList<>(friends);
+        return new ArrayList<>(friends.keySet());
     }
 
     public void clearFriendList() {
         friends.clear();
-    }
-
-    @Override
-    public User clone() {
-        try {
-            return (User) super.clone();
-        } catch (CloneNotSupportedException e) {
-            User copy = new User(id, email, login, name, birthday);
-            copy.friends.addAll(friends);
-            return copy;
-        }
     }
 
 }
