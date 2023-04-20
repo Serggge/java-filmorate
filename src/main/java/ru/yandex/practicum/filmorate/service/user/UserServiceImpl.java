@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service.user;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
@@ -13,16 +13,17 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private static long count;
     private final UserStorage storage;
+
+    public UserServiceImpl(@Qualifier("userDbStorage") UserStorage storage) {
+        this.storage = storage;
+    }
 
     @Override
     public User create(User user) {
         validateUser(user);
-        user.setId(++count);
         log.info("Создан пользователь: {}", user);
         return storage.save(user);
     }
