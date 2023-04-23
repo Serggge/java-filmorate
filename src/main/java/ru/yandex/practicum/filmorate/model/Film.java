@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Set;
 
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
+@AllArgsConstructor
 public class Film {
 
-    final Set<Long> likes = new HashSet<>();
-    final Set<Genre> genres = new HashSet<>();
     long id;
     @NotBlank()
     String name;
@@ -27,7 +27,9 @@ public class Film {
     @Positive
     int duration;
     @NotNull
-    Rating rating;
+    Mpa mpa;
+    final Set<Genre> genres = new HashSet<>();
+    final Set<Long> likes = new HashSet<>();
 
     public List<Long> getLikes() {
         return new ArrayList<>(likes);

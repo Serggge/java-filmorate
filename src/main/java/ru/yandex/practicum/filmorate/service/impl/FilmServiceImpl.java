@@ -1,14 +1,16 @@
-package ru.yandex.practicum.filmorate.service.film;
+package ru.yandex.practicum.filmorate.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.user.UserService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +22,7 @@ public class FilmServiceImpl implements FilmService {
     private final FilmStorage storage;
     private final UserService userService;
 
+    @Autowired
     public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage storage, UserService userService) {
         this.storage = storage;
         this.userService = userService;
@@ -28,16 +31,18 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film create(Film film) {
         validateFilm(film);
-        log.info("Добавлен фильм: {}", film);
-        return storage.save(film);
+        Film saved = storage.save(film);
+        log.info("Добавлен фильм: {}", saved);
+        return saved;
     }
 
     @Override
     public Film update(Film film) {
         validateFilm(film);
-        if (storage.findAllId().contains(film.getId())) {
-            log.info("Обновлён фильм: {}", film);
-            return storage.save(film);
+        if (storage.findById(film.getId()).isPresent()) {
+            Film saved = storage.save(film);
+            log.info("Обновлён фильм: {}", saved);
+            return saved;
         } else {
             throw new FilmNotFoundException(String.format("Фильм: id=%d не найден", film.getId()));
         }

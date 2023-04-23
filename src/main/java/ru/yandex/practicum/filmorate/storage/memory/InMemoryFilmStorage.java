@@ -1,7 +1,9 @@
-package ru.yandex.practicum.filmorate.storage.film;
+package ru.yandex.practicum.filmorate.storage.memory;
 
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+
 import java.util.*;
 
 @Repository("inMemoryFilmStorage")
@@ -27,11 +29,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public List<Film> findAll() {
         return new ArrayList<>(films.values());
-    }
-
-    @Override
-    public Set<Long> findAllId() {
-        return films.keySet();
     }
 
 }

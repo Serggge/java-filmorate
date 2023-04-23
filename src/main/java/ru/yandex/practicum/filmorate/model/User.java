@@ -16,8 +16,10 @@ public class User {
 
     final Map<Long, Boolean> friends = new HashMap<>();
     long id;
-    @Email @NotEmpty String email;
-    @NotBlank @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы") String login;
+    @NotBlank @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы")
+    String login;
+    @Email @NotEmpty
+    String email;
     String name;
     @NotNull @PastOrPresent LocalDate birthday;
 

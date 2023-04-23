@@ -1,12 +1,14 @@
-package ru.yandex.practicum.filmorate.service.user;
+package ru.yandex.practicum.filmorate.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +19,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserStorage storage;
 
+    @Autowired
     public UserServiceImpl(@Qualifier("userDbStorage") UserStorage storage) {
         this.storage = storage;
     }
@@ -24,16 +27,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public User create(User user) {
         validateUser(user);
-        log.info("Создан пользователь: {}", user);
-        return storage.save(user);
+        User saved = storage.save(user);
+        log.info("Создан пользователь: {}", saved);
+        return saved;
     }
 
     @Override
     public User update(User user) {
         validateUser(user);
-        if (storage.findAllId().contains(user.getId())) {
-            log.info("Пользователь обновлён: {}", user);
-            return storage.save(user);
+        if (storage.findById(user.getId()).isPresent()) {
+            User saved = storage.save(user);
+            log.info("Пользователь обновлён: {}", saved);
+            return saved;
         } else {
             throw new UserNotFoundException(String.format("Пользователь: id=%d не найден", user.getId()));
         }
