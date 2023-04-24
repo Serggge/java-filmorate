@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service.impl;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,8 +13,11 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.dao.FilmGenresStorage;
+import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,14 +26,15 @@ import java.util.stream.Collectors;
 public class FilmServiceImpl implements FilmService {
 
     private final FilmStorage filmStorage;
-    private final FilmGenresStorage filmGenresStorage;
+    private final FilmGenreStorage filmGenreStorage;
     private final UserService userService;
 
     @Autowired
-    public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage filmStorage, FilmGenresStorage filmGenresStorage,
+    public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                           FilmGenreStorage filmGenreStorage,
                            UserService userService) {
         this.filmStorage = filmStorage;
-        this.filmGenresStorage = filmGenresStorage;
+        this.filmGenreStorage = filmGenreStorage;
         this.userService = userService;
     }
 
@@ -37,8 +42,8 @@ public class FilmServiceImpl implements FilmService {
     public Film create(Film film) {
         validateFilm(film);
         Film saved = filmStorage.save(film);
-        if (!film.getGenres().isEmpty()) {
-            upsertGenres(saved);
+        if (!saved.getGenres().isEmpty()) {
+            saved = filmGenreStorage.save(saved);
         }
         log.info("Добавлен фильм: {}", saved);
         return saved;
@@ -47,8 +52,9 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film update(Film film) {
         validateFilm(film);
-        if (filmStorage.findById(film.getId()).isPresent()) {
+        if (filmStorage.existsById(film.getId())) {
             Film saved = filmStorage.save(film);
+            saved = fillGenres(saved);
             log.info("Обновлён фильм: {}", saved);
             return saved;
         } else {
@@ -59,13 +65,19 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getAll() {
         log.debug("Запрос списка всех фильмов");
-        return filmStorage.findAll();
+        return filmStorage.findAll()
+                .stream()
+                .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     @Override
     public Film getById(long id) {
         log.debug("Запрошен фильм: id={}", id);
-        return getFilmOrThrow(id);
+        Film saved = getFilmOrThrow(id);
+        saved.getGenres().addAll(filmGenreStorage.findAllById(id));
+        return saved;
     }
 
     @Override
@@ -93,21 +105,22 @@ public class FilmServiceImpl implements FilmService {
     public List<Film> getPopular(int count) {
         log.debug("Запрошен список самых популярных фильмов");
         return filmStorage.findAll()
-                      .stream()
-                      .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
-                      .limit(count)
-                      .collect(Collectors.toList());
+                .stream()
+                .sorted(Comparator.comparingLong(film -> film.getLikes().size()))
+                .limit(count)
+                .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
+                .collect(Collectors.toList());
     }
 
-    private Film upsertGenres(Film film) {
-        filmGenresStorage.deleteById(film.getId());
-        return filmGenresStorage.save(film);
+    private Film fillGenres(Film film) {
+        filmGenreStorage.deleteById(film.getId());
+        return filmGenreStorage.save(film);
     }
 
     private Film getFilmOrThrow(long id) {
         Film saved = filmStorage.findById(id)
-                      .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
-        for (Genre genre : filmGenresStorage.findAllById(id)) {
+                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
+        for (Genre genre : filmGenreStorage.findAllById(id)) {
             saved.addGenre(genre);
         }
         return saved;

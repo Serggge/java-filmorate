@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.serialize.GenreDeserializer;
 
+@JsonDeserialize(using = GenreDeserializer.class)
 @Data
 public class Genre {
 

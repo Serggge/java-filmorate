@@ -14,7 +14,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Film {
+public class Film implements Comparable<Film> {
 
     long id;
     @NotBlank()
@@ -50,5 +50,11 @@ public class Film {
     public void addGenre(Genre genre) {
         genres.add(genre);
     }
+
+    @Override
+    public int compareTo(Film o) {
+        return Long.compare(this.id, o.id);
+    }
+
 
 }

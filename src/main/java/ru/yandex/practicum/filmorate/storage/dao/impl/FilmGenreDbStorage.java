@@ -5,17 +5,20 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.dao.FilmGenresStorage;
+import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
+
+import java.util.Collection;
+
 import static ru.yandex.practicum.filmorate.Constants.GENRE_ROW_MAPPER;
 
 @Repository("filmGenresDbStorage")
-public class FilmGenresDbStorage implements FilmGenresStorage {
+public class FilmGenreDbStorage implements FilmGenreStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private String sqlQuery;
 
     @Autowired
-    public FilmGenresDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmGenreDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -29,7 +32,7 @@ public class FilmGenresDbStorage implements FilmGenresStorage {
     }
 
     @Override
-    public Iterable<Genre> findAllById(long id) {
+    public Collection<Genre> findAllById(long id) {
         sqlQuery = "SELECT genre_id FROM film_genre WHERE film_id = ?";
         return jdbcTemplate.query(sqlQuery, GENRE_ROW_MAPPER, id);
     }
