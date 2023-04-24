@@ -12,4 +12,6 @@ public interface MpaStorage {
 
     List<Mpa> findAll();
 
+    boolean existsById(long id);
+
 }

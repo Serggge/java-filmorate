@@ -31,4 +31,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         return new ArrayList<>(films.values());
     }
 
+    @Override
+    public boolean existsById(long id) {
+        return findById(id).isPresent();
+    }
+
 }

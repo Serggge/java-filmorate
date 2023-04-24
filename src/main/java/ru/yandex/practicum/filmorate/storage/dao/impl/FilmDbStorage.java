@@ -82,4 +82,9 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public boolean existsById(long id) {
+        return findById(id).isPresent();
+    }
+
 }

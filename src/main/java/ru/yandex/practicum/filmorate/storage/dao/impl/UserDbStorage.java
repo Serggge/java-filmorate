@@ -101,4 +101,9 @@ public class UserDbStorage implements UserStorage {
         deleteAllById(ids);
     }
 
+    @Override
+    public boolean existsById(long id) {
+        return findById(id).isPresent();
+    }
+
 }

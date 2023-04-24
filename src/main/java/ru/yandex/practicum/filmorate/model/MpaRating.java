@@ -7,15 +7,14 @@ public enum MpaRating {
     PG_13 ("PG-13"),
     R ("R"),
     NC_17 ("NC-17");
-    private final String rating;
+    private final String name;
 
-    private MpaRating(String rating) {
-        this.rating = rating;
+    private MpaRating(String name) {
+        this.name = name;
     }
 
-    @Override
-    public String toString(){
-        return rating;
+    public String getName(){
+        return name;
     }
 
 }

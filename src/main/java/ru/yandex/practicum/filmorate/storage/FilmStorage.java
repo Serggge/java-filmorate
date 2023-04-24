@@ -12,4 +12,6 @@ public interface FilmStorage {
 
     List<Film> findAll();
 
+    boolean existsById(long id);
+
 }

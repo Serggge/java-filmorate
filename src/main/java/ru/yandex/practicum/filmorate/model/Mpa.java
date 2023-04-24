@@ -1,17 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
 public class Mpa {
 
-    private long id;
-    private MpaRating name;
+    private int id;
+    private String name;
 
-    public String getName() {
-        return name.toString();
+    public Mpa(int id) {
+        this.id = id;
+        this.name = MpaRating.values()[id - 1].getName();
     }
 
 }

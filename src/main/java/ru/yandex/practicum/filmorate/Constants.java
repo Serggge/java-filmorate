@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate;
 
 import org.springframework.jdbc.core.RowMapper;
 import ru.yandex.practicum.filmorate.model.*;
-
 import java.sql.ResultSet;
 import java.time.LocalDate;
 
@@ -22,15 +21,13 @@ public final class Constants {
             .description(resultSet.getString("description"))
             .releaseDate(resultSet.getDate("release_date").toLocalDate())
             .duration(resultSet.getInt("duration"))
-            .mpa(new Mpa(resultSet.getLong("mpa_id"),
-                    MpaRating.values()[resultSet.getInt("mpa_id") - 1]))
+            .mpa(new Mpa(resultSet.getInt("mpa_id")))
             .build();
     public static final RowMapper<Mpa> MPA_ROW_MAPPER = (ResultSet resultSet, int rowNum) ->
-            new Mpa(resultSet.getLong("mpa_id"),
-                    MpaRating.values()[resultSet.getInt("mpa_id") - 1]);
+            new Mpa(resultSet.getInt("mpa_id"));
 
     public static final RowMapper<Genre> GENRE_ROW_MAPPER = (ResultSet resultSet, int rowNum) ->
-            Genre.values()[resultSet.getInt("genre_id") - 1];
+            new Genre(resultSet.getInt("genre_id"));
 
     private Constants() {
 
