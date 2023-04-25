@@ -32,6 +32,15 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> findAllById(Collection<Long> ids) {
+        List<Film> result = new ArrayList<>();
+        for (Long id : ids) {
+            result.add(films.get(id));
+        }
+        return result;
+    }
+
+    @Override
     public boolean existsById(long id) {
         return findById(id).isPresent();
     }

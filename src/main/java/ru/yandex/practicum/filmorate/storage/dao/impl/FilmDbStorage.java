@@ -14,10 +14,8 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static ru.yandex.practicum.filmorate.Constants.FILM_ROW_MAPPER;
 
@@ -74,12 +72,23 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> findAll() {
-        sqlQuery = "SELECT * FROM films";
+        sqlQuery = "SELECT * FROM films ORDER BY film_id";
         try {
             return jdbcTemplate.query(sqlQuery, FILM_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) {
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public Collection<Film> findAllById(Collection<Long> ids) {
+        List<Film> result = new ArrayList<>();
+        sqlQuery = "SELECT * FROM films WHERE film_id = ?";
+        for (Long id : ids) {
+            result.add(jdbcTemplate.queryForObject(sqlQuery, FILM_ROW_MAPPER, id));
+        }
+        return result;
+        //return jdbcTemplate.query(sqlQuery, FILM_ROW_MAPPER, it);
     }
 
     @Override

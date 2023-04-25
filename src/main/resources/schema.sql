@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS films (
 	description varchar(255) NOT NULL,
 	release_date date NOT NULL,
 	duration int NOT NULL,
-	mpa_id int REFERENCES mpa (mpa_id) NOT NULL,
+	mpa_id int REFERENCES mpa (mpa_id) ON DELETE CASCADE,
 CONSTRAINT release_after_first_film CHECK (release_date > '1895-12-28'),
 CONSTRAINT film_not_blank_fields CHECK (name <> ''AND description <> '' AND duration > 0)
 );
@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS genres (
 );
 
 CREATE TABLE IF NOT EXISTS film_genre (
-	film_id int REFERENCES films (film_id) NOT NULL,
-	genre_id int REFERENCES genres (genre_id) NOT NULL,
+	film_id int REFERENCES films (film_id) ON DELETE CASCADE,
+	genre_id int REFERENCES genres (genre_id) ON DELETE CASCADE,
 CONSTRAINT pk_fields_film_genre PRIMARY KEY (film_id, genre_id)
 );
 
@@ -36,15 +36,15 @@ CONSTRAINT birthday_past CHECK (birthday < NOW())
 );
 
 CREATE TABLE IF NOT EXISTS friends (
-	user_id int NOT NULL REFERENCES users (user_id),
-	friend_id int NOT NULL REFERENCES users (user_id),
+	user_id int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+	friend_id int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
 	confirmed boolean NOT NULL,
 CONSTRAINT pk_fields_friends PRIMARY KEY (user_id, friend_id)
 );
 
 CREATE TABLE IF NOT EXISTS likes (
-	film_id int REFERENCES films (film_id) NOT NULL,
-	user_id int REFERENCES users (user_id) NOT NULL,
+	film_id int REFERENCES films (film_id) ON DELETE CASCADE,
+	user_id int REFERENCES users (user_id) ON DELETE CASCADE,
 CONSTRAINT pk_fields_likes PRIMARY KEY (film_id, user_id)
 );
 

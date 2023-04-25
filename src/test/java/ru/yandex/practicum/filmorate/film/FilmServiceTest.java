@@ -14,6 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static ru.yandex.practicum.filmorate.Constants.FIRST_FILM;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
@@ -30,6 +32,7 @@ import java.util.*;
 class FilmServiceTest {
 
     @Mock
+    @Qualifier("filmDbStorage")
     FilmStorage storage;
     @Mock
     UserService userService;
@@ -90,26 +93,26 @@ class FilmServiceTest {
         final Film savedFilm = filmService.create(firstFilm);
         secondFilm.setId(savedFilm.getId());
 
-        given(storage.findAllId()).willReturn(Set.of(savedFilm.getId()));
+        given(storage.findAll()).willReturn(List.of(savedFilm));
 
         final Film updatedFilm = filmService.update(secondFilm);
 
         verify(storage).save(firstFilm);
         verify(storage).save(secondFilm);
-        verify(storage).findAllId();
+        verify(storage).findAll();
         assertThat(updatedFilm).isNotNull();
         assertThat(updatedFilm).isEqualTo(secondFilm);
     }
 
     @Test
     void givenFilmObjectNotPresentInStorage_whenUpdateFilm_thenThrowFilmNotFoundException() {
-        given(storage.findAllId()).willReturn(Collections.emptySet());
+        given(storage.findAll()).willReturn(Collections.emptyList());
         lenient().when(storage.save(any(Film.class))).thenReturn(firstFilm);
 
         final Throwable exception = assertThrows(FilmNotFoundException.class, () ->
                                                             tempContainer[0] = filmService.update(firstFilm));
 
-        verify(storage).findAllId();
+        verify(storage).findAll();
         verify(storage, never()).save(any(Film.class));
         assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();

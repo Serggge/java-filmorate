@@ -39,7 +39,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
 
     @Override
     public void deleteById(long id) {
-        sqlQuery = "DELETE FROM film_genres WHERE film_id = ?";
+        sqlQuery = "DELETE FROM film_genre WHERE film_id = ?";
         jdbcTemplate.update(sqlQuery, id);
     }
 

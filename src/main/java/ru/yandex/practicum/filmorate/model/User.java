@@ -14,7 +14,7 @@ import java.util.*;
 @NoArgsConstructor
 public class User {
 
-    final Map<Long, Boolean> friends = new HashMap<>();
+    //final Map<Long, Boolean> friends = new HashMap<>();
     long id;
     @NotBlank @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы")
     String login;
@@ -23,7 +23,7 @@ public class User {
     String name;
     @NotNull @PastOrPresent LocalDate birthday;
 
-    public void addFriendId(long id) {
+/*    public void addFriendId(long id) {
         if (friends.get(id) == null) {
             friends.put(id, Boolean.FALSE);
         } else if (friends.get(id).equals(Boolean.FALSE)){
@@ -44,6 +44,6 @@ public class User {
 
     public void clearFriendList() {
         friends.clear();
-    }
+    }*/
 
 }

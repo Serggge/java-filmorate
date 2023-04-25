@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service.impl;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -9,15 +8,14 @@ import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
-
+import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
-
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,14 +25,17 @@ public class FilmServiceImpl implements FilmService {
 
     private final FilmStorage filmStorage;
     private final FilmGenreStorage filmGenreStorage;
+    private final LikeStorage likeStorage;
     private final UserService userService;
 
     @Autowired
     public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                            FilmGenreStorage filmGenreStorage,
+                           LikeStorage likeStorage,
                            UserService userService) {
         this.filmStorage = filmStorage;
         this.filmGenreStorage = filmGenreStorage;
+        this.likeStorage = likeStorage;
         this.userService = userService;
     }
 
@@ -84,8 +85,12 @@ public class FilmServiceImpl implements FilmService {
     public Film setLike(long filmId, long userId) {
         Film film = getFilmOrThrow(filmId);
         User user = userService.getById(userId);
-        film.addLike(user.getId());
-        log.info("Пользователь: id={} поставил лайк фильму: id={}", userId, filmId);
+        Like like = new Like(filmId, userId);
+        if (!likeStorage.isExist(like)) {
+            likeStorage.save(like);
+            log.info("Пользователь: id={} поставил лайк фильму: id={}", userId, filmId);
+            film.getGenres().addAll(filmGenreStorage.findAllById(filmId));
+        }
         return film;
     }
 
@@ -93,22 +98,24 @@ public class FilmServiceImpl implements FilmService {
     public Film deleteLike(long filmId, long userId) {
         Film film = getFilmOrThrow(filmId);
         User user = userService.getById(userId);
-        boolean isSuccess = film.removeLike(user.getId());
-        if (!isSuccess) {
+        if (likeStorage.isExist(new Like(filmId, userId))) {
+            likeStorage.deleteById(new Like(filmId, userId));
+            log.info("Пользователь: id={} убрал лайк фильму: id={}", userId, filmId);
+        } else  {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
-        log.info("Пользователь: id={} убрал лайк фильму: id={}", userId, filmId);
         return film;
     }
 
     @Override
     public List<Film> getPopular(int count) {
         log.debug("Запрошен список самых популярных фильмов");
-        return filmStorage.findAll()
-                .stream()
-                .sorted(Comparator.comparingLong(film -> film.getLikes().size()))
-                .limit(count)
+        return filmStorage.findAll().stream()
                 .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
+                .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
+                .peek(film -> System.out.println(film.getLikes().size()))
+                .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
+                .limit(count)
                 .collect(Collectors.toList());
     }
 

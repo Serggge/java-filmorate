@@ -4,14 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -58,7 +56,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User addFriend(long userId, long friendId) {
-        User user = getUserOrThrow(userId);
+/*        User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
         if (user.getFriends().contains(friendId)) {
             throw new DataUpdateException("Пользователи уже являются друзьями");
@@ -67,12 +65,13 @@ public class UserServiceImpl implements UserService {
             friend.addFriendId(userId);
             log.info("Пользователь: id={} добавил в друзья пользователя: id={}", userId, friendId);
             return friend;
-        }
+        }*/
+        return null;
     }
 
     @Override
     public User deleteFriendById(long userId, long friendId) {
-        User user = getUserOrThrow(userId);
+/*        User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
         boolean friendFound = user.deleteFriendId(friendId);
         if (!friendFound) {
@@ -81,26 +80,34 @@ public class UserServiceImpl implements UserService {
             friend.deleteFriendId(userId);
             log.info("Пользователь: id={} удалил из друзей пользователя: id={}", userId, friendId);
             return friend;
-        }
+        }*/
+        return null;
     }
 
     @Override
     public List<User> getAllFriends(long userId) {
-        log.debug("Запрос списка друзей для пользователя: id={}", userId);
+/*        log.debug("Запрос списка друзей для пользователя: id={}", userId);
         User user = getUserOrThrow(userId);
-        return storage.findAllById(user.getFriends());
+        return storage.findAllById(user.getFriends());*/
+        return null;
     }
 
     @Override
     public List<User> getMutualFriends(long id, long otherId) {
-        log.debug("Запрос общих друзей для пользователей: id={} и id={}", id, otherId);
+/*        log.debug("Запрос общих друзей для пользователей: id={} и id={}", id, otherId);
         User user = getUserOrThrow(id);
         User otherUser = getUserOrThrow(otherId);
         List<Long> userFriends = user.getFriends();
         List<Long> otherUserFriends = otherUser.getFriends();
         return storage.findAllById(userFriends.stream()
                                               .filter(otherUserFriends::contains)
-                                              .collect(Collectors.toSet()));
+                                              .collect(Collectors.toSet()));*/
+        return null;
+    }
+
+    @Override
+    public boolean isExist(long id) {
+        return storage.existsById(id);
     }
 
     private User getUserOrThrow(long id) {

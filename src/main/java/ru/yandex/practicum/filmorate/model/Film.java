@@ -31,10 +31,6 @@ public class Film implements Comparable<Film> {
     final Set<Genre> genres = new HashSet<>();
     final Set<Long> likes = new HashSet<>();
 
-    public List<Long> getLikes() {
-        return new ArrayList<>(likes);
-    }
-
     public void addLike(long id) {
         likes.add(id);
     }
@@ -55,6 +51,5 @@ public class Film implements Comparable<Film> {
     public int compareTo(Film o) {
         return Long.compare(this.id, o.id);
     }
-
 
 }

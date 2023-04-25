@@ -79,13 +79,13 @@ class UserServiceTest {
         final long id = savedUser.getId();
         friend.setId(id);
 
-        given(storage.findAllId()).willReturn(Set.of(user.getId()));
+        given(storage.findAll()).willReturn(List.of(user));
 
         final User updatedUser = service.update(friend);
 
         verify(storage).save(user);
         verify(storage).save(friend);
-        verify(storage).findAllId();
+        verify(storage).findAll();
         assertThat(updatedUser).isNotNull();
         assertThat(updatedUser).isEqualTo(friend);
     }

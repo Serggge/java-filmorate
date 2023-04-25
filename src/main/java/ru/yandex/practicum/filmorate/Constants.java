@@ -29,6 +29,15 @@ public final class Constants {
     public static final RowMapper<Genre> GENRE_ROW_MAPPER = (ResultSet resultSet, int rowNum) ->
             new Genre(resultSet.getInt("genre_id"));
 
+    public static final RowMapper<Like> LIKE_ROW_MAPPER = ((ResultSet resultSet, int rowNum) ->
+            new Like(resultSet.getLong("film_id"),
+                    resultSet.getLong("user_id")));
+
+    public static final RowMapper<Friendship> FRIENDSHIP_ROW_MAPPER = ((ResultSet resultSet, int rowNum) ->
+            new Friendship(resultSet.getLong("user_id"),
+                    resultSet.getLong("friend_id"),
+                    resultSet.getBoolean("confirmed")));
+
     private Constants() {
 
     }

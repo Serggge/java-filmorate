@@ -11,9 +11,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.DataBaseResponseException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-
 import java.util.*;
-
 import static ru.yandex.practicum.filmorate.Constants.USER_ROW_MAPPER;
 
 @Repository("userDbStorage")
@@ -33,13 +31,13 @@ public class UserDbStorage implements UserStorage {
         if (user.getId() == 0) {
             sqlQuery = "INSERT INTO users (login, email, name, birthday) VALUES (:login, :email, :name, :birthday)";
         } else {
-            sqlQuery = "UPDATE users SET user_id = :id, login = :login, name = :name, birthday = :birthday " +
-                    "WHERE USER_ID = :id";
+            sqlQuery = "UPDATE users SET login = :login, email = :email, name = :name, birthday = :birthday " +
+                         "WHERE user_id = :id";
         }
         SqlParameterSource userParams = new BeanPropertySqlParameterSource(user);
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        int rowNums = namedParameterJdbcTemplate.update(sqlQuery, userParams, keyHolder);
-         if (rowNums == 0) {
+        int affectedRows = namedParameterJdbcTemplate.update(sqlQuery, userParams, keyHolder);
+         if (affectedRows == 0) {
              throw new DataBaseResponseException(
                      String.format("При попытке добавить пользователя с id=%d произошла ошибка", user.getId())
              );
@@ -62,7 +60,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAll() {
-        sqlQuery = "SELECT * FROM users";
+        sqlQuery = "SELECT * FROM users ORDER BY user_id";
         try {
             return jdbcTemplate.query(sqlQuery, USER_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) {
@@ -72,12 +70,12 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAllById(Iterable<Long> ids) {
-        sqlQuery = "SELECT * FROM users WHERE user_id IN (?)";
-        try {
-            return jdbcTemplate.query(sqlQuery, USER_ROW_MAPPER, ids);
-        } catch (EmptyResultDataAccessException e) {
-            return Collections.emptyList();
+        sqlQuery = "SELECT * FROM users WHERE user_id = ?";
+        List<User> result = new ArrayList<>();
+        for (Long id : ids) {
+            result.add(jdbcTemplate.queryForObject(sqlQuery, USER_ROW_MAPPER, id));
         }
+        return result;
     }
 
     public void deleteById(long id) {
@@ -90,7 +88,9 @@ public class UserDbStorage implements UserStorage {
 
     public void deleteAllById(Iterable<Long> ids) {
         sqlQuery = "DELETE FROM users WHERE user_id IN (?)";
-        jdbcTemplate.update(sqlQuery, ids);
+        for (Long id : ids) {
+            jdbcTemplate.update(sqlQuery, id);
+        }
     }
 
     public void deleteAll(Iterable<User> users) {
