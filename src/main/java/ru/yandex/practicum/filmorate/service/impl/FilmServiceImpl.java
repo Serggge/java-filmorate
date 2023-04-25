@@ -113,7 +113,6 @@ public class FilmServiceImpl implements FilmService {
         return filmStorage.findAll().stream()
                 .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
                 .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
-                .peek(film -> System.out.println(film.getLikes().size()))
                 .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());

@@ -16,4 +16,8 @@ public interface FriendStorage {
 
     boolean isExist(Friendship friendship);
 
+    boolean isConfirmed(Friendship friendship);
+
+    boolean confirm(Friendship friendship);
+
 }

@@ -38,7 +38,7 @@ CONSTRAINT birthday_past CHECK (birthday < NOW())
 CREATE TABLE IF NOT EXISTS friends (
 	user_id int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
 	friend_id int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
-	confirmed boolean NOT NULL,
+	confirmed boolean DEFAULT false,
 CONSTRAINT pk_fields_friends PRIMARY KEY (user_id, friend_id)
 );
 

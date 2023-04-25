@@ -4,28 +4,35 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
 
-    private final UserStorage storage;
+    private final UserStorage userStorage;
+    private final FriendStorage friendStorage;
 
     @Autowired
-    public UserServiceImpl(@Qualifier("userDbStorage") UserStorage storage) {
-        this.storage = storage;
+    public UserServiceImpl(@Qualifier("userDbStorage") UserStorage userStorage, FriendStorage friendStorage) {
+        this.userStorage = userStorage;
+        this.friendStorage = friendStorage;
     }
 
     @Override
     public User create(User user) {
         validateUser(user);
-        User saved = storage.save(user);
+        User saved = userStorage.save(user);
         log.info("Создан пользователь: {}", saved);
         return saved;
     }
@@ -33,8 +40,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public User update(User user) {
         validateUser(user);
-        if (storage.findById(user.getId()).isPresent()) {
-            User saved = storage.save(user);
+        if (userStorage.findById(user.getId()).isPresent()) {
+            User saved = userStorage.save(user);
             log.info("Пользователь обновлён: {}", saved);
             return saved;
         } else {
@@ -45,7 +52,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAll() {
         log.debug("Запрошен список всех пользователей");
-        return storage.findAll();
+        return userStorage.findAll();
     }
 
     @Override
@@ -56,63 +63,69 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User addFriend(long userId, long friendId) {
-/*        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
-        if (user.getFriends().contains(friendId)) {
-            throw new DataUpdateException("Пользователи уже являются друзьями");
+        validateId(userId);
+        validateId(friendId);
+        Friendship friendship = new Friendship(userId, friendId);
+        if (!friendStorage.isExist(friendship)) {
+            friendStorage.save(friendship);
+            log.info("Пользователь: id={} отправил запрос на дружбу пользователю: id={}", userId, friendId);
+        } else if (!friendStorage.isConfirmed(friendship)) {
+            friendStorage.confirm(friendship);
+            log.info("Пользователь: id={} и пользователь: id={} теперь друзья", userId, friendId);
         } else {
-            user.addFriendId(friendId);
-            friend.addFriendId(userId);
-            log.info("Пользователь: id={} добавил в друзья пользователя: id={}", userId, friendId);
-            return friend;
-        }*/
-        return null;
+            throw new DataUpdateException("Пользователи уже являются друзьями");
+        }
+        return getUserOrThrow(friendId);
     }
 
     @Override
     public User deleteFriendById(long userId, long friendId) {
-/*        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
-        boolean friendFound = user.deleteFriendId(friendId);
-        if (!friendFound) {
-            throw new UserNotFoundException("Пользователь не является вашим другом");
+        validateId(userId);
+        validateId(friendId);
+        Friendship friendship = new Friendship(userId, friendId);
+        if (friendStorage.isExist(friendship)) {
+            friendStorage.deleteById(friendship);
+            log.info("Пользователь: id={} и пользователь: id={} больше не являются друзьями", userId, friendId);
         } else {
-            friend.deleteFriendId(userId);
-            log.info("Пользователь: id={} удалил из друзей пользователя: id={}", userId, friendId);
-            return friend;
-        }*/
-        return null;
+            throw new UserNotFoundException("Пользователь не является вашим другом");
+        }
+        return getUserOrThrow(friendId);
     }
 
     @Override
     public List<User> getAllFriends(long userId) {
-/*        log.debug("Запрос списка друзей для пользователя: id={}", userId);
-        User user = getUserOrThrow(userId);
-        return storage.findAllById(user.getFriends());*/
-        return null;
+        validateId(userId);
+        log.debug("Запрошен список друзей для пользователя: id={}", userId);
+        return userStorage.findAllById(friendStorage.findAllById(userId));
     }
 
     @Override
-    public List<User> getMutualFriends(long id, long otherId) {
-/*        log.debug("Запрос общих друзей для пользователей: id={} и id={}", id, otherId);
-        User user = getUserOrThrow(id);
-        User otherUser = getUserOrThrow(otherId);
-        List<Long> userFriends = user.getFriends();
-        List<Long> otherUserFriends = otherUser.getFriends();
-        return storage.findAllById(userFriends.stream()
-                                              .filter(otherUserFriends::contains)
-                                              .collect(Collectors.toSet()));*/
-        return null;
+    public List<User> getMutualFriends(long userId, long otherId) {
+        validateId(userId);
+        validateId(otherId);
+        log.debug("Запрос общих друзей для пользователей: id={} и id={}", userId, otherId);
+        Collection<Long> friendIds = friendStorage.findAllById(userId);
+        List<Long> commonId = friendStorage.findAllById(otherId)
+                .stream()
+                .filter(friendIds::contains)
+                .collect(Collectors.toList());
+        return userStorage.findAllById(commonId);
     }
 
     @Override
     public boolean isExist(long id) {
-        return storage.existsById(id);
+        return userStorage.existsById(id);
     }
 
     private User getUserOrThrow(long id) {
-        return storage.findById(id)
+        return userStorage.findById(id)
                       .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
+    }
+
+    private void validateId(long id) {
+        if (!userStorage.existsById(id)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", id));
+        }
     }
 
 }

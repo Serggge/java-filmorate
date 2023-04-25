@@ -9,6 +9,5 @@ public class Friendship {
 
     private long userId;
     private long friendId;
-    private boolean isConfirmed;
 
 }
