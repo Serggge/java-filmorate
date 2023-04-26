@@ -12,9 +12,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.DataBaseResponseException;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
-
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.Constants.FRIENDSHIP_ROW_MAPPER;

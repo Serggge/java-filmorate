@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -113,7 +112,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean isExist(long id) {
+    public boolean existsById(long id) {
         return userStorage.existsById(id);
     }
 

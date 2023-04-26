@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Like;
@@ -42,22 +43,29 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film create(Film film) {
         validateFilm(film);
-        Film saved = filmStorage.save(film);
-        if (!saved.getGenres().isEmpty()) {
-            saved = filmGenreStorage.save(saved);
+        if (film.getId() != 0) {
+            throw new ValidationException("Недопустимый параметр ID при создании фильма");
         }
-        log.info("Добавлен фильм: {}", saved);
-        return saved;
+        film = filmStorage.save(film);
+        if (!film.getGenres().isEmpty()) {
+            film = filmGenreStorage.save(film);
+        }
+        log.info("Добавлен фильм: {}", film);
+        return film;
     }
 
     @Override
     public Film update(Film film) {
         validateFilm(film);
-        if (filmStorage.existsById(film.getId())) {
-            Film saved = filmStorage.save(film);
-            saved = fillGenres(saved);
-            log.info("Обновлён фильм: {}", saved);
-            return saved;
+        if (film.getId() == 0) {
+            throw new ValidationException("Для обновления требуется указать ID фильма");
+        } else if (filmStorage.existsById(film.getId())) {
+            film = filmStorage.save(film);
+            filmGenreStorage.deleteById(film.getId());
+            filmGenreStorage.save(film);
+            film.getLikes().addAll(likeStorage.findAllById(film.getId()));
+            log.info("Обновлён фильм: {}", film);
+            return film;
         } else {
             throw new FilmNotFoundException(String.format("Фильм: id=%d не найден", film.getId()));
         }
@@ -69,6 +77,7 @@ public class FilmServiceImpl implements FilmService {
         return filmStorage.findAll()
                 .stream()
                 .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
+                .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -76,9 +85,10 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film getById(long id) {
         log.debug("Запрошен фильм: id={}", id);
-        Film saved = getFilmOrThrow(id);
-        saved.getGenres().addAll(filmGenreStorage.findAllById(id));
-        return saved;
+        Film film = getFilmOrThrow(id);
+        film.getGenres().addAll(filmGenreStorage.findAllById(id));
+        film.getLikes().addAll(likeStorage.findAllById(id));
+        return film;
     }
 
     @Override
@@ -90,6 +100,10 @@ public class FilmServiceImpl implements FilmService {
             likeStorage.save(like);
             log.info("Пользователь: id={} поставил лайк фильму: id={}", userId, filmId);
             film.getGenres().addAll(filmGenreStorage.findAllById(filmId));
+            film.getLikes().addAll(likeStorage.findAllById(filmId));
+        } else {
+            throw new DataUpdateException(
+                    String.format("Пользователь id=%d уже оставлял лайк фильму id=%d", userId, filmId));
         }
         return film;
     }
@@ -98,10 +112,13 @@ public class FilmServiceImpl implements FilmService {
     public Film deleteLike(long filmId, long userId) {
         Film film = getFilmOrThrow(filmId);
         User user = userService.getById(userId);
-        if (likeStorage.isExist(new Like(filmId, userId))) {
-            likeStorage.deleteById(new Like(filmId, userId));
+        Like like = new Like(filmId, userId);
+        if (likeStorage.isExist(like)) {
+            likeStorage.deleteById(like);
             log.info("Пользователь: id={} убрал лайк фильму: id={}", userId, filmId);
-        } else  {
+            film.getGenres().addAll(filmGenreStorage.findAllById(filmId));
+            film.getLikes().addAll(likeStorage.findAllById(filmId));
+        } else {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
         return film;
@@ -110,17 +127,13 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(int count) {
         log.debug("Запрошен список самых популярных фильмов");
-        return filmStorage.findAll().stream()
+        return filmStorage.findAll()
+                .stream()
                 .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
                 .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
                 .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());
-    }
-
-    private Film fillGenres(Film film) {
-        filmGenreStorage.deleteById(film.getId());
-        return filmGenreStorage.save(film);
     }
 
     private Film getFilmOrThrow(long id) {
