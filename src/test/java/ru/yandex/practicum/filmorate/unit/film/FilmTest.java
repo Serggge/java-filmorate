@@ -1,10 +1,12 @@
-package ru.yandex.practicum.filmorate.film;
+package ru.yandex.practicum.filmorate.unit.film;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
+
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
@@ -95,11 +97,11 @@ public class FilmTest {
     void mustAddUserIdInLikeSet() {
         final long userId = random.nextInt(32) + 1;
         film.addLike(userId);
-        final List<Long> result = film.getLikes();
+        final Set<Long> result = film.getLikes();
 
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
-        assertEquals(List.of(userId), result);
+        assertEquals(Set.of(userId), result);
         assertTrue(result.contains(userId));
     }
 
@@ -108,21 +110,21 @@ public class FilmTest {
         final long userId = random.nextInt(32) + 1;
         film.addLike(userId);
         film.removeLike(userId);
-        final List<Long> result = film.getLikes();
+        final Set<Long> result = film.getLikes();
 
         assertTrue(result.isEmpty());
-        assertEquals(Collections.emptyList(), result);
+        assertEquals(Collections.emptySet(), result);
         assertFalse(result.contains(userId));
     }
 
     @Test
     void mustReturnLikeList() {
-        final List<Long> expected = new ArrayList<>();
+        final Set<Long> expected = new HashSet<>();
         for (long i = 1; i <= 10; i++) {
             film.addLike(i);
             expected.add(i);
         }
-        final List<Long> returned = film.getLikes();
+        final Set<Long> returned = film.getLikes();
 
 
         assertFalse(returned.isEmpty());
@@ -136,7 +138,7 @@ public class FilmTest {
         final long userId = random.nextInt(32) + 1;
         film.addLike(userId);
         film.clearLikes();
-        final List<Long> cleared = film.getLikes();
+        final Set<Long> cleared = film.getLikes();
 
         assertTrue(cleared.isEmpty());
     }
@@ -148,6 +150,7 @@ public class FilmTest {
         film.setDescription("Description first");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
+        film.setMpa(new Mpa(1));
         film.clearLikes();
     }
 

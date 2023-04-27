@@ -5,10 +5,6 @@ import java.util.List;
 
 public interface MpaService {
 
-    Mpa create(Mpa mpa);
-
-    Mpa update(Mpa mpa);
-
     List<Mpa> getAll();
 
     Mpa getById(long id);

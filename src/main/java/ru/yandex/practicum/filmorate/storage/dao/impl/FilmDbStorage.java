@@ -11,12 +11,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.DataBaseResponseException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-
-import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.util.*;
-import java.util.stream.Collectors;
-
 import static ru.yandex.practicum.filmorate.Constants.FILM_ROW_MAPPER;
 
 @Repository("filmDbStorage")
@@ -24,7 +19,6 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private String sqlQuery;
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -33,6 +27,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film save(Film film) {
+        String sqlQuery;
         if (film.getId() == 0) {
             sqlQuery = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
                     "VALUES (:name, :description, :releaseDate, :duration, :mpaId)";
@@ -62,7 +57,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> findById(long id) {
-        sqlQuery = "SELECT * FROM films WHERE film_id = ?";
+        String sqlQuery = "SELECT * FROM films WHERE film_id = ?";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, FILM_ROW_MAPPER, id));
         } catch (EmptyResultDataAccessException e) {
@@ -72,7 +67,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> findAll() {
-        sqlQuery = "SELECT * FROM films ORDER BY film_id";
+        String sqlQuery = "SELECT * FROM films ORDER BY film_id";
         try {
             return jdbcTemplate.query(sqlQuery, FILM_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) {
@@ -81,19 +76,24 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> findAllById(Collection<Long> ids) {
+    public List<Film> findAllById(Collection<Long> ids) {
         List<Film> result = new ArrayList<>();
-        sqlQuery = "SELECT * FROM films WHERE film_id = ?";
+        String sqlQuery = "SELECT * FROM films WHERE film_id = ?";
         for (Long id : ids) {
             result.add(jdbcTemplate.queryForObject(sqlQuery, FILM_ROW_MAPPER, id));
         }
         return result;
-        //return jdbcTemplate.query(sqlQuery, FILM_ROW_MAPPER, it);
     }
 
     @Override
     public boolean existsById(long id) {
         return findById(id).isPresent();
+    }
+
+    @Override
+    public void deleteAll() {
+        String sqlQuery = "DELETE FROM films";
+        jdbcTemplate.update(sqlQuery);
     }
 
 }

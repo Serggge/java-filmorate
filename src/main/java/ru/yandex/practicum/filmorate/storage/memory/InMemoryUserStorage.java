@@ -4,8 +4,8 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository("inMemoryUserStorage")
 public class InMemoryUserStorage implements UserStorage {
@@ -33,14 +33,12 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> findAllById(Iterable<Long> ids) {
-        List<User> result = new ArrayList<>();
-        for (Long id : ids) {
-            if (users.containsKey(id)) {
-                result.add(users.get(id));
-            }
-        }
-        return result;
+    public List<User> findAllById(Collection<Long> ids) {
+        return ids
+                .stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -52,18 +50,18 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void deleteAllById(Iterable<Long> ids) {
+    public void deleteAllById(Collection<Long> ids) {
         for (Long id : ids) {
             users.remove(id);
         }
     }
 
     @Override
-    public void deleteAll(Iterable<User> users) {
-        LinkedList<Long> ids = new LinkedList<>();
-        for (User user : users) {
-            ids.addLast(user.getId());
-        }
+    public void deleteAll(Collection<User> users) {
+        List<Long> ids = users
+                .stream()
+                .map(User::getId)
+                .collect(Collectors.toList());
         deleteAllById(ids);
     }
 
@@ -71,4 +69,5 @@ public class InMemoryUserStorage implements UserStorage {
     public boolean existsById(long id) {
         return findById(id).isPresent();
     }
+
 }

@@ -28,10 +28,4 @@ public class GenreController {
         return service.getAll();
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Genre addNew(@RequestBody Genre genre) {
-        return service.create(genre);
-    }
-
 }

@@ -69,7 +69,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public List<User> findAllById(Iterable<Long> ids) {
+    public List<User> findAllById(Collection<Long> ids) {
         sqlQuery = "SELECT * FROM users WHERE user_id = ?";
         List<User> result = new ArrayList<>();
         for (Long id : ids) {
@@ -86,14 +86,14 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
-    public void deleteAllById(Iterable<Long> ids) {
+    public void deleteAllById(Collection<Long> ids) {
         sqlQuery = "DELETE FROM users WHERE user_id IN (?)";
         for (Long id : ids) {
             jdbcTemplate.update(sqlQuery, id);
         }
     }
 
-    public void deleteAll(Iterable<User> users) {
+    public void deleteAll(Collection<User> users) {
         LinkedList<Long> ids = new LinkedList<>();
         for (User user : users) {
             ids.addLast(user.getId());

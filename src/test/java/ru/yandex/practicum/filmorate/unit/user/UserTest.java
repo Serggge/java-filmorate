@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.user;
+package ru.yandex.practicum.filmorate.unit.user;
 
 import org.junit.jupiter.api.*;
 import ru.yandex.practicum.filmorate.model.User;

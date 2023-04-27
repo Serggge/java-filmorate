@@ -32,7 +32,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> findAllById(Collection<Long> ids) {
+    public List<Film> findAllById(Collection<Long> ids) {
         List<Film> result = new ArrayList<>();
         for (Long id : ids) {
             result.add(films.get(id));
@@ -45,4 +45,8 @@ public class InMemoryFilmStorage implements FilmStorage {
         return findById(id).isPresent();
     }
 
+    @Override
+    public void deleteAll() {
+        films.clear();
+    }
 }
