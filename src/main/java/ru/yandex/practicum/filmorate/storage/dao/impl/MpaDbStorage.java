@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dao.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,14 +12,10 @@ import java.util.Optional;
 import static ru.yandex.practicum.filmorate.Constants.MPA_ROW_MAPPER;
 
 @Repository("mpaDbStorage")
+@RequiredArgsConstructor(onConstructor__ = @Autowired)
 public class MpaDbStorage implements MpaStorage {
 
     private final JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    public MpaDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public Optional<Mpa> findById(long id) {

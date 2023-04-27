@@ -8,10 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.dao.MpaStorage;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,13 +35,18 @@ class MpaDaoIntegrationTest {
 
     @Test
     void findAll() {
+        List<Mpa> allMpaRatings = Arrays.stream(MpaRating.values())
+                .map(mpaRating -> new Mpa(mpaRating.ordinal() + 1))
+                .collect(Collectors.toList());
+
         final Collection<Mpa> mpas = mpaStorage.findAll();
 
         assertThat(mpas)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(MpaRating.values().length);
-        assertThat(mpas.containsAll(List.of(MpaRating.values())));
+                .hasSize(MpaRating.values().length)
+                .containsAll(allMpaRatings)
+                .isEqualTo(allMpaRatings);
     }
 
     @Test

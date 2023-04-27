@@ -50,22 +50,6 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void deleteAllById(Collection<Long> ids) {
-        for (Long id : ids) {
-            users.remove(id);
-        }
-    }
-
-    @Override
-    public void deleteAll(Collection<User> users) {
-        List<Long> ids = users
-                .stream()
-                .map(User::getId)
-                .collect(Collectors.toList());
-        deleteAllById(ids);
-    }
-
-    @Override
     public boolean existsById(long id) {
         return findById(id).isPresent();
     }

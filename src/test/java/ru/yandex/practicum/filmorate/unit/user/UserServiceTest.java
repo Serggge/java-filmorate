@@ -250,7 +250,7 @@ class UserServiceTest {
 
     @Test
     void givenUserId_whenGetAllFriends_thenReturnFriendList() {
-        given(storage.findAllById(anyIterable())).willReturn(List.of(friend));
+        given(storage.findAllById(anyCollection())).willReturn(List.of(friend));
         given(storage.findById(anyLong())).willReturn(Optional.of(user));
 
         user.addFriendId(friend.getId());
@@ -266,14 +266,14 @@ class UserServiceTest {
     @Test
     void givenUserNotPresentId_whenGetAllFriends_thenThrowUserNotFoundException() {
         given(storage.findById(anyLong())).willReturn(Optional.empty());
-        lenient().when(storage.findAllById(anyIterable())).thenReturn(List.of(friend));
+        lenient().when(storage.findAllById(anyCollection())).thenReturn(List.of(friend));
 
         final List<User> tempContainer = new ArrayList<>();
         final Throwable exception = assertThrows(UserNotFoundException.class, () ->
             tempContainer.addAll(service.getAllFriends(user.getId())));
 
         verify(storage).findById(user.getId());
-        verify(storage, never()).findAllById(anyIterable());
+        verify(storage, never()).findAllById(anyCollection());
         assertThat(tempContainer.size()).isEqualTo(0);
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(UserNotFoundException.class);
@@ -284,7 +284,7 @@ class UserServiceTest {
     void givenUserIdAndFriendId_whenGetMutualFriends_thenReturnMutualFriends() {
         User mutualFriend = User.builder().id(friend.getId() + 1).email("dima07@mailbox.org").name("Dmitry")
                 .login("DmitryDima").birthday(LocalDate.of(1980, 9, 26)).build();
-        given(storage.findAllById(anyIterable())).willReturn(List.of(mutualFriend));
+        given(storage.findAllById(anyCollection())).willReturn(List.of(mutualFriend));
         given(storage.findById(user.getId())).willReturn(Optional.of(user));
         given(storage.findById(friend.getId())).willReturn(Optional.of(friend));
 
@@ -292,7 +292,7 @@ class UserServiceTest {
         friend.addFriendId(mutualFriend.getId());
         final List<User> mutualFriendList = service.getMutualFriends(user.getId(), friend.getId());
 
-        verify(storage).findAllById(anyIterable());
+        verify(storage).findAllById(anyCollection());
         verify(storage).findById(user.getId());
         verify(storage).findById(friend.getId());
         assertThat(mutualFriendList).isNotNull();

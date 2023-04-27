@@ -8,10 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MovieGenre;
 import ru.yandex.practicum.filmorate.storage.dao.GenreStorage;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,7 +24,7 @@ class GenreDaoIntegrationTest {
     void findById() {
         final int id = 1;
 
-        Optional<Genre> genreOptional = genreStorage.findById(id);
+        final Optional<Genre> genreOptional = genreStorage.findById(id);
 
         assertThat(genreOptional)
                 .isPresent()
@@ -38,13 +36,18 @@ class GenreDaoIntegrationTest {
 
     @Test
     void findAll() {
-        Collection<Genre> genres = genreStorage.findAll();
+        final List<Genre> allMovieGenres = Arrays.stream(MovieGenre.values())
+                .map(movieGenre -> new Genre(movieGenre.ordinal() + 1))
+                .collect(Collectors.toList());
+
+        final Collection<Genre> genres = genreStorage.findAll();
 
         assertThat(genres)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(MovieGenre.values().length);
-        assertThat(genres.containsAll(List.of(MovieGenre.values())));
+                .hasSize(MovieGenre.values().length)
+                .containsAll(allMovieGenres)
+                .isEqualTo(allMovieGenres);
     }
 
     @Test

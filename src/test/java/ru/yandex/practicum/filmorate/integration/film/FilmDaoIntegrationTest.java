@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.integration.film;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,17 +29,21 @@ class FilmDaoIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        filmStorage.deleteAll();
         setFilmsForDefaults();
+    }
+
+    @AfterEach
+    void afterEach() {
+        filmStorage.deleteAll();
     }
 
     @Test
     void testSaveEntity() {
+        assertThat(firstFilm.getId()).isZero();
         final Film saved = filmStorage.save(firstFilm);
 
         assertThat(saved).isNotNull();
-        assertThat(saved.getId()).isNotEqualTo(0);
-        assertThat(saved.getId()).isEqualTo(1);
+        assertThat(saved.getId()).isNotZero();
         assertThat(saved.getName()).isEqualTo(firstFilm.getName());
         assertThat(saved.getDescription()).isEqualTo(firstFilm.getDescription());
         assertThat(saved.getReleaseDate()).isEqualTo(firstFilm.getReleaseDate());

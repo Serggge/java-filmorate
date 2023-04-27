@@ -93,7 +93,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteAll() {
         String sqlQuery = "DELETE FROM films";
-        jdbcTemplate.update(sqlQuery);
+        int rows = jdbcTemplate.update(sqlQuery);
+        System.out.println(rows);
     }
 
 }

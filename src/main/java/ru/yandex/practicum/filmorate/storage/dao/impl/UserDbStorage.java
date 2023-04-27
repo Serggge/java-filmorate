@@ -19,7 +19,6 @@ public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private String sqlQuery;
 
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -28,11 +27,13 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User save(User user) {
+        String sqlQuery;
         if (user.getId() == 0) {
-            sqlQuery = "INSERT INTO users (login, email, name, birthday) VALUES (:login, :email, :name, :birthday)";
+            sqlQuery = "INSERT INTO users (login, email, name, birthday) " +
+                    " VALUES (:login, :email, :name, :birthday)";
         } else {
             sqlQuery = "UPDATE users SET login = :login, email = :email, name = :name, birthday = :birthday " +
-                         "WHERE user_id = :id";
+                         " WHERE user_id = :id";
         }
         SqlParameterSource userParams = new BeanPropertySqlParameterSource(user);
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -50,7 +51,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> findById(long id) {
-        sqlQuery = "SELECT * FROM users WHERE user_id = ?";
+        var sqlQuery = "SELECT * FROM users WHERE user_id = ?";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, USER_ROW_MAPPER, id));
         } catch (EmptyResultDataAccessException e) {
@@ -60,7 +61,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAll() {
-        sqlQuery = "SELECT * FROM users ORDER BY user_id";
+        var sqlQuery = "SELECT * FROM users ORDER BY user_id";
         try {
             return jdbcTemplate.query(sqlQuery, USER_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) {
@@ -70,7 +71,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAllById(Collection<Long> ids) {
-        sqlQuery = "SELECT * FROM users WHERE user_id = ?";
+        var sqlQuery = "SELECT * FROM users WHERE user_id = ?";
         List<User> result = new ArrayList<>();
         for (Long id : ids) {
             result.add(jdbcTemplate.queryForObject(sqlQuery, USER_ROW_MAPPER, id));
@@ -79,7 +80,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     public void deleteById(long id) {
-        sqlQuery = "DELETE FROM users WHERE user_id = ?";
+        var sqlQuery = "DELETE FROM users WHERE user_id = ?";
         int rowNums = jdbcTemplate.update(sqlQuery, id);
         if (rowNums == 0) {
             throw new DataBaseResponseException("User not found: id=" + id);
@@ -87,18 +88,10 @@ public class UserDbStorage implements UserStorage {
     }
 
     public void deleteAllById(Collection<Long> ids) {
-        sqlQuery = "DELETE FROM users WHERE user_id IN (?)";
+        var sqlQuery = "DELETE FROM users WHERE user_id IN (?)";
         for (Long id : ids) {
             jdbcTemplate.update(sqlQuery, id);
         }
-    }
-
-    public void deleteAll(Collection<User> users) {
-        LinkedList<Long> ids = new LinkedList<>();
-        for (User user : users) {
-            ids.addLast(user.getId());
-        }
-        deleteAllById(ids);
     }
 
     @Override

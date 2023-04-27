@@ -103,10 +103,10 @@ public class UserServiceImpl implements UserService {
         validateId(userId);
         validateId(otherId);
         log.debug("Запрос общих друзей для пользователей: id={} и id={}", userId, otherId);
-        Collection<Long> friendIds = friendStorage.findAllById(userId);
+        Collection<Long> friendsId = friendStorage.findAllById(userId);
         List<Long> commonId = friendStorage.findAllById(otherId)
                 .stream()
-                .filter(friendIds::contains)
+                .filter(friendsId::contains)
                 .collect(Collectors.toList());
         return userStorage.findAllById(commonId);
     }

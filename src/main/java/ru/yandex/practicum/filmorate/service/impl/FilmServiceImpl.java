@@ -61,7 +61,7 @@ public class FilmServiceImpl implements FilmService {
             throw new ValidationException("Для обновления требуется указать ID фильма");
         } else if (filmStorage.existsById(film.getId())) {
             film = filmStorage.save(film);
-            filmGenreStorage.deleteById(film.getId());
+            filmGenreStorage.deleteByFilmId(film.getId());
             filmGenreStorage.save(film);
             film.getLikes().addAll(likeStorage.findAllById(film.getId()));
             log.info("Обновлён фильм: {}", film);
@@ -76,7 +76,7 @@ public class FilmServiceImpl implements FilmService {
         log.debug("Запрос списка всех фильмов");
         return filmStorage.findAll()
                 .stream()
-                .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
+                .peek(film -> film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(film.getId())))
                 .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
                 .sorted()
                 .collect(Collectors.toList());
@@ -86,7 +86,7 @@ public class FilmServiceImpl implements FilmService {
     public Film getById(long id) {
         log.debug("Запрошен фильм: id={}", id);
         Film film = getFilmOrThrow(id);
-        film.getGenres().addAll(filmGenreStorage.findAllById(id));
+        film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
         film.getLikes().addAll(likeStorage.findAllById(id));
         return film;
     }
@@ -99,7 +99,7 @@ public class FilmServiceImpl implements FilmService {
         if (!likeStorage.isExist(like)) {
             likeStorage.save(like);
             log.info("Пользователь: id={} поставил лайк фильму: id={}", userId, filmId);
-            film.getGenres().addAll(filmGenreStorage.findAllById(filmId));
+            film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(filmId));
             film.getLikes().addAll(likeStorage.findAllById(filmId));
         } else {
             throw new DataUpdateException(
@@ -116,7 +116,7 @@ public class FilmServiceImpl implements FilmService {
         if (likeStorage.isExist(like)) {
             likeStorage.deleteById(like);
             log.info("Пользователь: id={} убрал лайк фильму: id={}", userId, filmId);
-            film.getGenres().addAll(filmGenreStorage.findAllById(filmId));
+            film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(filmId));
             film.getLikes().addAll(likeStorage.findAllById(filmId));
         } else {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
@@ -129,7 +129,7 @@ public class FilmServiceImpl implements FilmService {
         log.debug("Запрошен список самых популярных фильмов");
         return filmStorage.findAll()
                 .stream()
-                .peek(film -> film.getGenres().addAll(filmGenreStorage.findAllById(film.getId())))
+                .peek(film -> film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(film.getId())))
                 .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
                 .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .limit(count)
@@ -139,7 +139,7 @@ public class FilmServiceImpl implements FilmService {
     private Film getFilmOrThrow(long id) {
         Film saved = filmStorage.findById(id)
                 .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
-        for (Genre genre : filmGenreStorage.findAllById(id)) {
+        for (Genre genre : filmGenreStorage.findGenresByFilmId(id)) {
             saved.addGenre(genre);
         }
         return saved;

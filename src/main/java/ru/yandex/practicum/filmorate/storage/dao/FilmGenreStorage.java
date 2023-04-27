@@ -2,14 +2,16 @@ package ru.yandex.practicum.filmorate.storage.dao;
 
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import java.util.Collection;
+import java.util.List;
 
 public interface FilmGenreStorage {
 
     Film save(Film film);
 
-    Collection<Genre> findAllById(long id);
+    List<Genre> findGenresByFilmId(long id);
 
-    void deleteById(long id);
+    void deleteByFilmId(long id);
+
+    void deleteAll();
 
 }
