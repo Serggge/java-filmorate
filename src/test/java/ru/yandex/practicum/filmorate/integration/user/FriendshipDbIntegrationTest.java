@@ -1,20 +1,18 @@
 package ru.yandex.practicum.filmorate.integration.user;
 
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
-import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.UserDbStorage;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+import java.util.Optional;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -29,14 +27,10 @@ class FriendshipDbIntegrationTest {
     public FriendshipDbIntegrationTest(FriendStorage friendStorage, UserDbStorage userDbStorage) {
         this.friendStorage = friendStorage;
         userStorage = userDbStorage;
+        userStorage.deleteAll();
         setUsersForDefaults();
         userStorage.save(user);
         userStorage.save(friend);
-    }
-
-    @BeforeEach
-    void beforeEach() {
-        setUsersForDefaults();
     }
 
     @AfterEach
@@ -45,31 +39,86 @@ class FriendshipDbIntegrationTest {
     }
 
     @Test
-    void save() {
+    void testSaveAndFindFriendsId() {
+        final Friendship friendship = new Friendship(user.getId(), friend.getId());
+
+        friendStorage.save(friendship);
+
+        final List<Long> friendsForUser = friendStorage.findFriendsIdByUserId(user.getId());
+        final  List<Long> friendsForFriend = friendStorage.findFriendsIdByUserId(friend.getId());
+
+        assertThat(friendsForUser)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(1)
+                .contains(friend.getId());
+        assertThat(friendsForFriend)
+                .isNotNull()
+                .isEmpty();
     }
 
     @Test
-    void findAllById() {
+    void testFindFriendship() {
+        final Friendship friendship = new Friendship(user.getId(), friend.getId());
+        final Friendship inverseFriendship = new Friendship(friend.getId(), user.getId());
+        friendStorage.save(friendship);
+
+        final Optional<Friendship> optionalFriendship = friendStorage.find(inverseFriendship);
+
+        assertThat(optionalFriendship)
+                .hasValueSatisfying(friendShip ->
+                        assertThat(friendShip)
+                                .hasFieldOrPropertyWithValue("userId", user.getId())
+                                .hasFieldOrPropertyWithValue("friendId", friend.getId()));
     }
 
     @Test
-    void findById() {
+    void testCancelFriendship() {
+        final Friendship friendship = new Friendship(user.getId(), friend.getId());
+        final Friendship inverseFriendship = new Friendship(friend.getId(), user.getId());
+        friendStorage.save(friendship);
+        assertThat(friendStorage.find(friendship)).isPresent();
+
+        friendStorage.cancel(friendship);
+
+        assertThat(friendStorage.find(friendship)).isNotPresent();
+        assertThat(friendStorage.find(inverseFriendship)).isNotPresent();
     }
 
     @Test
-    void deleteById() {
+    void testIsExist() {
+        final Friendship friendship = new Friendship(user.getId(), friend.getId());
+        final Friendship inverseFriendship = new Friendship(friend.getId(), user.getId());
+        friendStorage.save(friendship);
+
+        final boolean areFriends = friendStorage.isExist(friendship);
+
+        assertThat(areFriends).isTrue();
+        assertThat(friendStorage.isExist(inverseFriendship)).isTrue();
     }
 
     @Test
-    void isExist() {
+    void testIsNotConfirmed() {
+        final Friendship friendship = new Friendship(user.getId(), friend.getId());
+        final Friendship inverseFriendship = new Friendship(friend.getId(), user.getId());
+        friendStorage.save(friendship);
+
+        final boolean isConfirmed = friendStorage.isConfirmed(friendship);
+
+        assertThat(isConfirmed).isFalse();
+        assertThat(friendStorage.isConfirmed(inverseFriendship)).isFalse();
     }
 
     @Test
-    void isConfirmed() {
-    }
+    void testConfirm() {
+        final Friendship friendship = new Friendship(user.getId(), friend.getId());
+        final Friendship inverseFriendship = new Friendship(friend.getId(), user.getId());
+        friendStorage.save(friendship);
 
-    @Test
-    void confirm() {
+        friendStorage.confirm(inverseFriendship);
+
+        assertThat(friendStorage.isConfirmed(friendship)).isTrue();
+        assertThat(friendStorage.isConfirmed(inverseFriendship)).isTrue();
     }
 
     static void setUsersForDefaults() {

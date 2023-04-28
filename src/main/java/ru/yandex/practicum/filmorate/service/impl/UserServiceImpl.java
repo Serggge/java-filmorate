@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
         validateId(friendId);
         Friendship friendship = new Friendship(userId, friendId);
         if (friendStorage.isExist(friendship)) {
-            friendStorage.deleteById(friendship);
+            friendStorage.cancel(friendship);
             log.info("Пользователь: id={} и пользователь: id={} больше не являются друзьями", userId, friendId);
         } else {
             throw new UserNotFoundException("Пользователь не является вашим другом");
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllFriends(long userId) {
         validateId(userId);
         log.debug("Запрошен список друзей для пользователя: id={}", userId);
-        return userStorage.findAllById(friendStorage.findAllById(userId));
+        return userStorage.findAllById(friendStorage.findFriendsIdByUserId(userId));
     }
 
     @Override
@@ -103,8 +103,8 @@ public class UserServiceImpl implements UserService {
         validateId(userId);
         validateId(otherId);
         log.debug("Запрос общих друзей для пользователей: id={} и id={}", userId, otherId);
-        Collection<Long> friendsId = friendStorage.findAllById(userId);
-        List<Long> commonId = friendStorage.findAllById(otherId)
+        Collection<Long> friendsId = friendStorage.findFriendsIdByUserId(userId);
+        List<Long> commonId = friendStorage.findFriendsIdByUserId(otherId)
                 .stream()
                 .filter(friendsId::contains)
                 .collect(Collectors.toList());

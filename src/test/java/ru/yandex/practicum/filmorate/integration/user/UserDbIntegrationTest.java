@@ -27,6 +27,7 @@ class UserDbIntegrationTest {
     @BeforeEach
     void beforeEach() {
         setUsersForDefaults();
+        userStorage.deleteAll();
     }
 
     @AfterEach

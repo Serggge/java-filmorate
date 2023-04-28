@@ -8,11 +8,11 @@ public interface FriendStorage {
 
     Friendship save(Friendship friendship);
 
-    Optional<Friendship> findById(Friendship friendship);
+    Optional<Friendship> find(Friendship friendship);
 
-    List<Long> findAllById(long id);
+    List<Long> findFriendsIdByUserId(long id);
 
-    void deleteById(Friendship friendship);
+    void cancel(Friendship friendship);
 
     boolean isExist(Friendship friendship);
 

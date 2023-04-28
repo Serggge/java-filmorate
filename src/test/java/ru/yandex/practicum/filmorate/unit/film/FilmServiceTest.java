@@ -25,6 +25,9 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.service.impl.FilmServiceImpl;
+import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
+import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import java.time.LocalDate;
 import java.util.*;
 
@@ -36,6 +39,11 @@ class FilmServiceTest {
     FilmStorage filmStorage;
     @Mock
     UserService userService;
+    @Mock
+    FilmGenreStorage filmGenreStorage;
+    @Mock
+    LikeStorage likeStorage;
+
     @InjectMocks
     FilmServiceImpl filmService;
     static Film firstFilm;
@@ -296,7 +304,7 @@ class FilmServiceTest {
     static void settingsForDefaults() {
         tempContainer[0] = null;
 
-        firstFilm.setId(random.nextInt(32) + 1);
+        firstFilm.setId(0);
         firstFilm.setName("First film");
         firstFilm.setDescription("Description first");
         firstFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
@@ -304,7 +312,7 @@ class FilmServiceTest {
         firstFilm.setMpa(new Mpa(1));
         firstFilm.clearLikes();
 
-        secondFilm.setId(firstFilm.getId() + 1);
+        secondFilm.setId(0);
         secondFilm.setName("Second film");
         secondFilm.setDescription("Description second");
         secondFilm.setReleaseDate(LocalDate.of(2020, 2, 2));
@@ -312,7 +320,7 @@ class FilmServiceTest {
         secondFilm.setMpa(new Mpa(2));
         secondFilm.clearLikes();
 
-        user.setId(random.nextInt(32) + 1);
+        user.setId(0);
         user.setEmail("ivan2000@yandex.ru");
         user.setLogin("Ivan2000");
         user.setName("Ivan");

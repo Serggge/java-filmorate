@@ -28,10 +28,10 @@ public class FilmDbStorage implements FilmStorage {
         var keyHolder = new GeneratedKeyHolder();
         if (film.getId() == 0) {
             sqlQuery = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
-                    "VALUES (:name, :description, :releaseDate, :duration, :mpaId)";
+                                    "VALUES (:name, :description, :releaseDate, :duration, :mpaId)";
         } else {
             sqlQuery = "UPDATE films SET name = :name, description = :description, release_date = :releaseDate, " +
-                    "duration = :duration, mpa_id = :mpaId WHERE film_id = :id";
+                                          "duration = :duration, mpa_id = :mpaId WHERE film_id = :id";
         }
         var filmParams = new MapSqlParameterSource()
                 .addValue("id", film.getId())

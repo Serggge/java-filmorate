@@ -37,7 +37,7 @@ public class FriendshipDbStorage implements FriendStorage {
     }
 
     @Override
-    public List<Long> findAllById(long id) {
+    public List<Long> findFriendsIdByUserId(long id) {
         var sqlQuery = "SELECT friend_id FROM friends WHERE user_id = :id " +
                         "UNION SELECT user_id FROM friends WHERE friend_id = :id AND confirmed = true";
         var idParam = new MapSqlParameterSource("id", id);
@@ -45,7 +45,7 @@ public class FriendshipDbStorage implements FriendStorage {
     }
 
     @Override
-    public Optional<Friendship> findById(Friendship friendship) {
+    public Optional<Friendship> find(Friendship friendship) {
         var sqlQuery = "SELECT * from friends WHERE (user_id = :userId AND friend_id = :friendId) " +
                                                 "OR (user_id = :friendId AND friend_id = :userId)";
         var friendParams = new BeanPropertySqlParameterSource(friendship);
@@ -58,7 +58,7 @@ public class FriendshipDbStorage implements FriendStorage {
     }
 
     @Override
-    public void deleteById(Friendship friendship) {
+    public void cancel(Friendship friendship) {
         var sqlQuery = "DELETE FROM friends WHERE user_id = :userId AND friend_id = :friendId " +
                                               "OR user_id = :friendId AND friend_id = :userId";
         var friendParams = new BeanPropertySqlParameterSource(friendship);
@@ -67,7 +67,7 @@ public class FriendshipDbStorage implements FriendStorage {
 
     @Override
     public boolean isExist(Friendship friendship) {
-        return findById(friendship).isPresent();
+        return find(friendship).isPresent();
     }
 
     @Override
