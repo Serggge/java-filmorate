@@ -1,16 +1,18 @@
 package ru.yandex.practicum.filmorate.storage.dao;
 
 import ru.yandex.practicum.filmorate.model.Like;
-import java.util.Collection;
+import java.util.List;
 
 public interface LikeStorage {
 
     Like save(Like like);
 
-    Collection<Long> findAllById(long id);
+    List<Long> findUsersIdByFilmId(long id);
 
-    void deleteById(Like like);
+    void delete(Like like);
 
     boolean isExist(Like like);
+
+    void deleteAll();
 
 }

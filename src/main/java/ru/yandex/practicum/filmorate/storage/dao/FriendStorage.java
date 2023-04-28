@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.dao;
 
 import ru.yandex.practicum.filmorate.model.Friendship;
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface FriendStorage {
@@ -10,7 +10,7 @@ public interface FriendStorage {
 
     Optional<Friendship> findById(Friendship friendship);
 
-    Collection<Long> findAllById(long id);
+    List<Long> findAllById(long id);
 
     void deleteById(Friendship friendship);
 
@@ -19,5 +19,7 @@ public interface FriendStorage {
     boolean isConfirmed(Friendship friendship);
 
     boolean confirm(Friendship friendship);
+
+    void deleteAll();
 
 }

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.GenreStorage;
 import static ru.yandex.practicum.filmorate.Constants.GENRE_ROW_MAPPER;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +19,7 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public Optional<Genre> findById(long id) {
-        String sqlQuery = "SELECT * FROM genres WHERE genre_id = ?";
+        var sqlQuery = "SELECT * FROM genres WHERE genre_id = ?";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, GENRE_ROW_MAPPER, id));
         } catch (EmptyResultDataAccessException e) {
@@ -30,12 +29,8 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public List<Genre> findAll() {
-        String sqlQuery = "SELECT * FROM genres ORDER BY genre_id";
-        try {
-            return jdbcTemplate.query(sqlQuery, GENRE_ROW_MAPPER);
-        } catch (EmptyResultDataAccessException e) {
-            return Collections.emptyList();
-        }
+        var sqlQuery = "SELECT * FROM genres ORDER BY genre_id";
+        return jdbcTemplate.query(sqlQuery, GENRE_ROW_MAPPER);
     }
 
     @Override

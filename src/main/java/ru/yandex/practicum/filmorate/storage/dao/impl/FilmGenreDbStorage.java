@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import java.util.List;
-
 import static ru.yandex.practicum.filmorate.Constants.GENRE_ROW_MAPPER;
 
 @Repository("filmGenresDbStorage")
@@ -40,7 +39,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
 
     @Override
     public void deleteAll() {
-        String sqlQuery = "DELETE from film_genre";
+        var sqlQuery = "DELETE from film_genre";
         jdbcTemplate.update(sqlQuery);
     }
 

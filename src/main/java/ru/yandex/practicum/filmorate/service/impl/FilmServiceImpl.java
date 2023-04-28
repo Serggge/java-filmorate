@@ -63,7 +63,7 @@ public class FilmServiceImpl implements FilmService {
             film = filmStorage.save(film);
             filmGenreStorage.deleteByFilmId(film.getId());
             filmGenreStorage.save(film);
-            film.getLikes().addAll(likeStorage.findAllById(film.getId()));
+            film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId()));
             log.info("Обновлён фильм: {}", film);
             return film;
         } else {
@@ -77,7 +77,7 @@ public class FilmServiceImpl implements FilmService {
         return filmStorage.findAll()
                 .stream()
                 .peek(film -> film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(film.getId())))
-                .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
+                .peek(film -> film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId())))
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -87,7 +87,7 @@ public class FilmServiceImpl implements FilmService {
         log.debug("Запрошен фильм: id={}", id);
         Film film = getFilmOrThrow(id);
         film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
-        film.getLikes().addAll(likeStorage.findAllById(id));
+        film.getLikes().addAll(likeStorage.findUsersIdByFilmId(id));
         return film;
     }
 
@@ -100,7 +100,7 @@ public class FilmServiceImpl implements FilmService {
             likeStorage.save(like);
             log.info("Пользователь: id={} поставил лайк фильму: id={}", userId, filmId);
             film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(filmId));
-            film.getLikes().addAll(likeStorage.findAllById(filmId));
+            film.getLikes().addAll(likeStorage.findUsersIdByFilmId(filmId));
         } else {
             throw new DataUpdateException(
                     String.format("Пользователь id=%d уже оставлял лайк фильму id=%d", userId, filmId));
@@ -114,10 +114,10 @@ public class FilmServiceImpl implements FilmService {
         User user = userService.getById(userId);
         Like like = new Like(filmId, userId);
         if (likeStorage.isExist(like)) {
-            likeStorage.deleteById(like);
+            likeStorage.delete(like);
             log.info("Пользователь: id={} убрал лайк фильму: id={}", userId, filmId);
             film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(filmId));
-            film.getLikes().addAll(likeStorage.findAllById(filmId));
+            film.getLikes().addAll(likeStorage.findUsersIdByFilmId(filmId));
         } else {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
@@ -130,7 +130,7 @@ public class FilmServiceImpl implements FilmService {
         return filmStorage.findAll()
                 .stream()
                 .peek(film -> film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(film.getId())))
-                .peek(film -> film.getLikes().addAll(likeStorage.findAllById(film.getId())))
+                .peek(film -> film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId())))
                 .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());

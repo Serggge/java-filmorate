@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.memory;
 
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.DataUpdateException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.*;
@@ -34,8 +34,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> findAllById(Collection<Long> ids) {
-        return ids
-                .stream()
+        return ids.stream()
                 .map(users::get)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -45,8 +44,17 @@ public class InMemoryUserStorage implements UserStorage {
     public void deleteById(long id) {
         User user = users.remove(id);
         if (user == null) {
-            throw new DataUpdateException("User not found: id=" + id);
+            throw new UserNotFoundException("User not found: id=" + id);
         }
+    }
+
+    @Override
+    public void deleteAllById(Collection<Long> ids) {
+        ids.stream().forEach(id -> {
+            if (users.containsKey(id)) {
+                users.remove(id);
+            }
+        });
     }
 
     @Override
@@ -54,4 +62,8 @@ public class InMemoryUserStorage implements UserStorage {
         return findById(id).isPresent();
     }
 
+    @Override
+    public void deleteAll() {
+        users.clear();
+    }
 }
