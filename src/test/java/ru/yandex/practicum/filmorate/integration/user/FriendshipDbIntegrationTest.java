@@ -19,8 +19,8 @@ import java.util.Optional;
 class FriendshipDbIntegrationTest {
 
     static UserDbStorage userStorage;
-    static User user = new User();
-    static User friend = new User();
+    static final User user = new User();
+    static final User friend = new User();
     final FriendStorage friendStorage;
 
     @Autowired

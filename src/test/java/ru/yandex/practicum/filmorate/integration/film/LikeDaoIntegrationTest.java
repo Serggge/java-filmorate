@@ -22,8 +22,8 @@ class LikeDaoIntegrationTest {
 
     static FilmDbStorage filmStorage;
     static UserDbStorage userStorage;
-    final static Film film = new Film();
-    final static User user = new User();
+    static final Film film = new Film();
+    static final User user = new User();
     final LikeStorage likeStorage;
 
     @Autowired

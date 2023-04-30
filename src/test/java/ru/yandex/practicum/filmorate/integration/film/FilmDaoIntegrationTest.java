@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
 class FilmDaoIntegrationTest {
 
-    static Film firstFilm = new Film();
-    static Film secondFilm = new Film();
+    static final Film firstFilm = new Film();
+    static final Film secondFilm = new Film();
     final FilmDbStorage filmStorage;
 
 
