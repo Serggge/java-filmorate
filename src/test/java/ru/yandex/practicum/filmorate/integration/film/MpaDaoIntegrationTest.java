@@ -28,8 +28,8 @@ class MpaDaoIntegrationTest {
         assertThat(mpaOptional)
                 .isPresent()
                 .hasValueSatisfying(mpa ->
-                        assertThat(mpa).
-                                hasFieldOrPropertyWithValue("name", MpaRating.values()[id - 1].getName())
+                        assertThat(mpa)
+                                .hasFieldOrPropertyWithValue("name", MpaRating.values()[id - 1].getName())
                                 .hasFieldOrPropertyWithValue("name", "PG-13"));
     }
 
