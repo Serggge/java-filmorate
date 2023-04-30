@@ -4,7 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .github/
-.mvn/
+.mvn/wrapper/maven-wrapper.properties
 checkstyle.xml
 mvnw
 mvnw.cmd
