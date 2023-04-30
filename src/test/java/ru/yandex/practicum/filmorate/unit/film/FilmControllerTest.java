@@ -33,15 +33,15 @@ import java.util.Random;
 @WebMvcTest(FilmController.class)
 class FilmControllerTest {
 
+    static Film firstFilm;
+    static Film secondFilm;
+    static Random random = new Random();
     @Autowired
     MockMvc mvc;
     @Autowired
     ObjectMapper mapper;
     @MockBean
     FilmService service;
-    static Film firstFilm;
-    static Film secondFilm;
-    static Random random = new Random();
 
     @BeforeAll
     public static void beforeAll() {

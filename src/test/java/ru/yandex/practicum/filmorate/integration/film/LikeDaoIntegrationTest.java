@@ -20,11 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase
 class LikeDaoIntegrationTest {
 
-    final LikeStorage likeStorage;
     static FilmDbStorage filmStorage;
     static UserDbStorage userStorage;
     final static Film film = new Film();
     final static User user = new User();
+    final LikeStorage likeStorage;
 
     @Autowired
     public LikeDaoIntegrationTest(LikeStorage likeStorage, FilmDbStorage filmDbStorage, UserDbStorage userDbStorage) {

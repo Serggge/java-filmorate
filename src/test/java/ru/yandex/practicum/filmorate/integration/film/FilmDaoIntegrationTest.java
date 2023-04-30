@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
 class FilmDaoIntegrationTest {
 
-    final FilmDbStorage filmStorage;
     static Film firstFilm = new Film();
     static Film secondFilm = new Film();
+    final FilmDbStorage filmStorage;
 
 
     @BeforeEach

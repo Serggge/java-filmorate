@@ -33,15 +33,15 @@ import java.util.Random;
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
+    static User user;
+    static User friend;
+    static Random random;
     @Autowired
     MockMvc mvc;
     @Autowired
     ObjectMapper mapper;
     @MockBean
     UserService service;
-    static User user;
-    static User friend;
-    static Random random;
 
     @BeforeAll
     public static void beforeAll() {

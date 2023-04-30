@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
 class UserDbIntegrationTest {
 
-    final UserDbStorage userStorage;
     static User user = new User();
     static User friend = new User();
+    final UserDbStorage userStorage;
 
     @BeforeEach
     void beforeEach() {

@@ -18,10 +18,10 @@ import java.util.Optional;
 @AutoConfigureTestDatabase
 class FriendshipDbIntegrationTest {
 
-    final FriendStorage friendStorage;
     static UserDbStorage userStorage;
     static User user = new User();
     static User friend = new User();
+    final FriendStorage friendStorage;
 
     @Autowired
     public FriendshipDbIntegrationTest(FriendStorage friendStorage, UserDbStorage userDbStorage) {
