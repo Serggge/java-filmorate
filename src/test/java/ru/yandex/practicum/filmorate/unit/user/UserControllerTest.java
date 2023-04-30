@@ -254,7 +254,7 @@ class UserControllerTest {
     void handleAddNew_UserObjectHasNotValidField_ThrowMethodArgumentNotValidEx_returnErrorMessage() throws Exception {
         lenient().when(service.create(any(User.class))).thenReturn(user);
 
-        user.setLogin(" ");
+        user.setLogin("q q");
         var mvcRequest = post(String.format("/users")).contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(user));
 
