@@ -4,10 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Builder
@@ -18,16 +15,12 @@ public class User {
 
     final Set<Long> friends = new HashSet<>();
     long id;
-    @Email
-    @NotEmpty
-    String email;
-    @NotBlank
-    @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы")
+    @NotBlank @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы")
     String login;
+    @Email @NotEmpty
+    String email;
     String name;
-    @NotNull
-    @PastOrPresent
-    LocalDate birthday;
+    @NotNull @PastOrPresent LocalDate birthday;
 
     public void addFriendId(long id) {
         friends.add(id);

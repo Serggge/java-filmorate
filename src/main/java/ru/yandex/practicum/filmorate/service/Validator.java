@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -11,14 +10,6 @@ public final class Validator {
 
     private Validator() {
 
-    }
-
-    public static long validateId(String stringId) {
-        try {
-            return Long.parseLong(stringId);
-        } catch (NumberFormatException e) {
-            throw new IncorrectParameterException("id", "Идентификатор не числовой");
-        }
     }
 
     public static void validateUser(User user) {
