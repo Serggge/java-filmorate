@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,11 +22,13 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -61,7 +64,7 @@ class UserControllerTest {
         when(service.create(any(User.class))).thenReturn(user);
 
         final var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
-                                                       .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(user));
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isCreated())
@@ -80,7 +83,7 @@ class UserControllerTest {
         when(service.update(any(User.class))).thenReturn(friend);
 
         final var mvcRequest = put("/users").contentType(MediaType.APPLICATION_JSON)
-                                                      .content(mapper.writeValueAsString(friend));
+                .content(mapper.writeValueAsString(friend));
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
@@ -99,7 +102,7 @@ class UserControllerTest {
         when(service.getAll()).thenReturn(List.of(user, friend));
 
         final var mvcRequest = get("/users").contentType(MediaType.APPLICATION_JSON)
-                                                      .content(mapper.writeValueAsString(List.of(user, friend)));
+                .content(mapper.writeValueAsString(List.of(user, friend)));
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
@@ -112,7 +115,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[*].login", contains(user.getLogin(), friend.getLogin())))
                 .andExpect(jsonPath("$[*].name", contains(user.getName(), friend.getName())))
                 .andExpect(jsonPath("$[*].birthday", contains(user.getBirthday().toString(),
-                                                                        friend.getBirthday().toString())));
+                        friend.getBirthday().toString())));
     }
 
     @Test
@@ -216,10 +219,10 @@ class UserControllerTest {
 
         mvc.perform(mvcRequest).andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException()
-                                                    instanceof HttpMessageNotReadableException))
+                        instanceof HttpMessageNotReadableException))
                 .andExpect(result -> assertTrue(result.getResolvedException()
-                                                      .getMessage()
-                                                      .startsWith("JSON parse error")))
+                        .getMessage()
+                        .startsWith("JSON parse error")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
                 .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
@@ -235,14 +238,14 @@ class UserControllerTest {
 
         mvc.perform(mvcRequest).andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException()
-                                                    instanceof MethodArgumentTypeMismatchException))
+                        instanceof MethodArgumentTypeMismatchException))
                 .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
-                                                      .contains("Failed to convert value of type")))
+                        .contains("Failed to convert value of type")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", containsString(String.format(
                         "The parameter 'id' of value '%s' could not be converted to type 'long'", user.getName()))))
                 .andExpect(jsonPath("$.description", containsString("Failed to convert value " +
-                                                            "of type 'java.lang.String' to required type 'long'")));
+                        "of type 'java.lang.String' to required type 'long'")));
 
         verify(service, never()).update(any(User.class));
     }
@@ -253,13 +256,13 @@ class UserControllerTest {
 
         user.setLogin(" ");
         var mvcRequest = post(String.format("/users")).contentType(MediaType.APPLICATION_JSON)
-                                                      .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(user));
 
         mvc.perform(mvcRequest).andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException()
-                                                            instanceof MethodArgumentNotValidException))
+                        instanceof MethodArgumentNotValidException))
                 .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
-                                                      .contains("Field error in object 'user' on field 'login'")))
+                        .contains("Field error in object 'user' on field 'login'")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", containsString("login")))
                 .andExpect(jsonPath("$.description",
@@ -271,12 +274,12 @@ class UserControllerTest {
     @Test
     void testMethodNotAllowed_ThrowHttpRequestMethodNotSupportedException_returnErrorResponse() throws Exception {
         mvc.perform(patch("/users").contentType(MediaType.APPLICATION_JSON)
-                                 .content(mapper.writeValueAsString(user)))
+                        .content(mapper.writeValueAsString(user)))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(result -> assertTrue(result.getResolvedException()
                         instanceof HttpRequestMethodNotSupportedException))
-                .andExpect(result -> assertTrue(result.getResolvedException().getMessage().matches(
-                        "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                        .matches("^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", matchesPattern(
                         "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
