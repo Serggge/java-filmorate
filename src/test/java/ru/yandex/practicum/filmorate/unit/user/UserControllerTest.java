@@ -251,7 +251,7 @@ class UserControllerTest {
     void handleAddNew_UserObjectHasNotValidField_ThrowMethodArgumentNotValidEx_returnErrorMessage() throws Exception {
         lenient().when(service.create(any(User.class))).thenReturn(user);
 
-        user.setLogin("");
+        user.setLogin(" ");
         var mvcRequest = post(String.format("/users")).contentType(MediaType.APPLICATION_JSON)
                                                       .content(mapper.writeValueAsString(user));
 
@@ -262,7 +262,8 @@ class UserControllerTest {
                                                       .contains("Field error in object 'user' on field 'login'")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", containsString("login")))
-                .andExpect(jsonPath("$.description", containsString("must not be blank")));
+                .andExpect(jsonPath("$.description",
+                        containsString("логин не может содержать пробелы")));
 
         verify(service, never()).create(any(User.class));
     }

@@ -46,7 +46,7 @@ public class FriendshipDbStorage implements FriendStorage {
 
     @Override
     public Optional<Friendship> find(Friendship friendship) {
-        var sqlQuery = "SELECT * from friends WHERE (user_id = :userId AND friend_id = :friendId) " +
+        var sqlQuery = "SELECT * FROM friends WHERE (user_id = :userId AND friend_id = :friendId) " +
                                                 "OR (user_id = :friendId AND friend_id = :userId)";
         var friendParams = new BeanPropertySqlParameterSource(friendship);
         try {

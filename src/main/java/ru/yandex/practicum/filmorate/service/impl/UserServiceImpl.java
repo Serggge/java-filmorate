@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User update(User user) {
         validateUser(user);
-        if (userStorage.findById(user.getId()).isPresent()) {
+        if (userStorage.existsById(user.getId())) {
             User saved = userStorage.save(user);
             log.info("Пользователь обновлён: {}", saved);
             return saved;

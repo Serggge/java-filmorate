@@ -67,8 +67,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findAllById(Collection<Long> ids) {
         var sqlQuery = "SELECT * FROM films WHERE film_id IN (:ids)";
-        var idParam = new MapSqlParameterSource("ids", ids);
-        return namedParameterJdbcTemplate.query(sqlQuery, idParam, FILM_ROW_MAPPER);
+        var idsParams = new MapSqlParameterSource("ids", ids);
+        return namedParameterJdbcTemplate.query(sqlQuery, idsParams, FILM_ROW_MAPPER);
     }
 
     @Override

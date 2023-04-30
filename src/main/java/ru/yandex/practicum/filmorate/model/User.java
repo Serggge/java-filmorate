@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.*;
@@ -14,7 +13,7 @@ import java.util.*;
 @NoArgsConstructor
 public class User {
 
-    final Map<Long, Boolean> friends = new HashMap<>();
+    final Set<Long> friends = new HashSet<>();
     long id;
     @NotBlank @Pattern(regexp = "^[^ ]+$", message = "логин не может содержать пробелы")
     String login;
@@ -24,14 +23,7 @@ public class User {
     @NotNull @PastOrPresent LocalDate birthday;
 
     public void addFriendId(long id) {
-        if (friends.get(id) == null) {
-            friends.put(id, Boolean.FALSE);
-        } else if (friends.get(id).equals(Boolean.FALSE)){
-            friends.put(id, Boolean.TRUE);
-        } else {
-            throw new DataUpdateException(String.format(
-                    "Пользователь с id=%d уже в друзьях у пользователя с id=%d", id, this.id));
-        }
+        friends.add(id);
     }
 
     public boolean deleteFriendId(long id) {
@@ -39,7 +31,7 @@ public class User {
     }
 
     public List<Long> getFriends() {
-        return new ArrayList<>(friends.keySet());
+        return new ArrayList<>(friends);
     }
 
     public void clearFriendList() {

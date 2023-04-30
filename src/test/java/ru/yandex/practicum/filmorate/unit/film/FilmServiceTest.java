@@ -20,6 +20,7 @@ import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -95,33 +96,26 @@ class FilmServiceTest {
 
     @Test
     void givenFilmObject_whenUpdateIncomingFilm_thenReturnFilmObject() {
+        firstFilm.setId(1);
+        given(filmStorage.existsById(anyLong())).willReturn(Boolean.TRUE);
         given(filmStorage.save(firstFilm)).willReturn(firstFilm);
-        given(filmStorage.save(secondFilm)).willReturn(secondFilm);
 
-        final Film savedFilm = filmService.create(firstFilm);
-        secondFilm.setId(savedFilm.getId());
-
-        given(filmStorage.findAll()).willReturn(List.of(savedFilm));
-
-        final Film updatedFilm = filmService.update(secondFilm);
+        final Film updatedFilm = filmService.update(firstFilm);
 
         verify(filmStorage).save(firstFilm);
-        verify(filmStorage).save(secondFilm);
-        verify(filmStorage).findAll();
         assertThat(updatedFilm).isNotNull();
-        assertThat(updatedFilm).isEqualTo(secondFilm);
+        assertThat(updatedFilm).isEqualTo(firstFilm);
     }
 
     @Test
     void givenFilmObjectNotPresentInStorage_whenUpdateFilm_thenThrowFilmNotFoundException() {
-        given(filmStorage.findAll()).willReturn(Collections.emptyList());
-        lenient().when(filmStorage.save(any(Film.class))).thenReturn(firstFilm);
+        firstFilm.setId(1);
+        given(filmStorage.existsById(anyLong())).willReturn(Boolean.FALSE);
 
         final Throwable exception = assertThrows(FilmNotFoundException.class, () ->
                                                             tempContainer[0] = filmService.update(firstFilm));
 
-        verify(filmStorage).findAll();
-        verify(filmStorage, never()).save(any(Film.class));
+        verify(filmStorage).existsById(anyLong());
         assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(FilmNotFoundException.class);
@@ -168,13 +162,16 @@ class FilmServiceTest {
 
     @Test
     void givenFilmIdAndUserId_whenSetLike_thenReturnFilmObject() {
+        firstFilm.setId(1);
         given(filmStorage.findById(anyLong())).willReturn(Optional.of(firstFilm));
         given(userService.getById(anyLong())).willReturn(user);
+        given(likeStorage.isExist(any(Like.class))).willReturn(Boolean.FALSE);
 
         final Film returned = filmService.setLike(firstFilm.getId(), user.getId());
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService).getById(user.getId());
+        verify(likeStorage).isExist(new Like(firstFilm.getId(), user.getId()));
         assertThat(returned).isNotNull();
         assertThat(returned).isEqualTo(firstFilm);
     }
@@ -213,14 +210,17 @@ class FilmServiceTest {
 
     @Test
     void givenFilmIdAndUserId_whenDeleteLike_thenReturnFilmObject() {
+        firstFilm.setId(1);
+        user.setId(1);
         given(filmStorage.findById(anyLong())).willReturn(Optional.of(firstFilm));
         given(userService.getById(anyLong())).willReturn(user);
+        given(likeStorage.isExist(any(Like.class))).willReturn(Boolean.TRUE);
 
-        firstFilm.addLike(user.getId());
         final Film returned = filmService.deleteLike(firstFilm.getId(), user.getId());
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService).getById(user.getId());
+        verify(likeStorage).isExist(new Like(firstFilm.getId(), user.getId()));
         assertThat(returned).isNotNull();
         assertThat(returned).isEqualTo(firstFilm);
     }
@@ -229,12 +229,14 @@ class FilmServiceTest {
     void givenFilmIdAndUserIdWhoNotLikedFilm_whenDeleteLike_thenThrowDataUpdateException() {
         given(filmStorage.findById(anyLong())).willReturn(Optional.of(firstFilm));
         given(userService.getById(anyLong())).willReturn(user);
+        given(likeStorage.isExist(any(Like.class))).willReturn(Boolean.FALSE);
 
         final Throwable exception = assertThrows(DataUpdateException.class, () ->
                                    tempContainer[0] = filmService.deleteLike(firstFilm.getId(), user.getId()));
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService).getById(user.getId());
+        verify(likeStorage).isExist(new Like(firstFilm.getId(), user.getId()));
         assertThat(tempContainer[0]).isNull();
         assertThat(exception).isNotNull();
         assertThat(exception.getClass()).isEqualTo(DataUpdateException.class);
