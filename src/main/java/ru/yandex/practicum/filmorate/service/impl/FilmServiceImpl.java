@@ -18,6 +18,8 @@ import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,12 +76,22 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getAll() {
         log.debug("Запрос списка всех фильмов");
-        return filmStorage.findAll()
+        List<Film> films = filmStorage.findAll();
+        List<Long> filmsIds = films
                 .stream()
-                .peek(film -> film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(film.getId())))
-                .peek(film -> film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId())))
-                .sorted()
+                .map(Film::getId)
                 .collect(Collectors.toList());
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
+        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
+        for (Film film : films) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+            if (filmsLikes.containsKey(film.getId())) {
+                film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+        }
+        return films.stream().sorted().collect(Collectors.toList());
     }
 
     @Override

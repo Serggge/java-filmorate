@@ -76,13 +76,8 @@ public class FriendshipDbStorage implements FriendStorage {
                                                         "OR user_id = :friendId AND friend_id = :userId";
         var friendParams = new BeanPropertySqlParameterSource(friendship);
         SqlRowSet rs = namedParameterJdbcTemplate.queryForRowSet(sqlQuery, friendParams);
-        boolean isConfirmed = false;
-        if (rs.next()) {
-            isConfirmed = rs.getBoolean("confirmed");
-        } else {
-            throw new DataBaseResponseException("Пользователи не являются друзьями");
-        }
-        return isConfirmed;
+        rs.next();
+        return rs.getBoolean("confirmed");
     }
 
     @Override
