@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import java.util.*;
-import static ru.yandex.practicum.filmorate.util.RowMappers.LIKE_ROW_MAPPER;
 
 @Repository("likeDbStorage")
 public class LikeDbStorage implements LikeStorage {
