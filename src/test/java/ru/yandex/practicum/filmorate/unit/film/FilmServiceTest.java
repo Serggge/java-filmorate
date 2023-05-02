@@ -124,7 +124,8 @@ class FilmServiceTest {
 
     @Test
     void whenGetAllFilms_thenReturnFilmList() {
-        final List<Film> films = List.of(firstFilm, secondFilm);
+        final List<Film> films = new ArrayList<>();
+        films.addAll(List.of(firstFilm, secondFilm));
         given(filmStorage.findAll()).willReturn(films);
 
         final List<Film> allFilms = filmService.getAll();
