@@ -17,6 +17,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,7 +92,8 @@ public class FilmServiceImpl implements FilmService {
                 film.getLikes().addAll(filmsLikes.get(film.getId()));
             }
         }
-        return films.stream().sorted().collect(Collectors.toList());
+        Collections.sort(films);
+        return films;
     }
 
     @Override
@@ -139,10 +141,21 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(int count) {
         log.debug("Запрошен список самых популярных фильмов");
-        return filmStorage.findAll()
-                .stream()
-                .peek(film -> film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(film.getId())))
-                .peek(film -> film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId())))
+        List<Film> films = filmStorage.findAll();
+        List<Long> filmsIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList());
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
+        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
+        for (Film film : films) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+            if (filmsLikes.containsKey(film.getId())) {
+                film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+        }
+        return films.stream()
                 .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());

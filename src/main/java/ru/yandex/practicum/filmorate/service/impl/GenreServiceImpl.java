@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.storage.dao.GenreStorage;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,7 +23,7 @@ public class GenreServiceImpl implements GenreService {
     @Override
     public List<Genre> getAll() {
         log.debug("Запрошен список всех жанров");
-        return new ArrayList<>(storage.findAll());
+        return storage.findAll();
     }
 
     @Override

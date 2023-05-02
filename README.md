@@ -88,7 +88,12 @@ WHERE film_id = :id
 ```
 Поиск фильма по идентификатору:
 ```
-SELECT *
+SELECT film_id,
+      name,
+      description,
+      release_date,
+      duration,
+      mpa_id
 FROM films 
 WHERE film_id = ?
 ```
@@ -105,7 +110,9 @@ WHERE friend_id = :id
 ```
 Поиск дружбы пользователей:
 ```
-SELECT *
+SELECT user_id,
+      friend_id,
+      confirmed
 FROM friends
 WHERE (user_id = :userId
        AND friend_id = :friendId)

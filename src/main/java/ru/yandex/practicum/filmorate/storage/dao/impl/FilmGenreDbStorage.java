@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import java.util.*;
-import static ru.yandex.practicum.filmorate.Constants.GENRE_ROW_MAPPER;
+import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 
 @Repository("filmGenresDbStorage")
 public class FilmGenreDbStorage implements FilmGenreStorage {
@@ -46,7 +46,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
 
     @Override
     public Map<Long, Set<Genre>> findAll(Collection<Long> ids) {
-        var sqlQuery = "SELECT * FROM film_genre WHERE film_id IN (:ids)";
+        var sqlQuery = "SELECT film_id, genre_id FROM film_genre WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
         List<Map<String, Object>> resultSet = namedParameterJdbcTemplate.queryForList(sqlQuery, idParams);
         Map<Long, Set<Genre>> filmsGenres = new HashMap<>();

@@ -5,11 +5,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import java.util.*;
-import static ru.yandex.practicum.filmorate.Constants.LIKE_ROW_MAPPER;
+import static ru.yandex.practicum.filmorate.util.RowMappers.LIKE_ROW_MAPPER;
 
 @Repository("likeDbStorage")
 public class LikeDbStorage implements LikeStorage {
@@ -40,7 +41,7 @@ public class LikeDbStorage implements LikeStorage {
 
     @Override
     public Map<Long, Set<Long>> findAll(Collection<Long> ids) {
-        var sqlQuery = "SELECT * FROM likes WHERE film_id IN (:ids)";
+        var sqlQuery = "SELECT film_id, user_id FROM likes WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
         List<Map<String, Object>> resultSet = namedParameterJdbcTemplate.queryForList(sqlQuery, idParams);
         Map<Long, Set<Long>> filmsLikes = new HashMap<>();
@@ -64,9 +65,10 @@ public class LikeDbStorage implements LikeStorage {
 
     @Override
     public boolean isExist(Like like) {
-        var sqlQuery = "SELECT * FROM likes WHERE film_id = :filmId AND user_id = :userId";
+        var sqlQuery = "SELECT film_id, user_id FROM likes WHERE film_id = :filmId AND user_id = :userId";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        return namedParameterJdbcTemplate.query(sqlQuery, likeParams, LIKE_ROW_MAPPER).size() == 1;
+        SqlRowSet rowSet = namedParameterJdbcTemplate.queryForRowSet(sqlQuery, likeParams);
+        return rowSet.next();
     }
 
     @Override

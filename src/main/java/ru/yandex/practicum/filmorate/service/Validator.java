@@ -4,7 +4,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import java.time.LocalDate;
-import static ru.yandex.practicum.filmorate.Constants.FIRST_FILM;
+import static ru.yandex.practicum.filmorate.util.Constants.FIRST_FILM;
 
 public final class Validator {
 

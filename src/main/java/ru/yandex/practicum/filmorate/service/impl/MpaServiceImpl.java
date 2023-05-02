@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.MpaRatingNotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.MpaService;
 import ru.yandex.practicum.filmorate.storage.dao.MpaStorage;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,7 +22,7 @@ public class MpaServiceImpl implements MpaService {
     @Override
     public List<Mpa> getAll() {
         log.debug("Запрошен список всех рейтингов MPA");
-        return new ArrayList<>(storage.findAll());
+        return storage.findAll();
     }
 
     @Override
