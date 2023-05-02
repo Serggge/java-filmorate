@@ -45,7 +45,7 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public Film create(Film film) {
-        validateFilm(film);
+        film = validateFilm(film);
         if (film.getId() != 0) {
             throw new ValidationException("Недопустимый параметр ID при создании фильма");
         }
@@ -59,7 +59,7 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public Film update(Film film) {
-        validateFilm(film);
+        film = validateFilm(film);
         if (film.getId() == 0) {
             throw new ValidationException("Для обновления требуется указать ID фильма");
         } else if (filmStorage.existsById(film.getId())) {

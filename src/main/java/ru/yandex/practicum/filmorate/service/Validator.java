@@ -12,16 +12,39 @@ public final class Validator {
 
     }
 
-    public static void validateUser(User user) {
+    public static User validateUser(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
+        if (user.getFriends() == null) {
+            return User.builder()
+                    .id(user.getId())
+                    .login(user.getLogin())
+                    .email(user.getEmail())
+                    .name(user.getName())
+                    .birthday(user.getBirthday())
+                    .build();
+        } else {
+            return user;
+        }
     }
 
-    public static void validateFilm(Film film) {
+    public static Film validateFilm(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(FIRST_FILM)) {
             throw new ValidationException(String.format("Дата релиза фильма раньше %s", FIRST_FILM));
+        }
+        if (film.getGenres() == null || film.getLikes() == null) {
+            return Film.builder()
+                    .id(film.getId())
+                    .name(film.getName())
+                    .description(film.getDescription())
+                    .releaseDate(film.getReleaseDate())
+                    .duration(film.getDuration())
+                    .mpa(film.getMpa())
+                    .build();
+        } else {
+            return film;
         }
     }
 
