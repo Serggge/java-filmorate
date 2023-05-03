@@ -9,7 +9,10 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
+
+import java.sql.ResultSet;
 import java.util.*;
+
 import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 
 @Repository("filmGenresDbStorage")
@@ -30,7 +33,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
         SqlParameterSource[] batch = film.getGenres()
                 .stream()
                 .map(Genre::getId)
-                .map(genreId -> new  MapSqlParameterSource()
+                .map(genreId -> new MapSqlParameterSource()
                         .addValue("film_id", film.getId())
                         .addValue("genre_id", genreId))
                 .toArray(SqlParameterSource[]::new);
@@ -48,17 +51,14 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
     public Map<Long, Set<Genre>> findAll(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, genre_id FROM film_genre WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
-        List<Map<String, Object>> resultSet = namedParameterJdbcTemplate.queryForList(sqlQuery, idParams);
-        Map<Long, Set<Genre>> filmsGenres = new HashMap<>();
-        for (var mapRow : resultSet) {
-            long filmId = (Integer) mapRow.get("film_id");
-            int genreId = (Integer) mapRow.get("genre_id");
-            if (!filmsGenres.containsKey(filmId)) {
-                filmsGenres.put(filmId, new HashSet<>());
-            }
-            filmsGenres.get(filmId).add(new Genre(genreId));
-        }
-        return filmsGenres;
+        return namedParameterJdbcTemplate.queryForStream(sqlQuery, idParams, (rs, rowNum) ->
+                        Map.entry(rs.getLong("film_id"), new Genre(rs.getInt("genre_id"))))
+                .collect(HashMap::new, (map, entry) -> {
+                            Set<Genre> genres = map.getOrDefault(entry.getKey(), new HashSet<>());
+                            genres.add(entry.getValue());
+                            map.put(entry.getKey(), genres);
+                        },
+                        HashMap::putAll);
     }
 
     @Override
