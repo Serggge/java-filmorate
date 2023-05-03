@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.film.FilmService;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -32,22 +32,22 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film returnById(@PathVariable String id) {
+    public Film returnById(@PathVariable long id) {
         return service.getById(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addUserLike(@PathVariable("id") String filmId, @PathVariable String userId) {
+    public Film addUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
         return service.setLike(filmId, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film removeUserLike(@PathVariable("id") String filmId, @PathVariable String userId) {
+    public Film removeUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
         return service.deleteLike(filmId, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> returnPopular(@RequestParam(defaultValue = "10") String count) {
+    public List<Film> returnPopular(@RequestParam(defaultValue = "10") int count) {
         return service.getPopular(count);
     }
 
