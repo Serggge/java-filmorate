@@ -6,12 +6,12 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
-
-import java.sql.ResultSet;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 
@@ -21,8 +21,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    public FilmGenreDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmGenreDbStorage(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
     }
@@ -48,17 +47,18 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
     }
 
     @Override
+    @Transactional
     public Map<Long, Set<Genre>> findAll(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, genre_id FROM film_genre WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
         return namedParameterJdbcTemplate.queryForStream(sqlQuery, idParams, (rs, rowNum) ->
                         Map.entry(rs.getLong("film_id"), new Genre(rs.getInt("genre_id"))))
-                .collect(HashMap::new, (map, entry) -> {
-                            Set<Genre> genres = map.getOrDefault(entry.getKey(), new HashSet<>());
-                            genres.add(entry.getValue());
-                            map.put(entry.getKey(), genres);
-                        },
-                        HashMap::putAll);
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(
+                                Map.Entry::getValue,
+                                Collectors.toSet()
+                        )));
     }
 
     @Override

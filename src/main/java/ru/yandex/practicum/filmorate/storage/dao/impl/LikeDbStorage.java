@@ -5,11 +5,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import java.util.*;
+import java.util.stream.Collectors;
+import static ru.yandex.practicum.filmorate.util.RowMappers.LIKE_ROW_MAPPER;
 
 @Repository("likeDbStorage")
 public class LikeDbStorage implements LikeStorage {
@@ -17,8 +19,7 @@ public class LikeDbStorage implements LikeStorage {
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    public LikeDbStorage(JdbcTemplate jdbcTemplate) {
+    public LikeDbStorage(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
     }
@@ -39,20 +40,16 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
+    @Transactional
     public Map<Long, Set<Long>> findAll(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, user_id FROM likes WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
-        List<Map<String, Object>> resultSet = namedParameterJdbcTemplate.queryForList(sqlQuery, idParams);
-        Map<Long, Set<Long>> filmsLikes = new HashMap<>();
-        for (var mapRow : resultSet) {
-            long filmId = (Integer) mapRow.get("film_id");
-            long userId = (Integer) mapRow.get("user_id");
-            if (!filmsLikes.containsKey(filmId)) {
-                filmsLikes.put(filmId, new HashSet<>());
-            }
-            filmsLikes.get(filmId).add(userId);
-        }
-        return filmsLikes;
+        return namedParameterJdbcTemplate.queryForStream(sqlQuery, idParams, LIKE_ROW_MAPPER)
+                .collect(Collectors.groupingBy(
+                        Like::getFilmId,
+                        Collectors.mapping(
+                                Like::getUserId,
+                                Collectors.toSet())));
     }
 
     @Override
@@ -66,7 +63,7 @@ public class LikeDbStorage implements LikeStorage {
     public boolean isExist(Like like) {
         var sqlQuery = "SELECT film_id, user_id FROM likes WHERE film_id = :filmId AND user_id = :userId";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        SqlRowSet rowSet = namedParameterJdbcTemplate.queryForRowSet(sqlQuery, likeParams);
+        var rowSet = namedParameterJdbcTemplate.queryForRowSet(sqlQuery, likeParams);
         return rowSet.next();
     }
 

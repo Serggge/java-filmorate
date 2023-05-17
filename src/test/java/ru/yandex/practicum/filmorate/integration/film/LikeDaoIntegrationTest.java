@@ -13,7 +13,11 @@ import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.UserDbStorage;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -79,6 +83,18 @@ class LikeDaoIntegrationTest {
 
         likeStorage.delete(like);
         assertThat(likeStorage.isExist(like)).isFalse();
+    }
+
+    @Test
+    void testFindAll() {
+        final Like like = new Like(film.getId(), user.getId());
+
+        likeStorage.save(like);
+        Map<Long, Set<Long>> all = likeStorage.findAll(Collections.singleton(film.getId()));
+
+        assertThat(all.get(film.getId())).isNotEmpty();
+        assertThat(all.get(film.getId())).hasSize(1);
+        assertThat(all.get(film.getId())).contains(user.getId());
     }
 
     private static void setFilmAndUserForDefaults() {

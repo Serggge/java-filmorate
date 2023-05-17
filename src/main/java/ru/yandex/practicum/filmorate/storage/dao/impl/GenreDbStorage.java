@@ -8,9 +8,9 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.GenreStorage;
-import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 import java.util.List;
 import java.util.Optional;
+import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 
 @Repository("genreDbStorage")
 @RequiredArgsConstructor(onConstructor__ = @Autowired)

@@ -20,8 +20,7 @@ public class FriendshipDbStorage implements FriendStorage {
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    public FriendshipDbStorage(JdbcTemplate jdbcTemplate) {
+    public FriendshipDbStorage(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
     }
