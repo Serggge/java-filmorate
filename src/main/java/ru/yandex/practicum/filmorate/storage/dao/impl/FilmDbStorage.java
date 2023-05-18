@@ -1,15 +1,17 @@
 package ru.yandex.practicum.filmorate.storage.dao.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
-import static ru.yandex.practicum.filmorate.Constants.FILM_ROW_MAPPER;
+import static ru.yandex.practicum.filmorate.util.RowMappers.FILM_ROW_MAPPER;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
@@ -17,7 +19,7 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
     }
@@ -50,7 +52,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> findById(long id) {
-        var sqlQuery = "SELECT * FROM films WHERE film_id = ?";
+        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films WHERE film_id = ?";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, FILM_ROW_MAPPER, id));
         } catch (EmptyResultDataAccessException e) {
@@ -60,20 +62,23 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> findAll() {
-        var sqlQuery = "SELECT * FROM films ORDER BY film_id";
+        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films ORDER BY film_id";
         return jdbcTemplate.query(sqlQuery, FILM_ROW_MAPPER);
     }
 
     @Override
     public List<Film> findAllById(Collection<Long> ids) {
-        var sqlQuery = "SELECT * FROM films WHERE film_id IN (:ids)";
+        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id " +
+                         "FROM films WHERE film_id IN (:ids)";
         var idsParams = new MapSqlParameterSource("ids", ids);
         return namedParameterJdbcTemplate.query(sqlQuery, idsParams, FILM_ROW_MAPPER);
     }
 
     @Override
     public boolean existsById(long id) {
-        return findById(id).isPresent();
+        var sqlQuery = "SELECT film_id FROM films WHERE film_id = ?";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sqlQuery, id);
+        return rowSet.next();
     }
 
     @Override

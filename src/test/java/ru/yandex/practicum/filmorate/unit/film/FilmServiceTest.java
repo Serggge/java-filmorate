@@ -13,7 +13,7 @@ import static org.mockito.BDDMockito.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static ru.yandex.practicum.filmorate.Constants.FIRST_FILM;
+import static ru.yandex.practicum.filmorate.util.Constants.FIRST_FILM;
 import org.springframework.beans.factory.annotation.Qualifier;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
@@ -124,7 +124,8 @@ class FilmServiceTest {
 
     @Test
     void whenGetAllFilms_thenReturnFilmList() {
-        final List<Film> films = List.of(firstFilm, secondFilm);
+        final List<Film> films = new ArrayList<>();
+        films.addAll(List.of(firstFilm, secondFilm));
         given(filmStorage.findAll()).willReturn(films);
 
         final List<Film> allFilms = filmService.getAll();

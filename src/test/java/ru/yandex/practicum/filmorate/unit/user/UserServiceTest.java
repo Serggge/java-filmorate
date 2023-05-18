@@ -26,16 +26,16 @@ import java.util.*;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
+    static User user;
+    static User friend;
+    static Random random;
+    static User[] tempContainer;
     @Mock
     UserStorage userStorage;
     @Mock
     FriendStorage friendStorage;
     @InjectMocks
     UserServiceImpl userService;
-    static User user;
-    static User friend;
-    static Random random;
-    static User[] tempContainer;
 
     @BeforeAll
     static void beforeAll() {

@@ -24,6 +24,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     protected ErrorResponse handleHttpMessageNotReadable(HttpMessageNotReadableException exception) {
+
         errorResponse.setParams("Получен некорректный формат JSON", exception.getMessage());
         log(exception);
         return errorResponse;

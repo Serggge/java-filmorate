@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.UserDbStorage;
+
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +20,10 @@ import java.util.Optional;
 @AutoConfigureTestDatabase
 class FriendshipDbIntegrationTest {
 
-    final FriendStorage friendStorage;
     static UserDbStorage userStorage;
-    static User user = new User();
-    static User friend = new User();
+    static final User user = new User();
+    static final User friend = new User();
+    final FriendStorage friendStorage;
 
     @Autowired
     public FriendshipDbIntegrationTest(FriendStorage friendStorage, UserDbStorage userDbStorage) {
@@ -45,7 +47,7 @@ class FriendshipDbIntegrationTest {
         friendStorage.save(friendship);
 
         final List<Long> friendsForUser = friendStorage.findFriendsIdByUserId(user.getId());
-        final  List<Long> friendsForFriend = friendStorage.findFriendsIdByUserId(friend.getId());
+        final List<Long> friendsForFriend = friendStorage.findFriendsIdByUserId(friend.getId());
 
         assertThat(friendsForUser)
                 .isNotNull()
@@ -66,10 +68,9 @@ class FriendshipDbIntegrationTest {
         final Optional<Friendship> optionalFriendship = friendStorage.find(inverseFriendship);
 
         assertThat(optionalFriendship)
-                .hasValueSatisfying(friendShip ->
-                        assertThat(friendShip)
-                                .hasFieldOrPropertyWithValue("userId", user.getId())
-                                .hasFieldOrPropertyWithValue("friendId", friend.getId()));
+                .hasValueSatisfying(friendShip -> assertThat(friendShip)
+                        .hasFieldOrPropertyWithValue("userId", user.getId())
+                        .hasFieldOrPropertyWithValue("friendId", friend.getId()));
     }
 
     @Test

@@ -18,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -33,15 +35,15 @@ import java.util.Random;
 @WebMvcTest(FilmController.class)
 class FilmControllerTest {
 
+    static Film firstFilm;
+    static Film secondFilm;
+    static Random random = new Random();
     @Autowired
     MockMvc mvc;
     @Autowired
     ObjectMapper mapper;
     @MockBean
     FilmService service;
-    static Film firstFilm;
-    static Film secondFilm;
-    static Random random = new Random();
 
     @BeforeAll
     public static void beforeAll() {
@@ -60,15 +62,15 @@ class FilmControllerTest {
         when(service.create(any(Film.class))).thenReturn(firstFilm);
 
         var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON)
-                                       .content(mapper.writeValueAsString(firstFilm));
+                .content(mapper.writeValueAsString(firstFilm));
 
         mvc.perform(mvcRequest)
-           .andExpect(status().isCreated())
-           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-           .andExpect(jsonPath("$.name", is("First film")))
-           .andExpect(jsonPath("$.description", is("Description first")))
-           .andExpect(jsonPath("$.releaseDate", is("2000-01-01")))
-           .andExpect(jsonPath("$.duration", is(120)));
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.name", is("First film")))
+                .andExpect(jsonPath("$.description", is("Description first")))
+                .andExpect(jsonPath("$.releaseDate", is("2000-01-01")))
+                .andExpect(jsonPath("$.duration", is(120)));
     }
 
     @Test
@@ -76,16 +78,16 @@ class FilmControllerTest {
         when(service.update(any(Film.class))).thenReturn(secondFilm);
 
         var mvcRequest = put("/films").contentType(MediaType.APPLICATION_JSON)
-                                      .content(mapper.writeValueAsString(secondFilm));
+                .content(mapper.writeValueAsString(secondFilm));
 
         mvc.perform(mvcRequest)
-           .andExpect(status().isOk())
-           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-           .andExpect(jsonPath("$.id", is((int) secondFilm.getId())))
-           .andExpect(jsonPath("$.name", is(secondFilm.getName())))
-           .andExpect(jsonPath("$.description", is(secondFilm.getDescription())))
-           .andExpect(jsonPath("$.releaseDate", is(secondFilm.getReleaseDate().toString())))
-           .andExpect(jsonPath("$.duration", is(secondFilm.getDuration())));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is((int) secondFilm.getId())))
+                .andExpect(jsonPath("$.name", is(secondFilm.getName())))
+                .andExpect(jsonPath("$.description", is(secondFilm.getDescription())))
+                .andExpect(jsonPath("$.releaseDate", is(secondFilm.getReleaseDate().toString())))
+                .andExpect(jsonPath("$.duration", is(secondFilm.getDuration())));
     }
 
     @Test
@@ -95,17 +97,17 @@ class FilmControllerTest {
         var mvcRequest = get("/films");
 
         mvc.perform(mvcRequest)
-           .andExpect(status().isOk())
-           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-           .andExpect(content().json(mapper.writeValueAsString(List.of(firstFilm, secondFilm))))
-           .andExpect(jsonPath("$", hasSize(2)))
-           .andExpect(jsonPath("$[*].id", contains((int) firstFilm.getId(), (int) secondFilm.getId())))
-           .andExpect(jsonPath("$[*].name", contains(firstFilm.getName(), secondFilm.getName())))
-           .andExpect(jsonPath("$[*].description", contains(firstFilm.getDescription(),
-                   secondFilm.getDescription())))
-           .andExpect(jsonPath("$[*].releaseDate", contains(firstFilm.getReleaseDate().toString(),
-                   secondFilm.getReleaseDate().toString())))
-           .andExpect(jsonPath("$[*].duration", contains(firstFilm.getDuration(), secondFilm.getDuration())));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(mapper.writeValueAsString(List.of(firstFilm, secondFilm))))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].id", contains((int) firstFilm.getId(), (int) secondFilm.getId())))
+                .andExpect(jsonPath("$[*].name", contains(firstFilm.getName(), secondFilm.getName())))
+                .andExpect(jsonPath("$[*].description", contains(firstFilm.getDescription(),
+                        secondFilm.getDescription())))
+                .andExpect(jsonPath("$[*].releaseDate", contains(firstFilm.getReleaseDate().toString(),
+                        secondFilm.getReleaseDate().toString())))
+                .andExpect(jsonPath("$[*].duration", contains(firstFilm.getDuration(), secondFilm.getDuration())));
     }
 
     @Test
@@ -115,15 +117,15 @@ class FilmControllerTest {
         var mvcRequest = get("/films/" + firstFilm.getId());
 
         mvc.perform(mvcRequest)
-           .andExpect(status().isOk())
-           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-           .andExpect(content().json(mapper.writeValueAsString(firstFilm)))
-           .andExpect(jsonPath("$", notNullValue()))
-           .andExpect(jsonPath("$.id", is((int) firstFilm.getId())))
-           .andExpect(jsonPath("$.name", is(firstFilm.getName())))
-           .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
-           .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
-           .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(mapper.writeValueAsString(firstFilm)))
+                .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$.id", is((int) firstFilm.getId())))
+                .andExpect(jsonPath("$.name", is(firstFilm.getName())))
+                .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
+                .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
+                .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
     }
 
     @Test
@@ -191,10 +193,10 @@ class FilmControllerTest {
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() 
-                                                        instanceof HttpMessageNotReadableException))
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof HttpMessageNotReadableException))
                 .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
-                                                                                .startsWith("JSON parse error")))
+                        .startsWith("JSON parse error")))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
                 .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
@@ -210,7 +212,7 @@ class FilmControllerTest {
 
         mvc.perform(mvcRequest).andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException()
-                                                        instanceof MethodArgumentTypeMismatchException))
+                        instanceof MethodArgumentTypeMismatchException))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", is("The parameter 'id' of value 'First film' " +
                         "could not be converted to type 'long'")))
@@ -226,15 +228,15 @@ class FilmControllerTest {
         firstFilm.setName("");
 
         var mvcRequest = post("/films").contentType(MediaType.APPLICATION_JSON)
-                                                 .content(mapper.writeValueAsString(firstFilm));
+                .content(mapper.writeValueAsString(firstFilm));
 
         mvc.perform(mvcRequest).andExpect(status().isBadRequest())
-           .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
-           .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
-                                                 .contains("Field error in object 'film' on field 'name'")))
-           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-           .andExpect(jsonPath("$.message", containsString("name")))
-           .andExpect(jsonPath("$.description", containsString("must not be blank")));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                        .contains("Field error in object 'film' on field 'name'")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", containsString("name")))
+                .andExpect(jsonPath("$.description", containsString("must not be blank")));
 
         verify(service, never()).create(any(Film.class));
     }
@@ -242,16 +244,16 @@ class FilmControllerTest {
     @Test
     void testMethodNotAllowed_ThrowHttpRequestMethodNotSupportedException_returnErrorResponse() throws Exception {
         mvc.perform(patch("/films").contentType(MediaType.APPLICATION_JSON)
-                                   .content(mapper.writeValueAsString(firstFilm)))
-           .andExpect(status().isMethodNotAllowed())
-           .andExpect(result -> assertTrue(result.getResolvedException()
-                   instanceof HttpRequestMethodNotSupportedException))
-           .andExpect(result -> assertTrue(result.getResolvedException().getMessage().matches(
-                   "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
-           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-           .andExpect(jsonPath("$.message", matchesPattern(
-                   "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
-           .andExpect(jsonPath("$.description", matchesPattern("^(POST|PUT|PATCH|DELETE)$")));
+                        .content(mapper.writeValueAsString(firstFilm)))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof HttpRequestMethodNotSupportedException))
+                .andExpect(result -> assertTrue(result.getResolvedException().getMessage()
+                        .matches("^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", matchesPattern(
+                        "^Request method '(POST|PUT|PATCH|DELETE)' not supported$")))
+                .andExpect(jsonPath("$.description", matchesPattern("^(POST|PUT|PATCH|DELETE)$")));
     }
 
     static void setFilmsForDefaults() {

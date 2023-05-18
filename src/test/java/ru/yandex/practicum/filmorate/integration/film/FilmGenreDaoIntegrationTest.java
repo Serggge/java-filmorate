@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
 class FilmGenreDaoIntegrationTest {
 
+    static final Film firstFilm = new Film();
+    static final Film secondFilm = new Film();
     final FilmGenreStorage filmGenreStorage;
     final FilmDbStorage filmDbStorage;
-    final static Film firstFilm = new Film();
-    final static Film secondFilm = new Film();
 
     @BeforeEach
     void beforeEach() {

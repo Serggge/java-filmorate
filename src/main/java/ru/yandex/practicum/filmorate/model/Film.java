@@ -37,6 +37,10 @@ public class Film implements Comparable<Film> {
         return likes.remove(id);
     }
 
+    public int popularity() {
+        return likes.size();
+    }
+
     public void clearLikes() {
         likes.clear();
     }

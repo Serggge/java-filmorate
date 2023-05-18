@@ -1,16 +1,18 @@
 package ru.yandex.practicum.filmorate.storage.dao.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.*;
-import static ru.yandex.practicum.filmorate.Constants.USER_ROW_MAPPER;
+import static ru.yandex.practicum.filmorate.util.RowMappers.USER_ROW_MAPPER;
 
 @Repository("userDbStorage")
 public class UserDbStorage implements UserStorage {
@@ -18,7 +20,7 @@ public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
+    public UserDbStorage(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
     }
@@ -45,7 +47,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> findById(long id) {
-        var sqlQuery = "SELECT * FROM users WHERE user_id = ?";
+        var sqlQuery = "SELECT user_id, login, email, name, birthday FROM users WHERE user_id = ?";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, USER_ROW_MAPPER, id));
         } catch (EmptyResultDataAccessException e) {
@@ -55,13 +57,13 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAll() {
-        var sqlQuery = "SELECT * FROM users ORDER BY user_id";
+        var sqlQuery = "SELECT user_id, login, email, name, birthday FROM users ORDER BY user_id";
         return jdbcTemplate.query(sqlQuery, USER_ROW_MAPPER);
     }
 
     @Override
     public List<User> findAllById(Collection<Long> ids) {
-        var sqlQuery = "SELECT * FROM users WHERE user_id IN (:ids)";
+        var sqlQuery = "SELECT user_id, login, email, name, birthday FROM users WHERE user_id IN (:ids)";
         var idsParams = new MapSqlParameterSource("ids", ids);
         return namedParameterJdbcTemplate.query(sqlQuery, idsParams, USER_ROW_MAPPER);
     }
@@ -81,7 +83,9 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public boolean existsById(long id) {
-        return findById(id).isPresent();
+        var sqlQuery = "SELECT user_id FROM users WHERE user_id = ?";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sqlQuery, id);
+        return rowSet.next();
     }
 
     @Override

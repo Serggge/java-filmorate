@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User create(User user) {
-        validateUser(user);
+        user = validateUser(user);
         User saved = userStorage.save(user);
         log.info("Создан пользователь: {}", saved);
         return saved;
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User update(User user) {
-        validateUser(user);
+        user = validateUser(user);
         if (userStorage.existsById(user.getId())) {
             User saved = userStorage.save(user);
             log.info("Пользователь обновлён: {}", saved);
