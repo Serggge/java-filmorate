@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -44,8 +45,6 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     public User inviteFriend(@PathVariable("id") long userId, @PathVariable long friendId) {
-        System.out.println(userId);
-        System.out.println(friendId);
         return userService.addFriend(userId, friendId);
     }
 
@@ -72,6 +71,12 @@ public class UserController {
     @GetMapping("/{id}/feed")
     public List<Event> returnEvents(@PathVariable("id") long userId) {
         return userService.getEvents(userId);
+        return userService.getMutualFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> recommendFilms(@PathVariable("id") long userId) {
+        return filmService.getRecommendedFilms(userId);
     }
 
     @DeleteMapping("/{id}")

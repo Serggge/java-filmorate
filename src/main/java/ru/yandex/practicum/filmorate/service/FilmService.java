@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import ru.yandex.practicum.filmorate.model.Film;
-
 import java.util.List;
 import java.util.Map;
 
@@ -26,5 +25,7 @@ public interface FilmService {
     List<Film> searchByParams(String query, List<String> by);
 
     void delete(long filmId);
+
+    List<Film> getRecommendedFilms(long userId);
 
 }
