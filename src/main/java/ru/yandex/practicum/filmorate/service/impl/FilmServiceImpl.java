@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -143,6 +144,22 @@ public class FilmServiceImpl implements FilmService {
                 .sorted(Comparator.comparingInt(Film::popularity).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Film> getRecommendedFilms(long userId) {
+        if (!userService.existsById(userId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", userId));
+        }
+        List<Long> suggestedIds = likeStorage.suggestFilms(userId);
+        List<Film> recommendedFilms = filmStorage.findAllById(suggestedIds);
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(suggestedIds);
+        for (Film film : recommendedFilms) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+        }
+        return recommendedFilms;
     }
 
     private Film getFilmOrThrow(long id) {

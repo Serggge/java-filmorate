@@ -19,4 +19,6 @@ public interface FilmService {
 
     List<Film> getPopular(int count);
 
+    List<Film> getRecommendedFilms(long userId);
+
 }

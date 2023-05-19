@@ -9,8 +9,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import java.util.*;
 import java.util.stream.Collectors;
+
 import static ru.yandex.practicum.filmorate.util.RowMappers.LIKE_ROW_MAPPER;
 
 @Repository("likeDbStorage")
@@ -72,4 +74,34 @@ public class LikeDbStorage implements LikeStorage {
         var sqlQuery = "DELETE FROM likes";
         jdbcTemplate.update(sqlQuery);
     }
+
+    @Override
+    public List<Long> suggestFilms(long userId) {
+        var sqlQuery = "WITH user_favorite_films AS " +
+                "    (SELECT film_id " +
+                "     FROM likes " +
+                "     WHERE user_id = :userId), " +
+                "     similar_users AS " +
+                "    (SELECT user_id " +
+                "     FROM likes " +
+                "     WHERE film_id = ANY " +
+                "             (SELECT film_id " +
+                "              FROM user_favorite_films) " +
+                "         AND user_id != :userId " +
+                "     GROUP BY user_id " +
+                "     ORDER BY count(user_id) DESC) " +
+                "SELECT film_id " +
+                "FROM likes " +
+                "WHERE user_id = ANY " +
+                "        (SELECT user_id " +
+                "         FROM similar_users) " +
+                "    AND film_id not in " +
+                "        (SELECT film_id " +
+                "         FROM user_favorite_films) " +
+                "GROUP BY film_id " +
+                "ORDER BY count(film_id) DESC";
+        return namedParameterJdbcTemplate.queryForList(sqlQuery,
+                new MapSqlParameterSource("userId", userId), Long.class);
+    }
+
 }
