@@ -17,7 +17,9 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,23 +77,7 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getAll() {
         log.debug("Запрос списка всех фильмов");
-        List<Film> allFilms = filmStorage.findAll();
-        List<Long> filmsIds = allFilms
-                .stream()
-                .map(Film::getId)
-                .collect(Collectors.toList());
-        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
-        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
-        for (Film film : allFilms) {
-            if (filmsGenres.containsKey(film.getId())) {
-                film.getGenres().addAll(filmsGenres.get(film.getId()));
-            }
-            if (filmsLikes.containsKey(film.getId())) {
-                film.getLikes().addAll(filmsLikes.get(film.getId()));
-            }
-        }
-        Collections.sort(allFilms);
-        return allFilms;
+        return constructFilmList(filmStorage.findAllIds());
     }
 
     @Override
@@ -137,9 +123,11 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public List<Film> getPopular(int count) {
+    public List<Film> getPopular(Map<String, String> allParams) {
+        int count = allParams.containsKey("count") ? Integer.parseInt(allParams.get("count")) : 10;
+        allParams.remove("count");
         log.debug("Запрошен список самых популярных фильмов");
-        return getAll()
+        return constructFilmList(filmStorage.findByParams(allParams))
                 .stream()
                 .sorted(Comparator.comparingInt(Film::popularity).reversed())
                 .limit(count)
@@ -152,37 +140,12 @@ public class FilmServiceImpl implements FilmService {
             throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", userId));
         }
         log.debug("Запрошен список рекомендованных фильмов для пользователя id={}", userId);
-        List<Long> suggestedIds = likeStorage.suggestFilms(userId);
-        List<Film> recommendedFilms = filmStorage.findAllById(suggestedIds);
-        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(suggestedIds);
-        for (Film film : recommendedFilms) {
-            if (filmsGenres.containsKey(film.getId())) {
-                film.getGenres().addAll(filmsGenres.get(film.getId()));
-            }
-        }
-        return recommendedFilms;
+        return constructFilmList(likeStorage.suggestFilms(userId));
     }
 
     @Override
     public List<Film> searchByParams(String query, List<String> by) {
-        Set<Film> foundFilms = new HashSet<>();
-        if (by == null || by.isEmpty() || by.contains("title")) {
-            foundFilms.addAll(filmStorage.findBySubString(query));
-        }
-        if (by != null && by.contains("director")) {
-            //foundFilms.addAll();
-        }
-        Set<Long> filmIds = foundFilms
-                .stream()
-                .map(Film::getId)
-                .collect(Collectors.toSet());
-        Map<Long, Set<Genre>> filmGenres = filmGenreStorage.findAll(filmIds);
-        for (Film film : foundFilms) {
-            if (filmGenres.containsKey(film.getId())) {
-                film.getGenres().addAll(filmGenres.get(film.getId()));
-            }
-        }
-        return foundFilms
+        return constructFilmList(filmStorage.findBySubString(query))
                 .stream()
                 .sorted(Comparator.comparingInt(Film::popularity).reversed())
                 .collect(Collectors.toList());
@@ -195,6 +158,21 @@ public class FilmServiceImpl implements FilmService {
             saved.addGenre(genre);
         }
         return saved;
+    }
+
+    private List<Film> constructFilmList(Collection<Long> filmsIds) {
+        List<Film> films = filmStorage.findAllById(filmsIds);
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
+        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
+        for (Film film : films) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+            if (filmsLikes.containsKey(film.getId())) {
+                film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+        }
+        return films;
     }
 
 }
