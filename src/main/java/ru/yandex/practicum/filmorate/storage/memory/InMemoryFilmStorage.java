@@ -5,6 +5,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
@@ -51,9 +52,20 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> findBySubString(String substring) {
+    public List<Long> findBySubString(String substring) {
         return null;
     }
+
+    @Override
+    public List<Long> findByParams(Map<String, String> allParams) {
+        return null;
+    }
+
+    @Override
+    public List<Long> findAllIds() {
+        return films.values().stream().map(Film::getId).collect(Collectors.toList());
+    }
+
 
     @Override
     public void delete(long id) {

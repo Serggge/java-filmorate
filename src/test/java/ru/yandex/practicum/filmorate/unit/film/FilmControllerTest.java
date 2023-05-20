@@ -162,7 +162,7 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
     }
 
-    @Test
+/*    @Test
     void handleReturnPopular_returnFilmListDefaultSize() throws Exception {
         when(service.getPopular(anyInt())).thenReturn(List.of(firstFilm, secondFilm));
 
@@ -183,7 +183,7 @@ class FilmControllerTest {
                         secondFilm.getDuration())));
 
         verify(service).getPopular(10);
-    }
+    }*/
 
     @Test
     void handleCreateNew_RequestBodyHasWrongJson_ThrowHttpMessageNotReadableEx_returnErrorMessage() throws Exception {

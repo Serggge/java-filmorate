@@ -5,12 +5,17 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+
 import java.util.*;
+
 import static ru.yandex.practicum.filmorate.util.RowMappers.FILM_ROW_MAPPER;
 
 @Repository("filmDbStorage")
@@ -88,12 +93,58 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> findBySubString(String substring) {
-        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films " +
-                "WHERE (name ~* :substring) OR (description ~* :substring)";
-                //"WHERE REGEXP_LIKE (name, :substring) OR REGEXP_LIKE (description, :substring)";
+    public List<Long> findBySubString(String substring) {
+        var sqlQuery = "SELECT film_id FROM films WHERE (name ~* :substring) OR (description ~* :substring)";
         var param = new MapSqlParameterSource("substring", substring);
-        return namedParameterJdbcTemplate.query(sqlQuery, param, FILM_ROW_MAPPER);
+        return namedParameterJdbcTemplate.queryForList(sqlQuery, param, Long.class);
+    }
+
+    @Override
+    public List<Long> findByParams(Map<String, String> allParams) {
+        String sqlQuery;
+        if (allParams.size() == 2) {
+            sqlQuery = "SELECT films.film_id AS film_id FROM films " +
+                    "INNER JOIN film_genre ON films.film_id = film_genre.film_id " +
+                    "WHERE EXTRACT (YEAR FROM release_date) = :year AND genre_id = :genreId ORDER BY film_id";
+        } else if (allParams.containsKey("year")) {
+            sqlQuery = "SELECT films.film_id AS film_id FROM films " +
+                    "INNER JOIN film_genre ON films.film_id = film_genre.film_id " +
+                    "WHERE EXTRACT (YEAR FROM release_date) = :year ORDER BY film_id";
+        } else if (allParams.containsKey("genreId")) {
+            sqlQuery = "SELECT films.film_id AS film_id FROM films " +
+                    "INNER JOIN film_genre ON films.film_id = film_genre.film_id " +
+                    "WHERE genre_id = :genreId ORDER BY film_id";
+        } else {
+            sqlQuery = "SELECT DISTINCT film_id FROM films ORDER BY film_id";
+        }
+        return namedParameterJdbcTemplate.queryForList(sqlQuery, allParams, Long.class);
+    }
+
+    private List<Film> mapToFilmList(SqlRowSet rs) {
+        List<Film> films = new ArrayList<>();
+        Film currentFilm = null;
+        while (rs.next()) {
+            long filmId = rs.getLong("film_id");
+            if (currentFilm == null || currentFilm.getId() != filmId) {
+                currentFilm = Film.builder()
+                        .id(filmId)
+                        .name(rs.getString("name"))
+                        .description(rs.getString("description"))
+                        .releaseDate(rs.getDate("release_date").toLocalDate())
+                        .duration(rs.getInt("duration"))
+                        .mpa(new Mpa(rs.getInt("mpa_id")))
+                        .build();
+                films.add(currentFilm);
+            }
+            currentFilm.getGenres().add(new Genre(rs.getInt("genre_id")));
+        }
+        return films;
+    }
+
+    @Override
+    public List<Long> findAllIds() {
+        var sqlQuery = "SELECT DISTINCT film_id FROM films";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class);
     }
 
     @Override
