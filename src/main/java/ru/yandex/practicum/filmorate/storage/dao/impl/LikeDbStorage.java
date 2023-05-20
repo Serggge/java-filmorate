@@ -101,6 +101,10 @@ public class LikeDbStorage implements LikeStorage {
                 "    AND film_id NOT IN " +
                 "        (SELECT film_id " +
                 "         FROM user_favorite_films)";
+        var sqlQuery = "WITH user_favorite_films AS (SELECT film_id FROM likes WHERE user_id = :userId) " +
+                "SELECT film_id FROM likes WHERE user_id IN " +
+                "(SELECT user_id FROM likes WHERE film_id IN (SELECT film_id FROM user_favorite_films) " +
+                "AND user_id != :userId) AND film_id NOT IN (SELECT film_id FROM user_favorite_films)";
         return namedParameterJdbcTemplate.queryForList(sqlQuery,
                 new MapSqlParameterSource("userId", userId), Long.class);
     }
