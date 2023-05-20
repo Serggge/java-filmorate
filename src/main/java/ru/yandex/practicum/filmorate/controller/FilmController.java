@@ -52,4 +52,10 @@ public class FilmController {
         return service.getPopular(count);
     }
 
+    @GetMapping("/search")
+    public List<Film> returnFound(@RequestParam String query,
+                                  @RequestParam List<String> by) {
+        return service.searchByParams(query, by);
+    }
+
 }

@@ -19,4 +19,6 @@ public interface FilmStorage {
 
     void deleteAll();
 
+    List<Film> findBySubString(String substring);
+
 }

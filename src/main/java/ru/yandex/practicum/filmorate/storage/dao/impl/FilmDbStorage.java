@@ -87,4 +87,13 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlQuery);
     }
 
+    @Override
+    public List<Film> findBySubString(String substring) {
+        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films " +
+                "WHERE (name ~* :substring) OR (description ~* :substring)";
+                //"WHERE REGEXP_LIKE (name, :substring) OR REGEXP_LIKE (description, :substring)";
+        var param = new MapSqlParameterSource("substring", substring);
+        return namedParameterJdbcTemplate.query(sqlQuery, param, FILM_ROW_MAPPER);
+    }
+
 }

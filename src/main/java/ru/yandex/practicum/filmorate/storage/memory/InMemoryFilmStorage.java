@@ -49,4 +49,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public void deleteAll() {
         films.clear();
     }
+
+    @Override
+    public List<Film> findBySubString(String substring) {
+        return null;
+    }
 }
