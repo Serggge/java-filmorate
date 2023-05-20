@@ -77,10 +77,25 @@ public class LikeDbStorage implements LikeStorage {
 
     @Override
     public List<Long> suggestFilms(long userId) {
-        var sqlQuery = "WITH user_favorite_films AS (SELECT film_id FROM likes WHERE user_id = :userId) " +
-                "SELECT film_id FROM likes WHERE user_id IN " +
-                "(SELECT user_id FROM likes WHERE film_id IN (SELECT film_id FROM user_favorite_films) " +
-                "AND user_id != :userId) AND film_id NOT IN (SELECT film_id FROM user_favorite_films)";
+        var sqlQuery = "WITH user_favorite_films AS " +
+                "    (SELECT film_id " +
+                "     FROM likes " +
+                "     WHERE user_id = :userId) " +
+                "SELECT DISTINCT film_id " +
+                "FROM likes " +
+                "WHERE user_id IN " +
+                "        (SELECT user_id " +
+                "         FROM likes " +
+                "         WHERE film_id IN " +
+                "                 (SELECT film_id " +
+                "                  FROM user_favorite_films) " +
+                "             AND user_id != :userId " +
+                "         GROUP BY user_id " +
+                "         ORDER BY COUNT(user_id) DESC " +
+                "         LIMIT 3) " +
+                "    AND film_id NOT IN " +
+                "        (SELECT film_id " +
+                "         FROM user_favorite_films)";
         return namedParameterJdbcTemplate.queryForList(sqlQuery,
                 new MapSqlParameterSource("userId", userId), Long.class);
     }
