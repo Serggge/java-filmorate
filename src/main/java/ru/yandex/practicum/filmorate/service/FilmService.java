@@ -28,4 +28,6 @@ public interface FilmService {
 
     List<Film> getRecommendedFilms(long userId);
 
+    List<Film> searchByParams(String query, List<String> by);
+
 }

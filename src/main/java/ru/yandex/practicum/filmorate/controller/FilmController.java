@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +51,12 @@ public class FilmController {
     @GetMapping("/popular")
     public List<Film> returnPopular(@RequestParam Map<String, String> allParams) {
         return service.getPopular(allParams);
+    }
+
+    @GetMapping("/search")
+    public List<Film> returnFound(@RequestParam String query,
+                                  @RequestParam List<String> by) {
+        return service.searchByParams(query, by);
     }
 
     @GetMapping("/search")

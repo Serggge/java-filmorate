@@ -221,6 +221,31 @@ public class FilmServiceImpl implements FilmService {
         return foundedFilms;
     }
 
+    @Override
+    public List<Film> searchByParams(String query, List<String> by) {
+        Set<Film> foundFilms = new HashSet<>();
+        if (by == null || by.isEmpty() || by.contains("title")) {
+            foundFilms.addAll(filmStorage.findBySubString(query));
+        }
+        if (by != null && by.contains("director")) {
+            //foundFilms.addAll();
+        }
+        Set<Long> filmIds = foundFilms
+                .stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+        Map<Long, Set<Genre>> filmGenres = filmGenreStorage.findAll(filmIds);
+        for (Film film : foundFilms) {
+            if (filmGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmGenres.get(film.getId()));
+            }
+        }
+        return foundFilms
+                .stream()
+                .sorted(Comparator.comparingInt(Film::popularity).reversed())
+                .collect(Collectors.toList());
+    }
+
     private Film getFilmOrThrow(long id) {
         Film saved = filmStorage.findById(id)
                 .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
