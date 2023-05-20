@@ -169,6 +169,7 @@ public class FilmServiceImpl implements FilmService {
         if (!userService.existsById(userId)) {
             throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", userId));
         }
+        log.debug("Запрошен список рекомендованных фильмов для пользователя id={}", userId);
         List<Long> suggestedIds = likeStorage.suggestFilms(userId);
         List<Film> recommendedFilms = filmStorage.findAllById(suggestedIds);
         Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(suggestedIds);
