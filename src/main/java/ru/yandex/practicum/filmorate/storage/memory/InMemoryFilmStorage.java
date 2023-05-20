@@ -77,6 +77,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public List<Long> findAllIds() {
+        return films.values().stream().map(Film::getId).collect(Collectors.toList());
+    }
+
+
+    @Override
     public void delete(long id) {
         films.remove(id);
     }
