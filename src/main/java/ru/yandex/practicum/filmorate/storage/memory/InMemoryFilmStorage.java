@@ -51,6 +51,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> findBySubString(String substring) {
+        return null;
+    }
+
+    @Override
     public void delete(long id) {
         films.remove(id);
     }

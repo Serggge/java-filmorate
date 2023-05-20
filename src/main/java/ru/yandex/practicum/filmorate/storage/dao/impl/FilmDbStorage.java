@@ -10,9 +10,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-
 import java.util.*;
-
 import static ru.yandex.practicum.filmorate.util.RowMappers.FILM_ROW_MAPPER;
 
 @Repository("filmDbStorage")
@@ -87,6 +85,15 @@ public class FilmDbStorage implements FilmStorage {
     public void deleteAll() {
         var sqlQuery = "DELETE FROM films";
         jdbcTemplate.update(sqlQuery);
+    }
+
+    @Override
+    public List<Film> findBySubString(String substring) {
+        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films " +
+                "WHERE (name ~* :substring) OR (description ~* :substring)";
+                //"WHERE REGEXP_LIKE (name, :substring) OR REGEXP_LIKE (description, :substring)";
+        var param = new MapSqlParameterSource("substring", substring);
+        return namedParameterJdbcTemplate.query(sqlQuery, param, FILM_ROW_MAPPER);
     }
 
     @Override
