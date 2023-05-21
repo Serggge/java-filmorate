@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public interface UserService {
 
     List<User> getMutualFriends(long id, long otherId);
 
-    boolean existsById(long id);
+    boolean existsById(long userId);
+
+    List<Event> getEvents(long userId);
 
 }

@@ -8,18 +8,15 @@ import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Like;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
-
 import static ru.yandex.practicum.filmorate.service.Validator.*;
-
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,16 +28,19 @@ public class FilmServiceImpl implements FilmService {
     private final FilmGenreStorage filmGenreStorage;
     private final LikeStorage likeStorage;
     private final UserService userService;
+    private final EventStorage eventStorage;
 
     @Autowired
     public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                            FilmGenreStorage filmGenreStorage,
                            LikeStorage likeStorage,
-                           UserService userService) {
+                           UserService userService,
+                           EventStorage eventStorage) {
         this.filmStorage = filmStorage;
         this.filmGenreStorage = filmGenreStorage;
         this.likeStorage = likeStorage;
         this.userService = userService;
+        this.eventStorage = eventStorage;
     }
 
     @Override
@@ -103,6 +103,13 @@ public class FilmServiceImpl implements FilmService {
             throw new DataUpdateException(
                     String.format("Пользователь id=%d уже оставлял лайк фильму id=%d", userId, filmId));
         }
+        eventStorage.save(Event.builder()
+                .timestamp(Instant.now())
+                .eventType(EventType.LIKE)
+                .operation(Operation.ADD)
+                .userId(userId)
+                .entityId(filmId)
+                .build());
         return film;
     }
 
@@ -119,6 +126,13 @@ public class FilmServiceImpl implements FilmService {
         } else {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
+        eventStorage.save(Event.builder()
+                .timestamp(Instant.now())
+                .eventType(EventType.LIKE)
+                .operation(Operation.REMOVE)
+                .userId(userId)
+                .entityId(filmId)
+                .build());
         return film;
     }
 
