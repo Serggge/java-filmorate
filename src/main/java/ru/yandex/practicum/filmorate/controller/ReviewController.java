@@ -9,7 +9,7 @@ import ru.yandex.practicum.filmorate.storage.dao.ReviewStorage;
 import java.util.List;
 
 @RestController
-@RequestMapping("/review")
+@RequestMapping("/reviews")
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
 public class ReviewController {
     private final ReviewStorage reviewStorage;
@@ -29,9 +29,9 @@ public class ReviewController {
         return reviewStorage.findReviewById(id);
     }
 
-    @GetMapping("/byFilm/{id}")
-    public List<Review> getReviewsByFilmId(@PathVariable int id) {
-        return reviewStorage.findReviewsByFilmId(id);
+    @GetMapping()
+    public List<Review> getReviewsByFilmId(@RequestParam(defaultValue = "0") int filmId, @RequestParam(defaultValue = "10") int count) {
+        return reviewStorage.findReviewsByFilmId(filmId, count);
     }
 
     @DeleteMapping("/{id}")
