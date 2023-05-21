@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dao;
 
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -28,4 +29,5 @@ public interface DirectorsStorage {
 
     void deleteByFilmId(long id);
 
+    SqlRowSet getDirectorInFilms(int directorId);
 }

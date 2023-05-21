@@ -21,5 +21,4 @@ public interface FilmStorage {
 
     void deleteAll();
 
-    SqlRowSet getDirectorRows(int directorId);
 }

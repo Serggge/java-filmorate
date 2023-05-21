@@ -89,9 +89,4 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlQuery);
     }
 
-    public SqlRowSet getDirectorRows(int directorId) {
-        String sql = "SELECT film_id FROM film_directors WHERE director_id = ?";
-        return jdbcTemplate.queryForRowSet(sql, directorId);
-    }
-
 }

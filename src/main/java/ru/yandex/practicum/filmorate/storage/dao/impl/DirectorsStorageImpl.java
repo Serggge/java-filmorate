@@ -64,7 +64,7 @@ public class DirectorsStorageImpl implements DirectorsStorage {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("directors")
                 .usingGeneratedKeyColumns("id");
-        director.setId(simpleJdbcInsert.executeAndReturnKey(getValue(director)).intValue());
+        director.setId(simpleJdbcInsert.executeAndReturnKey(buildDirector(director)).intValue());
         return director;
 
     }
@@ -142,10 +142,15 @@ public class DirectorsStorageImpl implements DirectorsStorage {
         jdbcTemplate.update(sqlQuery, id);
     }
 
-    public Map<String, Object> getValue(Director director) {
+    public Map<String, Object> buildDirector(Director director) {
         Map<String, Object> values = new HashMap<>();
         values.put("name", director.getName());
         return values;
+    }
+
+    public SqlRowSet getDirectorInFilms(int directorId) {
+        String sql = "SELECT film_id FROM film_directors WHERE director_id = ?";
+        return jdbcTemplate.queryForRowSet(sql, directorId);
     }
 
 }

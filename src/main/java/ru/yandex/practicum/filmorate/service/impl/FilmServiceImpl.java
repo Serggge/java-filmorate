@@ -103,7 +103,6 @@ public class FilmServiceImpl implements FilmService {
                 film.getDirectors().addAll(filmsDirectors.get(film.getId()));
             }
         }
-        Collections.sort(allFilms);
         return allFilms;
     }
 
@@ -172,7 +171,7 @@ public class FilmServiceImpl implements FilmService {
     public List<Film> getDirectorFilms(int directorId, String sortBy) {
         List<Film> films = new ArrayList<>();
         directorsStorage.getDirectorById(directorId);
-        SqlRowSet rows = filmStorage.getDirectorRows(directorId);
+        SqlRowSet rows = directorsStorage.getDirectorInFilms(directorId);
         while (rows.next()) {
             films.add(getById(rows.getLong("film_id")));
         }

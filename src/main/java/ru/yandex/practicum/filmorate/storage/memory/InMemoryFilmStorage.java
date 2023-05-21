@@ -51,9 +51,5 @@ public class InMemoryFilmStorage implements FilmStorage {
         films.clear();
     }
 
-    @Override
-    public SqlRowSet getDirectorRows(int directorId) {
-        return null;
-    }
 
 }
