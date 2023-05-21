@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.RowMapper;
 import ru.yandex.practicum.filmorate.model.*;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class RowMappers {
 

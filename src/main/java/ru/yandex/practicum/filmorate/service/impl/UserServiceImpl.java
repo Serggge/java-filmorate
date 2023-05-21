@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
-
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 
 import java.time.Instant;
