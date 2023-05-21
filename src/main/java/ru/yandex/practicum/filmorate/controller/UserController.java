@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-
 import javax.validation.Valid;
 import java.util.List;
 
@@ -69,6 +69,11 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void removeUser(@PathVariable("id") long userId) {
         service.deleteUserById(userId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> returnEvents(@PathVariable("id") long userId) {
+        return userService.getEvents(userId);
     }
 
 }
