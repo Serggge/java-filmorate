@@ -55,6 +55,9 @@ public final class Validator {
 
     @SneakyThrows
     public static void validateExistFilm(List<Long> filmIdList, Long id) {
+        if (id == null) {
+            throw new ValidationException("Не указан id фильма");
+        }
         if (!filmIdList.contains(id)) {
             throw new FilmNotFoundException(String.format("Фильм с id %s не найден", id));
         }
@@ -62,6 +65,9 @@ public final class Validator {
 
     @SneakyThrows
     public static void validateExistUser(List<Long> userIdList, Long id) {
+        if (id == null) {
+            throw new ValidationException("Не указан id пользователя");
+        }
         if (!userIdList.contains(id)) {
             throw new FilmNotFoundException(String.format("Пользователь с id %s не найден", id));
         }
@@ -69,6 +75,9 @@ public final class Validator {
 
     @SneakyThrows
     public static void validateExistReview(List<Long> reviewIdList, Long id) {
+        if (id == null) {
+            throw new ValidationException("Не указан id отзыва");
+        }
         if (!reviewIdList.contains(id)) {
             throw new FilmNotFoundException(String.format("Ревью с id %s не найден", id));
         }

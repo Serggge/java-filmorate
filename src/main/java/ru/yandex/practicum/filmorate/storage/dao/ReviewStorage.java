@@ -11,7 +11,7 @@ public interface ReviewStorage {
 
     Review findReviewById(long id);
 
-    List<Review> findReviewsByFilmId(long id);
+    List<Review> findReviewsByFilmId(long filmId, int count);
 
     void deleteReviewById(long id);
 

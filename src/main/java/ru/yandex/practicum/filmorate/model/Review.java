@@ -15,7 +15,9 @@ public class Review {
     private Long reviewId;
     private Long filmId;
     private Long userId;
-    private String reviewText;
+    private String content;
+    private Boolean isPositive;
+    private Integer useful = 0;
     private LocalDateTime reviewDate;
 
 }

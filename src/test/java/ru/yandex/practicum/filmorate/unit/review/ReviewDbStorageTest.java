@@ -32,7 +32,7 @@ class ReviewDbStorageTest {
     @Test
     void testCreate() throws DataAccessException {
         when(jdbcTemplate.query(Mockito.<String>any(), Mockito.<RowMapper<Object>>any())).thenReturn(new ArrayList<>());
-        Review review = new Review(1L, 1L, 1L, "ReviewOne", LocalDate.of(1970, 1, 1).atStartOfDay());
+        Review review = new Review(1L, 1L, 1L, "ReviewOne", true, 4, LocalDate.of(1970, 1, 1).atStartOfDay());
         assertThrows(ValidationException.class, () -> reviewDbStorage
                 .create(review));
     }
