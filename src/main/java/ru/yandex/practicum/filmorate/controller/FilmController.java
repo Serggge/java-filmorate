@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -50,6 +51,11 @@ public class FilmController {
     @GetMapping("/popular")
     public List<Film> returnPopular(@RequestParam(defaultValue = "10") int count) {
         return service.getPopular(count);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getDirectorFilms(@PathVariable("directorId") int directorId, @RequestParam String sortBy) {
+        return service.getDirectorFilms(directorId, sortBy);
     }
 
 }

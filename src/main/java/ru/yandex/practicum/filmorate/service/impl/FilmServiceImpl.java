@@ -3,20 +3,21 @@ package ru.yandex.practicum.filmorate.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Like;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,16 +29,20 @@ public class FilmServiceImpl implements FilmService {
     private final FilmGenreStorage filmGenreStorage;
     private final LikeStorage likeStorage;
     private final UserService userService;
+    private final DirectorsStorage directorsStorage;
+
 
     @Autowired
     public FilmServiceImpl(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                            FilmGenreStorage filmGenreStorage,
                            LikeStorage likeStorage,
-                           UserService userService) {
+                           UserService userService,
+                           DirectorsStorage directorsStorage) {
         this.filmStorage = filmStorage;
         this.filmGenreStorage = filmGenreStorage;
         this.likeStorage = likeStorage;
         this.userService = userService;
+        this.directorsStorage = directorsStorage;
     }
 
     @Override
@@ -49,6 +54,9 @@ public class FilmServiceImpl implements FilmService {
         film = filmStorage.save(film);
         if (!film.getGenres().isEmpty()) {
             film = filmGenreStorage.save(film);
+        }
+        if (!film.getDirectors().isEmpty()) {
+            film = directorsStorage.save(film);
         }
         log.info("Добавлен фильм: {}", film);
         return film;
@@ -63,6 +71,8 @@ public class FilmServiceImpl implements FilmService {
             film = filmStorage.save(film);
             filmGenreStorage.deleteByFilmId(film.getId());
             filmGenreStorage.save(film);
+            directorsStorage.deleteByFilmId(film.getId());
+            directorsStorage.save(film);
             film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId()));
             log.info("Обновлён фильм: {}", film);
             return film;
@@ -81,12 +91,16 @@ public class FilmServiceImpl implements FilmService {
                 .collect(Collectors.toList());
         Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
         Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
+        Map<Long, Set<Director>> filmsDirectors = directorsStorage.findAll(filmsIds);
         for (Film film : allFilms) {
             if (filmsGenres.containsKey(film.getId())) {
                 film.getGenres().addAll(filmsGenres.get(film.getId()));
             }
             if (filmsLikes.containsKey(film.getId())) {
                 film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+            if (filmsDirectors.containsKey(film.getId())) {
+                film.getDirectors().addAll(filmsDirectors.get(film.getId()));
             }
         }
         Collections.sort(allFilms);
@@ -99,6 +113,7 @@ public class FilmServiceImpl implements FilmService {
         Film film = getFilmOrThrow(id);
         film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
         film.getLikes().addAll(likeStorage.findUsersIdByFilmId(id));
+        film.getDirectors().addAll(directorsStorage.findDirectorsByFilmId(id));
         return film;
     }
 
@@ -152,6 +167,22 @@ public class FilmServiceImpl implements FilmService {
             saved.addGenre(genre);
         }
         return saved;
+    }
+
+    public List<Film> getDirectorFilms(int directorId, String sortBy) {
+        List<Film> films = new ArrayList<>();
+        directorsStorage.getDirectorById(directorId);
+        SqlRowSet rows = filmStorage.getDirectorRows(directorId);
+        while (rows.next()) {
+            films.add(getById(rows.getLong("film_id")));
+        }
+        if (sortBy.equals("year")) {
+            films.stream().sorted(Comparator.comparing(Film::getReleaseDate));
+            Collections.reverse(films);
+        } else {
+            films.stream().sorted(Comparator.comparingInt(Film::popularity));
+        }
+        return films;
     }
 
 }

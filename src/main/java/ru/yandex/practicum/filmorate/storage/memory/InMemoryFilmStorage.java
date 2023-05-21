@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.memory;
 
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -49,4 +50,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     public void deleteAll() {
         films.clear();
     }
+
+    @Override
+    public SqlRowSet getDirectorRows(int directorId) {
+        return null;
+    }
+
 }

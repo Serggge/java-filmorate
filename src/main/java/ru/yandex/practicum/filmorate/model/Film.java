@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -28,6 +29,8 @@ public class Film implements Comparable<Film> {
     Mpa mpa;
     final Set<Genre> genres = new HashSet<>();
     final Set<Long> likes = new HashSet<>();
+
+    final Set<Director> directors = new HashSet<>();
 
     public void addLike(long id) {
         likes.add(id);
