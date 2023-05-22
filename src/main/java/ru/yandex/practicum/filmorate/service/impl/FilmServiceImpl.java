@@ -158,7 +158,6 @@ public class FilmServiceImpl implements FilmService {
         List<Film> foundedFilms = foundedIds.isEmpty()
                 ? constructFilmList(filmStorage.findAllIds())
                 : constructFilmList(foundedIds);
-
         return foundedFilms.stream()
                 .sorted(Comparator.comparingInt(Film::popularity).reversed())
                 .limit(count)
@@ -176,6 +175,7 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> searchByParams(String query, List<String> by) {
+        //TODO AFTER IMPLEMENTATION DIRECTORS FEATURE
         return constructFilmList(filmStorage.findBySubString(query))
                 .stream()
                 .sorted(Comparator.comparingInt(Film::popularity).reversed())
