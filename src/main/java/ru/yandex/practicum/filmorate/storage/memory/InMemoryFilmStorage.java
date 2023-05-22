@@ -57,7 +57,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Long> findByParams(Map<String, String> allParams) {
+    public List<Long> findAllByYear(int year) {
+        return null;
+    }
+
+    @Override
+    public List<Long> findAllByGenre(int genreId) {
         return null;
     }
 

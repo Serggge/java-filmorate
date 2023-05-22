@@ -15,9 +15,12 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -138,11 +141,22 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getPopular(Map<String, String> allParams) {
-        int count = allParams.containsKey("count") ? Integer.parseInt(allParams.get("count")) : 10;
-        allParams.remove("count");
         log.debug("Запрошен список самых популярных фильмов");
-        return constructFilmList(filmStorage.findByParams(allParams))
-                .stream()
+        int count = allParams.containsKey("count") ? safetyParse(Integer::parseInt, allParams.get("count")) : 10;
+        Set<Long> foundedIds = new HashSet<>();
+        if (allParams.containsKey("year")) {
+            int year = safetyParse(Integer::parseInt, allParams.get("year"));
+            foundedIds.addAll(filmStorage.findAllByYear(year));
+        }
+        if (allParams.containsKey("genreId")) {
+            int genreId = safetyParse(Integer::parseInt, allParams.get("genreId"));
+            foundedIds.addAll(filmStorage.findAllByGenre(genreId));
+        }
+        List<Film> foundedFilms = foundedIds.isEmpty()
+                ? constructFilmList(filmStorage.findAllIds())
+                : constructFilmList(foundedIds);
+
+        return foundedFilms.stream()
                 .sorted(Comparator.comparingInt(Film::popularity).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
@@ -187,6 +201,22 @@ public class FilmServiceImpl implements FilmService {
             }
         }
         return films;
+    }
+
+/*    private int safetyParse(String source) {
+        try {
+            return Integer.parseInt(source);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Некорректный параметр: " + source);
+        }
+    }*/
+
+    private <T extends Number> T safetyParse(Function<String, T> parser, String source) {
+        try {
+            return parser.apply(source);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Некорректный параметр: " + source);
+        }
     }
 
 }

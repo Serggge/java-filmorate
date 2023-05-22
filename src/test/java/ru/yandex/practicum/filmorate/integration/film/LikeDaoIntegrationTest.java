@@ -97,6 +97,39 @@ class LikeDaoIntegrationTest {
         assertThat(all.get(film.getId())).contains(user.getId());
     }
 
+    @Test
+    void testSuggestFilms() {
+        Film secondFilm = Film.builder()
+                .name("Second film")
+                .description("Description second film")
+                .releaseDate(LocalDate.now())
+                .duration(200)
+                .mpa(new Mpa(2))
+                .build();
+        User secondUser = User.builder()
+                .login("Peter555")
+                .name("Peter")
+                .email("peter@ya.ru")
+                .birthday(LocalDate.of(2010, 1, 1))
+                .build();
+        secondFilm = filmStorage.save(secondFilm);
+        secondUser = userStorage.save(secondUser);
+        final Like firstUserFirstFilm = new Like(film.getId(), user.getId());
+        likeStorage.save(firstUserFirstFilm);
+        final Like secondUserFirstFilm = new Like(film.getId(), secondUser.getId());
+        likeStorage.save(secondUserFirstFilm);
+        final Like secondUserSecondFilm = new Like(secondFilm.getId(), secondUser.getId());
+        likeStorage.save(secondUserSecondFilm);
+
+        List<Long> suggestForUser = likeStorage.suggestFilms(user.getId());
+
+        assertThat(suggestForUser)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(1)
+                .contains(secondFilm.getId());
+    }
+
     private static void setFilmAndUserForDefaults() {
         film.setId(0);
         film.setName("Film One");
