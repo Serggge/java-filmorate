@@ -162,7 +162,6 @@ public class FilmServiceImpl implements FilmService {
         List<Film> foundedFilms = foundedIds.isEmpty()
                 ? constructFilmList(filmStorage.findAllIds())
                 : constructFilmList(foundedIds);
-
         return foundedFilms.stream()
                 .sorted(Comparator.comparingInt(Film::popularity).reversed())
                 .limit(count)
