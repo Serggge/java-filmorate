@@ -8,12 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MovieGenre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.dao.impl.FilmGenreDbStorage;
+
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,6 +28,7 @@ class FilmDaoIntegrationTest {
     static final Film firstFilm = new Film();
     static final Film secondFilm = new Film();
     final FilmDbStorage filmStorage;
+    final FilmGenreDbStorage filmGenreStorage;
 
 
     @BeforeEach
@@ -115,6 +119,57 @@ class FilmDaoIntegrationTest {
 
         assertThat(saved.getId()).isNotEqualTo(0);
         assertTrue(filmStorage.existsById(saved.getId()));
+    }
+
+    @Test
+    void testFindBySubString() {
+        final String partOfName = "FILM";
+        final String partOfDesc = "script";
+        final Film savedFirst = filmStorage.save(firstFilm);
+        final Film savedSecond = filmStorage.save(secondFilm);
+
+        final List<Long> foundedByName = filmStorage.findBySubString(partOfName);
+        final List<Long> foundedByDesc= filmStorage.findBySubString(partOfDesc);
+
+        assertThat(foundedByName)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .contains(savedFirst.getId(), savedSecond.getId());
+        assertThat(foundedByDesc)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .contains(savedFirst.getId(), savedSecond.getId());
+    }
+
+@Test
+void testFindByParams_byYearParam() {
+    final Film saved = filmStorage.save(firstFilm);
+
+    final List<Long> foundedIds = filmStorage.findAllByYear(firstFilm.getReleaseDate().getYear());
+
+    assertThat(foundedIds)
+            .isNotNull()
+            .isNotEmpty()
+            .hasSize(1)
+            .contains(saved.getId());
+}
+
+    @Test
+    void testFindByParams_byGenreParam() {
+        final int genreId = new Random().nextInt(MovieGenre.values().length) + 1;
+        firstFilm.getGenres().add(new Genre(genreId));
+        final Film savedFilm = filmStorage.save(firstFilm);
+        filmGenreStorage.save(savedFilm);
+
+        final List<Long> foundedIds = filmStorage.findAllByGenre(genreId);
+
+        assertThat(foundedIds)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(1)
+                .contains(savedFilm.getId());
     }
 
     private void setFilmsForDefaults() {
