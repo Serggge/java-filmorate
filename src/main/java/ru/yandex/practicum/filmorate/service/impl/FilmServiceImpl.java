@@ -173,12 +173,12 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public void deleteFilm(long filmId) {
+    public void delete(long filmId) {
         log.info("Удаление фильма id={}", filmId);
-        if (filmStorage.findById(filmId).isEmpty()) {
+        if (!filmStorage.existsById(filmId)) {
             throw new FilmNotFoundException(String.format("Фильм с id=%d не найден", filmId));
         }
-        filmStorage.deleteFilm(filmId);
+        filmStorage.delete(filmId);
     }
 
 }

@@ -20,6 +20,6 @@ public interface FilmService {
 
     List<Film> getPopular(int count);
 
-    void deleteFilm(long filmId);
+    void delete(long filmId);
 
 }
