@@ -75,4 +75,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film update(Film film) {
         return null;
     }
+
+    @Override
+    public void deleteFilm(long id) {
+        films.remove(id);
+    }
 }

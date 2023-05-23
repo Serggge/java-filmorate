@@ -26,4 +26,6 @@ public interface UserService {
 
     List<Event> getEvents(long userId);
 
+    void deleteUserById(long id);
+
 }

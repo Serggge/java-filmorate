@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
 
 import java.time.Instant;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -155,6 +156,13 @@ public class UserServiceImpl implements UserService {
         if (!userStorage.existsById(id)) {
             throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", id));
         }
+    }
+
+    @Override
+    public void deleteUserById(long id) {
+        validateId(id);
+        log.debug("Удаление пользователя: id={}", id);
+        userStorage.deleteById(id);
     }
 
 }

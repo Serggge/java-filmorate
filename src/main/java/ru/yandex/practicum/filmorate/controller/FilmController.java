@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -59,4 +60,8 @@ public class FilmController {
         return service.searchByParams(query, by);
     }
 
+    @DeleteMapping("/{id}")
+    public void deleteFilm(@PathVariable("id") long filmId) {
+        service.deleteFilm(filmId);
+    }
 }

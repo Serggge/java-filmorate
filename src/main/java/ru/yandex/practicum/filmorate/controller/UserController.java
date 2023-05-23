@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -71,6 +72,11 @@ public class UserController {
     @GetMapping("/{id}/feed")
     public List<Event> returnEvents(@PathVariable("id") long userId) {
         return userService.getEvents(userId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void removeUser(@PathVariable("id") long userId) {
+        service.deleteUserById(userId);
     }
 
 }
