@@ -142,14 +142,14 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(Map<String, String> allParams) {
         log.debug("Запрошен список самых популярных фильмов");
-        int count = allParams.containsKey("count") ? safetyParse(Integer::parseInt, allParams.get("count")) : 10;
+        int count = allParams.containsKey("count") ? safelyParse(Integer::parseInt, allParams.get("count")) : 10;
         Set<Long> foundedIds = new HashSet<>();
         if (allParams.containsKey("year")) {
-            int year = safetyParse(Integer::parseInt, allParams.get("year"));
+            int year = safelyParse(Integer::parseInt, allParams.get("year"));
             foundedIds.addAll(filmStorage.findAllByYear(year));
         }
         if (allParams.containsKey("genreId")) {
-            int genreId = safetyParse(Integer::parseInt, allParams.get("genreId"));
+            int genreId = safelyParse(Integer::parseInt, allParams.get("genreId"));
             foundedIds.addAll(filmStorage.findAllByGenre(genreId));
         }
         List<Film> foundedFilms = foundedIds.isEmpty()
@@ -173,10 +173,10 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> searchByParams(String query, List<String> by) {
         //TODO AFTER IMPLEMENTATION DIRECTORS FEATURE
-        return constructFilmList(filmStorage.findBySubString(query))
-                .stream()
-                .sorted(Comparator.comparingInt(Film::popularity).reversed())
-                .collect(Collectors.toList());
+        log.debug("Поиск подстроки: {} / параметры поиска: [{}]", query, by);
+        List<Film> foundedFilms = constructFilmList(filmStorage.findBySubString(query));
+        foundedFilms.sort(Comparator.comparingInt(Film::popularity).reversed());
+        return foundedFilms;
     }
 
     private Film getFilmOrThrow(long id) {
@@ -203,7 +203,7 @@ public class FilmServiceImpl implements FilmService {
         return films;
     }
 
-    private <T extends Number> T safetyParse(Function<String, T> parser, String source) {
+    private <T extends Number> T safelyParse(Function<String, T> parser, String source) {
         try {
             return parser.apply(source);
         } catch (Exception e) {
