@@ -149,14 +149,14 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(Map<String, String> allParams) {
         log.debug("Запрошен список самых популярных фильмов");
-        int count = allParams.containsKey("count") ? safetyParse(Integer::parseInt, allParams.get("count")) : 10;
+        int count = allParams.containsKey("count") ? safelyParse(Integer::parseInt, allParams.get("count")) : 10;
         Set<Long> foundedIds = new HashSet<>();
         if (allParams.containsKey("year")) {
-            int year = safetyParse(Integer::parseInt, allParams.get("year"));
+            int year = safelyParse(Integer::parseInt, allParams.get("year"));
             foundedIds.addAll(filmStorage.findAllByYear(year));
         }
         if (allParams.containsKey("genreId")) {
-            int genreId = safetyParse(Integer::parseInt, allParams.get("genreId"));
+            int genreId = safelyParse(Integer::parseInt, allParams.get("genreId"));
             foundedIds.addAll(filmStorage.findAllByGenre(genreId));
         }
         List<Film> foundedFilms = foundedIds.isEmpty()
