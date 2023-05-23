@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MovieGenre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmGenreDbStorage;
 
@@ -186,6 +187,16 @@ void testFindByParams_byYearParam() {
         secondFilm.setReleaseDate(LocalDate.of(2001, 12, 31));
         secondFilm.setDuration(180);
         secondFilm.setMpa(new Mpa(2));
+    }
+
+    @Test
+    void testDeleteById() {
+        final long id = filmStorage.save(firstFilm).getId();
+
+        filmStorage.delete(id);
+        Optional<Film> optionalFilm = filmStorage.findById(id);
+
+        assertThat(optionalFilm).isNotPresent();
     }
 
 }
