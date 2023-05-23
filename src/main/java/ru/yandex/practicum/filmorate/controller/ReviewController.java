@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.storage.dao.ReviewStorage;
+import ru.yandex.practicum.filmorate.service.ReviewService;
+import ru.yandex.practicum.filmorate.storage.LikeReviewStorage;
 
 import java.util.List;
 
@@ -12,30 +13,51 @@ import java.util.List;
 @RequestMapping("/reviews")
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
 public class ReviewController {
-    private final ReviewStorage reviewStorage;
+    private final ReviewService service;
+    private final LikeReviewStorage likeReviewStorage;
 
     @PostMapping()
     public Review postReview(@RequestBody Review review) {
-        return reviewStorage.create(review);
+        return service.create(review);
     }
 
     @PutMapping()
     public Review putReview(@RequestBody Review review) {
-        return reviewStorage.save(review, true);
+        return service.update(review, true);
     }
 
     @GetMapping("/{id}")
     public Review getReviewById(@PathVariable int id) {
-        return reviewStorage.findReviewById(id);
+        return service.findById(id);
     }
 
     @GetMapping()
     public List<Review> getReviewsByFilmId(@RequestParam(defaultValue = "0") int filmId, @RequestParam(defaultValue = "10") int count) {
-        return reviewStorage.findReviewsByFilmId(filmId, count);
+        return service.findByFilmId(filmId, count);
     }
 
     @DeleteMapping("/{id}")
     public void deleteFriends(@PathVariable int id) {
-        reviewStorage.deleteReviewById(id);
+        service.deleteById(id);
+    }
+
+    @PutMapping("/{reviewId}/like/{userId}")
+    public void likeReview(@PathVariable Long reviewId, @PathVariable Long userId) {
+        likeReviewStorage.likeReview(reviewId, userId);
+    }
+
+    @PutMapping("/{reviewId}/dislike/{userId}")
+    public void dislikeReview(@PathVariable Long reviewId, @PathVariable Long userId) {
+        likeReviewStorage.dislikeReview(reviewId, userId);
+    }
+
+    @DeleteMapping("/{reviewId}/like/{userId}")
+    public void removeLikeReview(@PathVariable Long reviewId, @PathVariable Long userId) {
+        likeReviewStorage.dislikeReview(reviewId, userId);
+    }
+
+    @DeleteMapping("/{reviewId}/dislike/{userId}")
+    public void removeDislikeReview(@PathVariable Long reviewId, @PathVariable Long userId) {
+        likeReviewStorage.likeReview(reviewId, userId);
     }
 }

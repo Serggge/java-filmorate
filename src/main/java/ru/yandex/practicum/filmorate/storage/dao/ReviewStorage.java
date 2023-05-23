@@ -7,12 +7,12 @@ import java.util.List;
 public interface ReviewStorage {
     Review create(Review review);
 
-    Review save(Review review, Boolean isSave);
+    Review update(Review review);
 
-    Review findReviewById(long id);
+    Review findById(long id);
 
-    List<Review> findReviewsByFilmId(long filmId, int count);
+    List<Review> findByFilmId(long filmId, int count);
 
-    void deleteReviewById(long id);
+    void deleteById(long id);
 
 }

@@ -28,21 +28,21 @@ class ValidatorTest {
     }
 
     @Test
-    void testValidateUser4() {
+    void testValidateUser3() {
         User user = new User();
         user.setName("");
         assertNull(Validator.validateUser(user).getName());
     }
 
     @Test
-    void testValidateFilm2() {
+    void testValidateFilm() {
         LocalDate releaseDate = LocalDate.of(1970, 1, 1);
         Validator.validateFilm(
                 new Film(1L, "Name", "The characteristics of someone or something", releaseDate, 1, new Mpa(1)));
     }
 
     @Test
-    void testValidateFilm4() {
+    void testValidateFilm2() {
         LocalDate releaseDate = LocalDate.ofYearDay(1, 1);
         assertThrows(ValidationException.class, () -> Validator.validateFilm(
                 new Film(1L, "Name", "The characteristics of someone or something", releaseDate, 1, new Mpa(1))));
@@ -55,7 +55,6 @@ class ValidatorTest {
 
     @Test
     void testValidateExistFilm2() {
-
         ArrayList<Long> filmIdList = new ArrayList<>();
         filmIdList.add(1L);
         Validator.validateExistFilm(filmIdList, 1L);
