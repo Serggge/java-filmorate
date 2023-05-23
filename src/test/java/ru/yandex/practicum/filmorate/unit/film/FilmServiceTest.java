@@ -19,16 +19,12 @@ import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Like;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.service.impl.FilmServiceImpl;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
-
 import java.time.LocalDate;
 import java.util.*;
 
@@ -113,7 +109,7 @@ class FilmServiceTest {
         given(filmStorage.existsById(anyLong())).willReturn(Boolean.FALSE);
 
         final Throwable exception = assertThrows(FilmNotFoundException.class, () ->
-                                                            tempContainer[0] = filmService.update(firstFilm));
+                tempContainer[0] = filmService.update(firstFilm));
 
         verify(filmStorage).existsById(anyLong());
         assertThat(tempContainer[0]).isNull();
@@ -152,7 +148,7 @@ class FilmServiceTest {
         given(filmStorage.findById(anyLong())).willReturn(Optional.empty());
 
         final Throwable exception = assertThrows(FilmNotFoundException.class, () ->
-                                                     tempContainer[0] = filmService.getById(firstFilm.getId()));
+                tempContainer[0] = filmService.getById(firstFilm.getId()));
 
         verify(filmStorage).findById(firstFilm.getId());
         assertThat(exception).isNotNull();
@@ -183,7 +179,7 @@ class FilmServiceTest {
         lenient().when(userService.getById(anyLong())).thenReturn(user);
 
         final Throwable exception = assertThrows(FilmNotFoundException.class, () ->
-                                          tempContainer[0] = filmService.setLike(firstFilm.getId(), user.getId()));
+                tempContainer[0] = filmService.setLike(firstFilm.getId(), user.getId()));
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService, never()).getById(anyLong());
@@ -199,7 +195,7 @@ class FilmServiceTest {
         given(userService.getById(anyLong())).willThrow(new UserNotFoundException("Пользователь не найден"));
 
         final Throwable exception = assertThrows(UserNotFoundException.class, () ->
-                                    tempContainer[0] = filmService.setLike(firstFilm.getId(), user.getId()));
+                tempContainer[0] = filmService.setLike(firstFilm.getId(), user.getId()));
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService).getById(user.getId());
@@ -233,7 +229,7 @@ class FilmServiceTest {
         given(likeStorage.isExist(any(Like.class))).willReturn(Boolean.FALSE);
 
         final Throwable exception = assertThrows(DataUpdateException.class, () ->
-                                   tempContainer[0] = filmService.deleteLike(firstFilm.getId(), user.getId()));
+                tempContainer[0] = filmService.deleteLike(firstFilm.getId(), user.getId()));
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService).getById(user.getId());
@@ -250,7 +246,7 @@ class FilmServiceTest {
         lenient().when(userService.getById(anyLong())).thenReturn(user);
 
         final Throwable exception = assertThrows(FilmNotFoundException.class, () ->
-                                    tempContainer[0] = filmService.deleteLike(firstFilm.getId(), user.getId()));
+                tempContainer[0] = filmService.deleteLike(firstFilm.getId(), user.getId()));
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService, never()).getById(anyLong());
@@ -266,7 +262,7 @@ class FilmServiceTest {
         given(userService.getById(anyLong())).willThrow(new UserNotFoundException("Пользователь не найден"));
 
         final Throwable exception = assertThrows(UserNotFoundException.class, () ->
-                                      tempContainer[0] = filmService.deleteLike(firstFilm.getId(), user.getId()));
+                tempContainer[0] = filmService.deleteLike(firstFilm.getId(), user.getId()));
 
         verify(filmStorage).findById(firstFilm.getId());
         verify(userService).getById(user.getId());
@@ -276,33 +272,113 @@ class FilmServiceTest {
         assertThat(exception.getMessage()).isEqualTo("Пользователь не найден");
     }
 
-/*    @Test
-    void givenCountPopularFilms_whenGetPopular_thenReturnPopularList() {
-        final List<Film> filmList = new ArrayList<>(List.of(firstFilm, secondFilm));
-        given(filmStorage.findAll()).willReturn(filmList);
+    @Test
+    void givenCountPopularFilms_whenGetPopularByYear_thenReturnPopularListWithTopFirstFilm() {
+        firstFilm.setId(1);
+        secondFilm.setId(2);
+        secondFilm.setReleaseDate(firstFilm.getReleaseDate());
+        final List<Long> ids = List.of(firstFilm.getId(), secondFilm.getId());
+        final int year = firstFilm.getReleaseDate().getYear();
+        final Map<Long, Set<Long>> likes = new HashMap<>();
+        likes.put(firstFilm.getId(), new HashSet<>());
+        likes.put(secondFilm.getId(), new HashSet<>());
+        likes.get(firstFilm.getId()).add(1L);
+        given(filmStorage.findAllByYear(anyInt())).willReturn(ids);
+        given(filmStorage.findAllById(anyCollection())).willReturn(List.of(firstFilm, secondFilm));
+        given(likeStorage.findAll(anyCollection())).willReturn(likes);
+        final Map<String, String> yearParam = Map.of("year", String.valueOf(year));
 
-        secondFilm.addLike(user.getId());
-        final List<Film> mostPopularSecondFilm = filmService.getPopular(filmList.size());
+        final List<Film> mostPopular = filmService.getPopular(yearParam);
 
-        verify(filmStorage).findAll();
-        assertThat(mostPopularSecondFilm).isNotNull();
-        assertThat(mostPopularSecondFilm.size()).isEqualTo(filmList.size());
-        assertThat(mostPopularSecondFilm).isEqualTo(List.of(secondFilm, firstFilm));
-    }*/
+        verify(filmStorage).findAllByYear(year);
+        assertThat(mostPopular).isNotNull();
+        assertThat(mostPopular.size()).isEqualTo(2);
+        assertThat(mostPopular).isEqualTo(List.of(firstFilm, secondFilm));
+    }
 
-/*    @Test
-    void givenCountEqualsOnePopularFilm_whenGetPopular_thenReturnPopularListAndHasSizeOne() {
-        final List<Film> filmList = new ArrayList<>(List.of(firstFilm, secondFilm));
-        given(filmStorage.findAll()).willReturn(filmList);
+    @Test
+    void givenCountPopularFilms_whenGetPopularByYear_thenReturnPopularListWithTopSecondFilm() {
+        firstFilm.setId(1);
+        secondFilm.setId(2);
+        secondFilm.setReleaseDate(firstFilm.getReleaseDate());
+        final List<Long> ids = List.of(firstFilm.getId(), secondFilm.getId());
+        final int year = firstFilm.getReleaseDate().getYear();
+        final Map<Long, Set<Long>> likes = new HashMap<>();
+        likes.put(firstFilm.getId(), new HashSet<>());
+        likes.put(secondFilm.getId(), new HashSet<>());
+        likes.get(secondFilm.getId()).add(1L);
+        given(filmStorage.findAllByYear(anyInt())).willReturn(ids);
+        given(filmStorage.findAllById(anyCollection())).willReturn(List.of(firstFilm, secondFilm));
+        given(likeStorage.findAll(anyCollection())).willReturn(likes);
+        final Map<String, String> yearParam = Map.of("year", String.valueOf(year));
 
-        secondFilm.addLike(user.getId());
-        final List<Film> mostPopularSecondFilm = filmService.getPopular(1);
+        final List<Film> mostPopular = filmService.getPopular(yearParam);
 
-        verify(filmStorage).findAll();
-        assertThat(mostPopularSecondFilm).isNotNull();
-        assertThat(mostPopularSecondFilm.size()).isEqualTo(1);
-        assertThat(mostPopularSecondFilm).isEqualTo(List.of(secondFilm));
-    }*/
+        verify(filmStorage).findAllByYear(year);
+        assertThat(mostPopular).isNotNull();
+        assertThat(mostPopular.size()).isEqualTo(2);
+        assertThat(mostPopular).isEqualTo(List.of(secondFilm, firstFilm));
+    }
+
+    @Test
+    void givenCountPopularFilms_whenGetPopularByGenre_thenReturnPopularListWithTopFirstFilm() {
+        firstFilm.setId(1);
+        secondFilm.setId(2);
+        final int genreId = 2;
+        firstFilm.getGenres().add(new Genre(genreId));
+        secondFilm.getGenres().add(new Genre(genreId));
+        final List<Long> ids = List.of(firstFilm.getId(), secondFilm.getId());
+        final Map<Long, Set<Genre>> filmGenres = new HashMap<>();
+        filmGenres.put(firstFilm.getId(), new HashSet<>());
+        filmGenres.put(secondFilm.getId(), new HashSet<>());
+        filmGenres.get(firstFilm.getId()).add(new Genre(genreId));
+        filmGenres.get(secondFilm.getId()).add(new Genre(genreId));
+        final Map<Long, Set<Long>> likes = new HashMap<>();
+        likes.put(firstFilm.getId(), new HashSet<>());
+        likes.put(secondFilm.getId(), new HashSet<>());
+        likes.get(firstFilm.getId()).add(1L);
+        given(filmStorage.findAllByGenre(anyInt())).willReturn(ids);
+        given(filmStorage.findAllById(anyCollection())).willReturn(List.of(firstFilm, secondFilm));
+        given(likeStorage.findAll(anyCollection())).willReturn(likes);
+        final Map<String, String> genreParam = Map.of("genreId", String.valueOf(genreId));
+
+        final List<Film> mostPopular = filmService.getPopular(genreParam);
+
+        verify(filmStorage).findAllByGenre(genreId);
+        assertThat(mostPopular).isNotNull();
+        assertThat(mostPopular.size()).isEqualTo(2);
+        assertThat(mostPopular).isEqualTo(List.of(firstFilm, secondFilm));
+    }
+
+    @Test
+    void givenCountPopularFilms_whenGetPopularByGenre_thenReturnPopularListWithTopSecondFilm() {
+        firstFilm.setId(1);
+        secondFilm.setId(2);
+        final int genreId = 2;
+        firstFilm.getGenres().add(new Genre(genreId));
+        secondFilm.getGenres().add(new Genre(genreId));
+        final List<Long> ids = List.of(firstFilm.getId(), secondFilm.getId());
+        final Map<Long, Set<Genre>> filmGenres = new HashMap<>();
+        filmGenres.put(firstFilm.getId(), new HashSet<>());
+        filmGenres.put(secondFilm.getId(), new HashSet<>());
+        filmGenres.get(firstFilm.getId()).add(new Genre(genreId));
+        filmGenres.get(secondFilm.getId()).add(new Genre(genreId));
+        final Map<Long, Set<Long>> likes = new HashMap<>();
+        likes.put(firstFilm.getId(), new HashSet<>());
+        likes.put(secondFilm.getId(), new HashSet<>());
+        likes.get(secondFilm.getId()).add(1L);
+        given(filmStorage.findAllByGenre(anyInt())).willReturn(ids);
+        given(filmStorage.findAllById(anyCollection())).willReturn(List.of(firstFilm, secondFilm));
+        given(likeStorage.findAll(anyCollection())).willReturn(likes);
+        final Map<String, String> genreParam = Map.of("genreId", String.valueOf(genreId));
+
+        final List<Film> mostPopular = filmService.getPopular(genreParam);
+
+        verify(filmStorage).findAllByGenre(genreId);
+        assertThat(mostPopular).isNotNull();
+        assertThat(mostPopular.size()).isEqualTo(2);
+        assertThat(mostPopular).isEqualTo(List.of(secondFilm, firstFilm));
+    }
 
     static void settingsForDefaults() {
         tempContainer[0] = null;
