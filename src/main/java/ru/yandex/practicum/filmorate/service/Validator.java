@@ -1,11 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.SneakyThrows;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -53,31 +53,22 @@ public final class Validator {
         }
     }
 
-    @SneakyThrows
-    public static void validateExistFilm(List<Long> filmIdList, Long id) {
-        if (id == null) {
-            throw new ValidationException("Не указан id фильма");
-        }
+    @NotNull
+    public static void validateExistFilm(List<Long> filmIdList, long id) {
         if (!filmIdList.contains(id)) {
             throw new FilmNotFoundException(String.format("Фильм с id %s не найден", id));
         }
     }
 
-    @SneakyThrows
-    public static void validateExistUser(List<Long> userIdList, Long id) {
-        if (id == null) {
-            throw new ValidationException("Не указан id пользователя");
-        }
+    @NotNull
+    public static void validateExistUser(List<Long> userIdList, long id) {
         if (!userIdList.contains(id)) {
             throw new FilmNotFoundException(String.format("Пользователь с id %s не найден", id));
         }
     }
 
-    @SneakyThrows
-    public static void validateExistReview(List<Long> reviewIdList, Long id) {
-        if (id == null) {
-            throw new ValidationException("Не указан id отзыва");
-        }
+    @NotNull
+    public static void validateExistReview(List<Long> reviewIdList, long id) {
         if (!reviewIdList.contains(id)) {
             throw new FilmNotFoundException(String.format("Ревью с id %s не найден", id));
         }
