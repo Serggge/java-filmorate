@@ -11,7 +11,9 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -118,13 +120,20 @@ public class UserServiceImpl implements UserService {
 
     private User getUserOrThrow(long id) {
         return userStorage.findById(id)
-                      .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
+                .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
     }
 
     private void validateId(long id) {
         if (!userStorage.existsById(id)) {
             throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", id));
         }
+    }
+
+    @Override
+    public void deleteUserById(long id) {
+        validateId(id);
+        log.debug("Удаление пользователя: id={}", id);
+        userStorage.deleteById(id);
     }
 
 }
