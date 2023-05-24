@@ -26,8 +26,4 @@ public interface FilmService {
 
     void delete(long filmId);
 
-    List<Film> getRecommendedFilms(long userId);
-
-    List<Film> searchByParams(String query, List<String> by);
-
 }

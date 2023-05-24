@@ -189,28 +189,6 @@ public class FilmServiceImpl implements FilmService {
         return foundedFilms;
     }
 
-    private Film getFilmOrThrow(long id) {
-        Film saved = filmStorage.findById(id)
-                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
-        saved.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
-        return saved;
-    }
-
-    private List<Film> constructFilmList(Collection<Long> filmsIds) {
-        List<Film> films = filmStorage.findAllById(filmsIds);
-        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
-        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
-        for (Film film : films) {
-            if (filmsGenres.containsKey(film.getId())) {
-                film.getGenres().addAll(filmsGenres.get(film.getId()));
-            }
-            if (filmsLikes.containsKey(film.getId())) {
-                film.getLikes().addAll(filmsLikes.get(film.getId()));
-            }
-        }
-        return films;
-    }
-
     @Override
     public void delete(long filmId) {
         log.info("Удаление фильма id={}", filmId);
@@ -218,6 +196,13 @@ public class FilmServiceImpl implements FilmService {
             throw new FilmNotFoundException(String.format("Фильм с id=%d не найден", filmId));
         }
         filmStorage.delete(filmId);
+    }
+
+    private Film getFilmOrThrow(long id) {
+        Film saved = filmStorage.findById(id)
+                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
+        saved.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
+        return saved;
     }
 
     private List<Film> constructFilmList(Collection<Long> filmsIds) {
