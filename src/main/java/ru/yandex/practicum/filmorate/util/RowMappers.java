@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.util;
 import org.springframework.jdbc.core.RowMapper;
 import ru.yandex.practicum.filmorate.model.*;
 import java.sql.ResultSet;
+import java.time.LocalDateTime;
 
 public class RowMappers {
 
@@ -24,6 +25,15 @@ public class RowMappers {
             .releaseDate(resultSet.getDate("release_date").toLocalDate())
             .duration(resultSet.getInt("duration"))
             .mpa(new Mpa(resultSet.getInt("mpa_id")))
+            .build();
+    public static final RowMapper<Review> REVIEW_ROW_MAPPER = (ResultSet resultSet, int rowNum) -> Review.builder()
+            .reviewId(resultSet.getLong("review_id"))
+            .filmId(resultSet.getLong("film_id"))
+            .userId(resultSet.getLong("user_id"))
+            .content(resultSet.getString("content"))
+            .isPositive(resultSet.getBoolean("isPositive"))
+            .useful(resultSet.getInt("useful"))
+            .reviewDate(resultSet.getObject("review_date", LocalDateTime.class))
             .build();
     public static final RowMapper<Mpa> MPA_ROW_MAPPER = (ResultSet resultSet, int rowNum) ->
             new Mpa(resultSet.getInt("mpa_id"));
