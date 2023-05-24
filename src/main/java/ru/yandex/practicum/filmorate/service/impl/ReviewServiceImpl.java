@@ -4,13 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 import ru.yandex.practicum.filmorate.storage.dao.DAOValidator;
 import ru.yandex.practicum.filmorate.storage.dao.ReviewStorage;
 
 import java.util.List;
+
+import static ru.yandex.practicum.filmorate.service.Validator.createValidator;
 
 @Service
 @Slf4j
@@ -21,20 +22,16 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review create(Review review) {
-        if (review.getReviewId() != null) {
-            throw new ValidationException("Недопустимый параметр ID при создании ревью");
-        }
+        createValidator(review);
         daoValidator.validateFilmBd(review.getFilmId());
         daoValidator.validateUserBd(review.getUserId());
         log.info("Добавлен ревью: {}", review);
-        return storage.create(review);
+        return storage.update(review);
     }
 
     @Override
-    public Review update(Review review, Boolean isUpdate) {
-        if (isUpdate) {
-            daoValidator.validateReviewDB(review.getReviewId());
-        }
+    public Review update(Review review) {
+        daoValidator.validateReviewDB(review.getReviewId());
         daoValidator.validateFilmBd(review.getFilmId());
         daoValidator.validateUserBd(review.getUserId());
         log.debug("Запрос на обновление ревью");
@@ -59,5 +56,21 @@ public class ReviewServiceImpl implements ReviewService {
         daoValidator.validateReviewDB(id);
         log.debug("Запрос на удаление ревью по id = " + id);
         storage.deleteById(id);
+    }
+
+    @Override
+    public void likeReview(long id, long userId) {
+        daoValidator.validateReviewDB(id);
+        daoValidator.validateUserBd(userId);
+        log.debug("Запрос на лайк ревью по id = " + id + " userID = " + userId);
+        storage.likeReview(id, userId);
+    }
+
+    @Override
+    public void dislikeReview(long id, long userId) {
+        daoValidator.validateReviewDB(id);
+        daoValidator.validateUserBd(userId);
+        log.debug("Запрос на дизлайк ревью по id = " + id + " userID = " + userId);
+        storage.dislikeReview(id, userId);
     }
 }

@@ -37,29 +37,6 @@ class ReviewDbStorageTest {
     private ReviewDbStorage reviewDbStorage;
 
     @Test
-    void testCreate() {
-        assertThrows(ValidationException.class, () -> reviewDbStorage.create(new Review()));
-    }
-
-    @Test
-    void testCreate2() throws DataAccessException {
-        when(jdbcTemplate.update(Mockito.<PreparedStatementCreator>any(), Mockito.<KeyHolder>any()))
-                .thenAnswer((invocation) -> {
-                    KeyHolder keyHolder = invocation.getArgument(1);
-                    keyHolder.getKeyList().add(Collections.singletonMap("id", 1));
-                    return 1;
-                });
-        Review review = new Review();
-        when(jdbcTemplate.queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any()))
-                .thenReturn(review);
-        assertSame(review, reviewDbStorage.create(
-                new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1,
-                        LocalDate.of(1970, 1, 1).atStartOfDay())));
-        verify(jdbcTemplate).update(Mockito.<PreparedStatementCreator>any(), Mockito.<KeyHolder>any());
-        verify(jdbcTemplate).queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any());
-    }
-
-    @Test
     void testUpdate() {
         assertThrows(ValidationException.class, () -> reviewDbStorage.update(new Review()));
     }
@@ -83,6 +60,36 @@ class ReviewDbStorageTest {
     }
 
     @Test
+    void testUpdate3() throws DataAccessException {
+        when(jdbcTemplate.update(Mockito.<PreparedStatementCreator>any(), Mockito.<KeyHolder>any()))
+                .thenAnswer((invocation) -> {
+                    KeyHolder keyHolder = invocation.getArgument(1);
+                    keyHolder.getKeyList().add(Collections.singletonMap("id", 1));
+                    return 1;
+                });
+        Review review = new Review();
+        when(jdbcTemplate.queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any()))
+                .thenReturn(review);
+        Review review2 = mock(Review.class);
+        when(review2.getUseful()).thenReturn(1);
+        when(review2.getIsPositive()).thenReturn(true);
+        when(review2.getFilmId()).thenReturn(1L);
+        when(review2.getReviewId()).thenReturn(1L);
+        when(review2.getUserId()).thenReturn(1L);
+        doNothing().when(review2).setReviewId(anyLong());
+        when(review2.getContent()).thenReturn("Not all who wander are lost");
+        assertSame(review, reviewDbStorage.update(review2));
+        verify(jdbcTemplate).update(Mockito.<PreparedStatementCreator>any(), Mockito.<KeyHolder>any());
+        verify(jdbcTemplate).queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any());
+        verify(review2).getUseful();
+        verify(review2, atLeast(1)).getIsPositive();
+        verify(review2, atLeast(1)).getContent();
+        verify(review2).getFilmId();
+        verify(review2, atLeast(1)).getReviewId();
+        verify(review2).getUserId();
+    }
+
+    @Test
     void testFindById() throws DataAccessException {
         Review review = new Review();
         when(jdbcTemplate.queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any()))
@@ -94,17 +101,17 @@ class ReviewDbStorageTest {
     @Test
     void testFindByFilmId() throws DataAccessException {
         SqlRowSet sqlRowSet = mock(SqlRowSet.class);
-        when(sqlRowSet.getBoolean(Mockito.<String>any())).thenReturn(true);
-        when(sqlRowSet.getInt(Mockito.<String>any())).thenReturn(1);
-        when(sqlRowSet.getString(Mockito.<String>any())).thenReturn("String");
-        when(sqlRowSet.getLong(Mockito.<String>any())).thenReturn(1L);
-        when(sqlRowSet.next()).thenReturn(false).thenReturn(true).thenReturn(false);
+        when(sqlRowSet.getBoolean(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
+        when(sqlRowSet.getInt(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
+        when(sqlRowSet.getString(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
+        when(sqlRowSet.getLong(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
+        when(sqlRowSet.next()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(jdbcTemplate.queryForRowSet(Mockito.<String>any(), (Object[]) any())).thenReturn(sqlRowSet);
-        doNothing().when(dAOValidator).validateFilmBd(Mockito.<Long>any());
-        assertTrue(reviewDbStorage.findByFilmId(1L, 3).isEmpty());
+        doThrow(new ValidationException("An error occurred")).when(dAOValidator).validateFilmBd(Mockito.<Long>any());
+        assertThrows(ValidationException.class, () -> reviewDbStorage.findByFilmId(0L, 3));
         verify(jdbcTemplate).queryForRowSet(Mockito.<String>any(), (Object[]) any());
         verify(sqlRowSet).next();
-        verify(dAOValidator).validateFilmBd(Mockito.<Long>any());
+        verify(sqlRowSet).getLong(Mockito.<String>any());
     }
 
     @Test
@@ -114,20 +121,12 @@ class ReviewDbStorageTest {
         when(sqlRowSet.getInt(Mockito.<String>any())).thenReturn(1);
         when(sqlRowSet.getString(Mockito.<String>any())).thenReturn("String");
         when(sqlRowSet.getLong(Mockito.<String>any())).thenReturn(1L);
-        when(sqlRowSet.next()).thenReturn(true).thenReturn(true).thenReturn(false);
-        SqlRowSet sqlRowSet2 = mock(SqlRowSet.class);
-        when(sqlRowSet2.getBoolean(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
-        when(sqlRowSet2.getInt(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
-        when(sqlRowSet2.getString(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
-        when(sqlRowSet2.getLong(Mockito.<String>any())).thenThrow(new ValidationException("An error occurred"));
-        when(sqlRowSet2.next()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(jdbcTemplate.queryForRowSet(Mockito.<String>any())).thenReturn(sqlRowSet2);
+        when(sqlRowSet.next()).thenReturn(false).thenReturn(true).thenReturn(false);
         when(jdbcTemplate.queryForRowSet(Mockito.<String>any(), (Object[]) any())).thenReturn(sqlRowSet);
-        doNothing().when(dAOValidator).validateFilmBd(Mockito.<Long>any());
-        assertThrows(ValidationException.class, () -> reviewDbStorage.findByFilmId(0L, 3));
-        verify(jdbcTemplate).queryForRowSet(Mockito.<String>any());
-        verify(sqlRowSet2).next();
-        verify(sqlRowSet2).getLong(Mockito.<String>any());
+        doThrow(new ValidationException("An error occurred")).when(dAOValidator).validateFilmBd(Mockito.<Long>any());
+        assertTrue(reviewDbStorage.findByFilmId(0L, 3).isEmpty());
+        verify(jdbcTemplate).queryForRowSet(Mockito.<String>any(), (Object[]) any());
+        verify(sqlRowSet).next();
     }
 
     @Test
@@ -135,6 +134,48 @@ class ReviewDbStorageTest {
         when(jdbcTemplate.update(Mockito.<String>any(), (Object[]) any())).thenReturn(1);
         reviewDbStorage.deleteById(1L);
         verify(jdbcTemplate).update(Mockito.<String>any(), (Object[]) any());
+    }
+
+    @Test
+    void testLikeReview() throws DataAccessException {
+        when(jdbcTemplate.update(Mockito.<String>any(), (Object[]) any())).thenReturn(1);
+        when(jdbcTemplate.queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any()))
+                .thenReturn(new Review());
+        reviewDbStorage.likeReview(1L, 1L);
+        verify(jdbcTemplate).queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any());
+    }
+
+    @Test
+    void testLikeReview2() throws DataAccessException {
+        Review review = mock(Review.class);
+        when(review.getUseful()).thenReturn(1);
+        when(jdbcTemplate.update(Mockito.<String>any(), (Object[]) any())).thenReturn(1);
+        when(jdbcTemplate.queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any()))
+                .thenReturn(review);
+        reviewDbStorage.likeReview(1L, 1L);
+        verify(jdbcTemplate).queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any());
+        verify(review).getUseful();
+    }
+
+    @Test
+    void testDislikeReview() throws DataAccessException {
+        when(jdbcTemplate.update(Mockito.<String>any(), (Object[]) any())).thenReturn(1);
+        when(jdbcTemplate.queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any()))
+                .thenReturn(new Review());
+        reviewDbStorage.dislikeReview(1L, 1L);
+        verify(jdbcTemplate).queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any());
+    }
+
+    @Test
+    void testDislikeReview2() throws DataAccessException {
+        Review review = mock(Review.class);
+        when(review.getUseful()).thenReturn(1);
+        when(jdbcTemplate.update(Mockito.<String>any(), (Object[]) any())).thenReturn(1);
+        when(jdbcTemplate.queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any()))
+                .thenReturn(review);
+        reviewDbStorage.dislikeReview(1L, 1L);
+        verify(jdbcTemplate).queryForObject(Mockito.<String>any(), Mockito.<RowMapper<Object>>any(), (Object[]) any());
+        verify(review).getUseful();
     }
 }
 

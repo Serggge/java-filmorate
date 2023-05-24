@@ -5,7 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -16,9 +15,7 @@ import ru.yandex.practicum.filmorate.controller.ReviewController;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 import ru.yandex.practicum.filmorate.service.impl.ReviewServiceImpl;
-import ru.yandex.practicum.filmorate.storage.LikeReviewStorage;
 import ru.yandex.practicum.filmorate.storage.dao.DAOValidator;
-import ru.yandex.practicum.filmorate.storage.dao.impl.LikeReviewDbStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.ReviewDbStorage;
 
 import java.util.ArrayList;
@@ -29,9 +26,6 @@ import static org.mockito.Mockito.*;
 @ContextConfiguration(classes = {ReviewController.class})
 @ExtendWith(SpringExtension.class)
 class ReviewControllerTest {
-    @MockBean
-    private LikeReviewStorage likeReviewStorage;
-
     @Autowired
     private ReviewController reviewController;
 
@@ -39,29 +33,17 @@ class ReviewControllerTest {
     private ReviewService reviewService;
 
     @Test
-    void testPostReview2() {
-        ReviewDbStorage storage = mock(ReviewDbStorage.class);
+    void testPostReview() {
+        ReviewServiceImpl service = mock(ReviewServiceImpl.class);
         Review review = new Review();
-        when(storage.create(Mockito.<Review>any())).thenReturn(review);
-        DAOValidator daoValidator = mock(DAOValidator.class);
-        doNothing().when(daoValidator).validateFilmBd(Mockito.<Long>any());
-        doNothing().when(daoValidator).validateUserBd(Mockito.<Long>any());
-        ReviewServiceImpl service = new ReviewServiceImpl(storage, daoValidator);
-
-        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        ReviewController reviewController = new ReviewController(service,
-                new LikeReviewDbStorage(jdbcTemplate,
-                        new ReviewServiceImpl(new ReviewDbStorage(mock(JdbcTemplate.class), mock(DAOValidator.class)),
-                                mock(DAOValidator.class)),
-                        mock(DAOValidator.class)));
+        when(service.create(Mockito.<Review>any())).thenReturn(review);
+        ReviewController reviewController = new ReviewController(service);
         assertSame(review, reviewController.postReview(new Review()));
-        verify(storage).create(Mockito.<Review>any());
-        verify(daoValidator).validateFilmBd(Mockito.<Long>any());
-        verify(daoValidator).validateUserBd(Mockito.<Long>any());
+        verify(service).create(Mockito.<Review>any());
     }
 
     @Test
-    void testPutReview2() {
+    void testPutReview() {
         ReviewDbStorage storage = mock(ReviewDbStorage.class);
         Review review = new Review();
         when(storage.update(Mockito.<Review>any())).thenReturn(review);
@@ -69,14 +51,7 @@ class ReviewControllerTest {
         doNothing().when(daoValidator).validateFilmBd(Mockito.<Long>any());
         doNothing().when(daoValidator).validateReviewDB(Mockito.<Long>any());
         doNothing().when(daoValidator).validateUserBd(Mockito.<Long>any());
-        ReviewServiceImpl service = new ReviewServiceImpl(storage, daoValidator);
-
-        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        ReviewController reviewController = new ReviewController(service,
-                new LikeReviewDbStorage(jdbcTemplate,
-                        new ReviewServiceImpl(new ReviewDbStorage(mock(JdbcTemplate.class), mock(DAOValidator.class)),
-                                mock(DAOValidator.class)),
-                        mock(DAOValidator.class)));
+        ReviewController reviewController = new ReviewController(new ReviewServiceImpl(storage, daoValidator));
         assertSame(review, reviewController.putReview(new Review()));
         verify(storage).update(Mockito.<Review>any());
         verify(daoValidator).validateFilmBd(Mockito.<Long>any());
@@ -86,7 +61,7 @@ class ReviewControllerTest {
 
     @Test
     void testLikeReview() throws Exception {
-        doNothing().when(likeReviewStorage).likeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(reviewService).likeReview(anyLong(), anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/reviews/{reviewId}/like/{userId}", 1L,
                 1L);
         MockMvcBuilders.standaloneSetup(reviewController)
@@ -97,7 +72,7 @@ class ReviewControllerTest {
 
     @Test
     void testLikeReview2() throws Exception {
-        doNothing().when(likeReviewStorage).likeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(reviewService).likeReview(anyLong(), anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/reviews/{reviewId}/like/{userId}", 1L,
                 1L);
         requestBuilder.characterEncoding("Encoding");
@@ -109,7 +84,7 @@ class ReviewControllerTest {
 
     @Test
     void testRemoveDislikeReview() throws Exception {
-        doNothing().when(likeReviewStorage).likeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(reviewService).likeReview(anyLong(), anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
                 .delete("/reviews/{reviewId}/dislike/{userId}", 1L, 1L);
         MockMvcBuilders.standaloneSetup(reviewController)
@@ -119,7 +94,19 @@ class ReviewControllerTest {
     }
 
     @Test
-    void testDeleteFriends() throws Exception {
+    void testRemoveDislikeReview2() throws Exception {
+        doNothing().when(reviewService).likeReview(anyLong(), anyLong());
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                .delete("/reviews/{reviewId}/dislike/{userId}", 1L, 1L);
+        requestBuilder.characterEncoding("Encoding");
+        MockMvcBuilders.standaloneSetup(reviewController)
+                .build()
+                .perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    void testDeleteReview() throws Exception {
         doNothing().when(reviewService).deleteById(anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/reviews/{id}", 1);
         MockMvcBuilders.standaloneSetup(reviewController)
@@ -130,7 +117,7 @@ class ReviewControllerTest {
 
     @Test
     void testDislikeReview() throws Exception {
-        doNothing().when(likeReviewStorage).dislikeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(reviewService).dislikeReview(anyLong(), anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/reviews/{reviewId}/dislike/{userId}",
                 1L, 1L);
         MockMvcBuilders.standaloneSetup(reviewController)
@@ -141,7 +128,7 @@ class ReviewControllerTest {
 
     @Test
     void testDislikeReview2() throws Exception {
-        doNothing().when(likeReviewStorage).dislikeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(reviewService).dislikeReview(anyLong(), anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/reviews/{reviewId}/dislike/{userId}",
                 1L, 1L);
         requestBuilder.characterEncoding("Encoding");
@@ -152,7 +139,7 @@ class ReviewControllerTest {
     }
 
     @Test
-    void testDeleteFriends2() throws Exception {
+    void testDeleteReview2() throws Exception {
         doNothing().when(reviewService).deleteById(anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/reviews/{id}", 1);
         requestBuilder.characterEncoding("Encoding");
@@ -173,8 +160,7 @@ class ReviewControllerTest {
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
                 .andExpect(MockMvcResultMatchers.content()
                         .string(
-                                "{\"reviewId\":null,\"filmId\":null,\"userId\":null,\"content\":null,\"isPositive\":null,\"useful\":0,\"reviewDate"
-                                        + "\":null}"));
+                                "{\"reviewId\":0,\"filmId\":0,\"userId\":0,\"content\":null,\"isPositive\":null,\"useful\":0,\"reviewDate\":null}"));
     }
 
     @Test
@@ -206,7 +192,7 @@ class ReviewControllerTest {
 
     @Test
     void testRemoveLikeReview() throws Exception {
-        doNothing().when(likeReviewStorage).dislikeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(reviewService).dislikeReview(anyLong(), anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/reviews/{reviewId}/like/{userId}",
                 1L, 1L);
         MockMvcBuilders.standaloneSetup(reviewController)
@@ -217,7 +203,7 @@ class ReviewControllerTest {
 
     @Test
     void testRemoveLikeReview2() throws Exception {
-        doNothing().when(likeReviewStorage).dislikeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(reviewService).dislikeReview(anyLong(), anyLong());
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/reviews/{reviewId}/like/{userId}",
                 1L, 1L);
         requestBuilder.characterEncoding("Encoding");
