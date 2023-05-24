@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -213,6 +214,18 @@ public class FilmServiceImpl implements FilmService {
             throw new FilmNotFoundException(String.format("Фильм с id=%d не найден", filmId));
         }
         filmStorage.delete(filmId);
+    }
+
+    @Override
+    public List<Film> getCommonFilmPopular(long userId, long friendId) {
+        log.info("Запрошен список общий список фильмов с другом, отсортированный по популярности");
+        if (!userService.existsById(userId) || !userService.existsById(friendId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%s или с id=%s не найден", userId, friendId));
+        }
+        return filmStorage.findAllById(likeStorage.findCommonLikes(userId, friendId))
+                .stream()
+                .sorted(Comparator.comparingInt(Film::popularity).reversed())
+                .collect(Collectors.toList());
     }
 
 }

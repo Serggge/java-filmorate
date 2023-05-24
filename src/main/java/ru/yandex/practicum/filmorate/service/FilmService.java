@@ -24,4 +24,5 @@ public interface FilmService {
 
     void delete(long filmId);
 
+    List<Film> getCommonFilmPopular(long userId, long friendId);
 }
