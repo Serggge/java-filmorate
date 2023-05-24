@@ -69,7 +69,7 @@ public class FilmServiceImpl implements FilmService {
         if (film.getId() == 0) {
             throw new ValidationException("Для обновления требуется указать ID фильма");
         } else if (filmStorage.existsById(film.getId())) {
-            film = filmStorage.save(film);
+            film = filmStorage.update(film);
             filmGenreStorage.deleteByFilmId(film.getId());
             filmGenreStorage.save(film);
             film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId()));
@@ -110,7 +110,7 @@ public class FilmServiceImpl implements FilmService {
                     String.format("Пользователь id=%d уже оставлял лайк фильму id=%d", userId, filmId));
         }
         eventStorage.save(Event.builder()
-                .timestamp(Instant.now())
+                .timestamp(Instant.now().toEpochMilli())
                 .eventType(EventType.LIKE)
                 .operation(Operation.ADD)
                 .userId(userId)
@@ -133,7 +133,7 @@ public class FilmServiceImpl implements FilmService {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
         eventStorage.save(Event.builder()
-                .timestamp(Instant.now())
+                .timestamp(Instant.now().toEpochMilli())
                 .eventType(EventType.LIKE)
                 .operation(Operation.REMOVE)
                 .userId(userId)
@@ -155,6 +155,10 @@ public class FilmServiceImpl implements FilmService {
             int genreId = safelyParse(Integer::parseInt, allParams.get("genreId"));
             foundedIds.addAll(filmStorage.findAllByGenre(genreId));
         }
+        if (foundedIds.size() < count) {
+            foundedIds.addAll(likeStorage.findPopular(count - foundedIds.size()));
+        }
+        
         List<Film> foundedFilms = foundedIds.isEmpty()
                 ? constructFilmList(filmStorage.findAllIds())
                 : constructFilmList(foundedIds);
@@ -185,9 +189,7 @@ public class FilmServiceImpl implements FilmService {
     private Film getFilmOrThrow(long id) {
         Film saved = filmStorage.findById(id)
                 .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
-        for (Genre genre : filmGenreStorage.findGenresByFilmId(id)) {
-            saved.addGenre(genre);
-        }
+        saved.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
         return saved;
     }
 

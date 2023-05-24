@@ -4,14 +4,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import java.time.Instant;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Event {
 
-    Instant timestamp;
+    long timestamp;
     long userId;
     EventType eventType;
     Operation operation;
@@ -26,7 +25,4 @@ public class Event {
         return operation.name();
     }
 
-    public long getTimestamp() {
-        return timestamp.toEpochMilli();
-    }
 }

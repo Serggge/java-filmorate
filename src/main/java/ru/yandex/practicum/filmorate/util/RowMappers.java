@@ -48,7 +48,7 @@ public class RowMappers {
                     rs.getLong("friend_id")));
     public static final RowMapper<Event> EVENT_ROW_MAPPER = ((ResultSet rs, int rowNum) ->
             Event.builder().eventId(rs.getLong("event_id"))
-                    .timestamp(Instant.ofEpochMilli(rs.getLong("timestamp")))
+                    .timestamp(rs.getLong("timestamp"))
                     .userId(rs.getLong("user_id"))
                     .entityId(rs.getLong("entity_id"))
                     .eventType(EventType.valueOf(rs.getString("event_type")))

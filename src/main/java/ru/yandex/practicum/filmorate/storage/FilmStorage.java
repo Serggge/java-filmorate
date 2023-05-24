@@ -9,6 +9,8 @@ public interface FilmStorage {
 
     Film save(Film film);
 
+    Film update(Film film);
+
     Optional<Film> findById(long id);
 
     List<Film> findAllById(Collection<Long> ids);

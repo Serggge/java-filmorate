@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
             throw new DataUpdateException("Пользователи уже являются друзьями");
         }
         eventStorage.save(Event.builder()
-                .timestamp(Instant.now())
+                .timestamp(Instant.now().toEpochMilli())
                 .eventType(EventType.FRIEND)
                 .operation(Operation.ADD)
                 .userId(userId)
@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("Пользователь не является вашим другом");
         }
         eventStorage.save(Event.builder()
-                .timestamp(Instant.now())
+                .timestamp(Instant.now().toEpochMilli())
                 .eventType(EventType.FRIEND)
                 .operation(Operation.REMOVE)
                 .userId(userId)
