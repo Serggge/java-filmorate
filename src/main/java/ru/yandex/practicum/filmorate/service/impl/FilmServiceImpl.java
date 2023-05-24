@@ -159,6 +159,10 @@ public class FilmServiceImpl implements FilmService {
             int genreId = safelyParse(Integer::parseInt, allParams.get("genreId"));
             foundedIds.addAll(filmStorage.findAllByGenre(genreId));
         }
+        if (foundedIds.size() < count) {
+            foundedIds.addAll(likeStorage.findPopular(count - foundedIds.size()));
+        }
+        
         List<Film> foundedFilms = foundedIds.isEmpty()
                 ? constructFilmList(filmStorage.findAllIds())
                 : constructFilmList(foundedIds);
