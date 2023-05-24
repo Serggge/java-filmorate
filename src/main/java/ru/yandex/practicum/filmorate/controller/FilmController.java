@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -56,8 +57,9 @@ public class FilmController {
     public void deleteFilm(@PathVariable("id") long filmId) {
         service.delete(filmId);
     }
+
     @GetMapping("/common")
-    public List<Film> returnCommonPopular(@RequestParam(value="userId") long userId, @RequestParam(value="friendId") long friendId) {
+    public List<Film> returnCommonPopular(@RequestParam(value = "userId") long userId, @RequestParam(value = "friendId") long friendId) {
         return service.getCommonFilmPopular(userId, friendId);
     }
 
