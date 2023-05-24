@@ -20,4 +20,6 @@ public interface FilmStorage {
 
     void deleteAll();
 
+    void delete(long id);
+
 }

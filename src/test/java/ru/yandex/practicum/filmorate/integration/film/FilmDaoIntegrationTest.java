@@ -133,4 +133,14 @@ class FilmDaoIntegrationTest {
         secondFilm.setMpa(new Mpa(2));
     }
 
+    @Test
+    void testDeleteById() {
+        final long id = filmStorage.save(firstFilm).getId();
+
+        filmStorage.delete(id);
+        Optional<Film> optionalFilm = filmStorage.findById(id);
+
+        assertThat(optionalFilm).isNotPresent();
+    }
+
 }

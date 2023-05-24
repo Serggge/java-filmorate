@@ -151,9 +151,22 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(int count) {
         log.debug("Запрошен список самых популярных фильмов");
-        return getAll()
-                .stream()
-                .sorted(Comparator.comparingInt(Film::popularity).reversed())
+        List<Film> films = filmStorage.findAll();
+        List<Long> filmsIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList());
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
+        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
+        for (Film film : films) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+            if (filmsLikes.containsKey(film.getId())) {
+                film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+        }
+        return films.stream()
+                .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());
     }
@@ -191,6 +204,15 @@ public class FilmServiceImpl implements FilmService {
             films.sort(Comparator.comparingInt(Film::popularity));
         }
         return films;
+    }
+
+    @Override
+    public void delete(long filmId) {
+        log.info("Удаление фильма id={}", filmId);
+        if (!filmStorage.existsById(filmId)) {
+            throw new FilmNotFoundException(String.format("Фильм с id=%d не найден", filmId));
+        }
+        filmStorage.delete(filmId);
     }
 
 }

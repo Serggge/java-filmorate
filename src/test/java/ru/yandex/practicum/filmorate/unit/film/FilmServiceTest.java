@@ -281,7 +281,7 @@ class FilmServiceTest {
 
     @Test
     void givenCountPopularFilms_whenGetPopular_thenReturnPopularList() {
-        final List<Film> filmList = List.of(firstFilm, secondFilm);
+        final List<Film> filmList = new ArrayList<>(List.of(firstFilm, secondFilm));
         given(filmStorage.findAll()).willReturn(filmList);
 
         secondFilm.addLike(user.getId());
@@ -295,7 +295,7 @@ class FilmServiceTest {
 
     @Test
     void givenCountEqualsOnePopularFilm_whenGetPopular_thenReturnPopularListAndHasSizeOne() {
-        final List<Film> filmList = List.of(firstFilm, secondFilm);
+        final List<Film> filmList = new ArrayList<>(List.of(firstFilm, secondFilm));
         given(filmStorage.findAll()).willReturn(filmList);
 
         secondFilm.addLike(user.getId());
