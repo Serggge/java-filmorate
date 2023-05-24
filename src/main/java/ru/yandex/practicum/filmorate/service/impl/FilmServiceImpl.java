@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -143,22 +144,9 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(int count) {
         log.debug("Запрошен список самых популярных фильмов");
-        List<Film> films = filmStorage.findAll();
-        List<Long> filmsIds = films.stream()
-                .map(Film::getId)
-                .collect(Collectors.toList());
-        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
-        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
-        for (Film film : films) {
-            if (filmsGenres.containsKey(film.getId())) {
-                film.getGenres().addAll(filmsGenres.get(film.getId()));
-            }
-            if (filmsLikes.containsKey(film.getId())) {
-                film.getLikes().addAll(filmsLikes.get(film.getId()));
-            }
-        }
-        return films.stream()
-                .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
+        return getAll()
+                .stream()
+                .sorted(Comparator.comparingInt(Film::popularity).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
     }
@@ -170,6 +158,18 @@ public class FilmServiceImpl implements FilmService {
             saved.addGenre(genre);
         }
         return saved;
+    }
+
+    @Override
+    public List<Film> getCommonFilmPopular(long userId, long friendId) {
+        log.info("Запрошен список общий список фильмов с другом, отсортированный по популярности");
+        if (!userService.existsById(userId) || !userService.existsById(friendId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%s или с id=%s не найден", userId, friendId));
+        }
+        return filmStorage.findAllById(likeStorage.findCommonLikes(userId, friendId))
+                .stream()
+                .sorted(Comparator.comparingInt(Film::popularity).reversed())
+                .collect(Collectors.toList());
     }
 
     @Override
