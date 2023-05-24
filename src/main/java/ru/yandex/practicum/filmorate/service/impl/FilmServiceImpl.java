@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
@@ -168,18 +167,28 @@ public class FilmServiceImpl implements FilmService {
         return saved;
     }
 
-    public List<Film> getDirectorFilms(int directorId, String sortBy) {
-        List<Film> films = new ArrayList<>();
-        directorsStorage.getDirectorById(directorId);
-        SqlRowSet rows = directorsStorage.getDirectorInFilms(directorId);
-        while (rows.next()) {
-            films.add(getById(rows.getLong("film_id")));
+    public List<Film> getSortedFilms(int directorId, String sortBy) {
+        directorsStorage.getById(directorId);
+        List<Long> ids = directorsStorage.getSortedFilms(directorId);
+        List<Film> films = filmStorage.findAllById(ids);
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(ids);
+        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(ids);
+        Map<Long, Set<Director>> filmsDirectors = directorsStorage.findAll(ids);
+        for (Film film : films) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+            if (filmsLikes.containsKey(film.getId())) {
+                film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+            if (filmsDirectors.containsKey(film.getId())) {
+                film.getDirectors().addAll(filmsDirectors.get(film.getId()));
+            }
         }
         if (sortBy.equals("year")) {
-            films.stream().sorted(Comparator.comparing(Film::getReleaseDate));
-            Collections.reverse(films);
+            films.sort(Comparator.comparing(Film::getReleaseDate));
         } else {
-            films.stream().sorted(Comparator.comparingInt(Film::popularity));
+            films.sort(Comparator.comparingInt(Film::popularity));
         }
         return films;
     }

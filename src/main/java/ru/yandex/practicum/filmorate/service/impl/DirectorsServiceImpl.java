@@ -18,33 +18,33 @@ public class DirectorsServiceImpl implements DirectorsService {
     private final DirectorsStorage storage;
 
     @Override
-    public List<Director> getAllDirectors() {
+    public List<Director> getAll() {
         log.debug("Запрошен список всех режиссеров");
-        return storage.getAllDirectors();
+        return storage.getAll();
     }
 
     @Override
-    public Director getDirectorById(int id) {
+    public Director getById(int id) {
         log.debug("Запрошен режиссер " + id);
-        return storage.getDirectorById(id);
+        return storage.getById(id);
     }
 
     @Override
-    public Director createDirector(Director director) {
+    public Director create(Director director) {
         log.debug("Запрошено создание режиссера" + director.getId());
-        return storage.createDirector(director);
+        return storage.create(director);
     }
 
     @Override
-    public Director updateDirector(Director director) {
+    public Director update(Director director) {
         log.debug("Запрошено обновление режиссера" + director.getId());
-        return storage.updateDirector(director);
+        return storage.update(director);
     }
 
     @Override
-    public void deleteDirector(int id) {
+    public void delete(int id) {
         log.debug("Запрошено удаление режиссера " + id);
-        storage.deleteDirector(id);
+        storage.delete(id);
     }
 
 }

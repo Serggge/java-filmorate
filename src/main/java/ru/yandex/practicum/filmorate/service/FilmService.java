@@ -20,6 +20,6 @@ public interface FilmService {
 
     List<Film> getPopular(int count);
 
-    List<Film> getDirectorFilms(int directorId, String sortBy);
+    List<Film> getSortedFilms(int directorId, String sortBy);
 
 }

@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class DirectorsStorageImpl implements DirectorsStorage {
@@ -28,8 +29,8 @@ public class DirectorsStorageImpl implements DirectorsStorage {
     }
 
     @Override
-    public List<Director> getAllDirectors() {
-        SqlRowSet rows = jdbcTemplate.queryForRowSet("SELECT * FROM directors");
+    public List<Director> getAll() {
+        SqlRowSet rows = jdbcTemplate.queryForRowSet("SELECT id, name FROM directors");
         List<Director> directors = new ArrayList<>();
         while (rows.next()) {
             Director director = Director.builder()
@@ -42,8 +43,8 @@ public class DirectorsStorageImpl implements DirectorsStorage {
     }
 
     @Override
-    public Director getDirectorById(int id) {
-        SqlRowSet rows = jdbcTemplate.queryForRowSet("SELECT * FROM directors WHERE id = ?", id);
+    public Director getById(int id) {
+        SqlRowSet rows = jdbcTemplate.queryForRowSet("SELECT id, name FROM directors WHERE id = ?", id);
         if (rows.next()) {
             return Director.builder()
                     .id(rows.getInt("id"))
@@ -55,8 +56,8 @@ public class DirectorsStorageImpl implements DirectorsStorage {
     }
 
     @Override
-    public Director createDirector(Director director) {
-        String sql = "SELECT * FROM directors WHERE id = ?;";
+    public Director create(Director director) {
+        String sql = "SELECT id FROM directors WHERE id = ?;";
         SqlRowSet row = jdbcTemplate.queryForRowSet(sql, director.getId());
         if (row.next()) {
             throw new DataException("Режиссер  уже существует" + director.getId());
@@ -70,8 +71,8 @@ public class DirectorsStorageImpl implements DirectorsStorage {
     }
 
     @Override
-    public Director updateDirector(Director director) {
-        String sql = "SELECT * FROM directors WHERE id = ?";
+    public Director update(Director director) {
+        String sql = "SELECT id FROM directors WHERE id = ?";
         SqlRowSet rows = jdbcTemplate.queryForRowSet(sql, director.getId());
         if (rows.next()) {
             sql = "UPDATE directors SET name = ? WHERE id = ?;";
@@ -83,14 +84,14 @@ public class DirectorsStorageImpl implements DirectorsStorage {
     }
 
     @Override
-    public void deleteDirector(int id) {
+    public void delete(int id) {
         String sqlQuery = "DELETE FROM directors WHERE id = ?";
         jdbcTemplate.update(sqlQuery, id);
     }
 
     @Override
     public Film save(Film film) {
-        var sql = "INSERT INTO film_directors (film_id, director_id) VALUES (:film_id, :director_id)";
+        String sql = "INSERT INTO film_directors (film_id, director_id) VALUES (:film_id, :director_id)";
         SqlParameterSource[] batch = film.getDirectors()
                 .stream()
                 .map(Director::getId)
@@ -104,17 +105,17 @@ public class DirectorsStorageImpl implements DirectorsStorage {
 
     @Override
     public List<Director> findDirectorsByFilmId(long id) {
-        List<Director> directors = new ArrayList<>();
+        List<Integer> directorsId = new ArrayList<>();
         String sql = "SELECT director_id FROM film_directors WHERE film_id = ?";
         SqlRowSet rows = jdbcTemplate.queryForRowSet(sql, id);
         while (rows.next()) {
-            sql = "SELECT * FROM directors WHERE id = ?";
-            SqlRowSet rowDirector = jdbcTemplate.queryForRowSet(sql, rows.getInt("director_id"));
-            if (rowDirector.next()) {
-                directors.add(new Director(rowDirector.getInt("id"), rowDirector.getString("name")));
-            }
+            directorsId.add(rows.getInt("director_id"));
         }
-        return directors;
+        SqlParameterSource parameters = new MapSqlParameterSource("ids", directorsId);
+        return namedParameterJdbcTemplate.queryForStream(
+                "SELECT id, name FROM directors WHERE id IN (:ids)",
+                parameters,
+                (rs, rowNum) -> new Director(rs.getInt("id"), rs.getString("name"))).collect(Collectors.toList());
     }
 
     @Override
@@ -148,9 +149,14 @@ public class DirectorsStorageImpl implements DirectorsStorage {
         return values;
     }
 
-    public SqlRowSet getDirectorInFilms(int directorId) {
+    public List<Long> getSortedFilms(int directorId) {
+        List<Long> ids = new ArrayList<>();
         String sql = "SELECT film_id FROM film_directors WHERE director_id = ?";
-        return jdbcTemplate.queryForRowSet(sql, directorId);
+        SqlRowSet rows = jdbcTemplate.queryForRowSet(sql, directorId);
+        while (rows.next()) {
+            ids.add((long) rows.getInt("film_id"));
+        }
+        return ids;
     }
 
 }

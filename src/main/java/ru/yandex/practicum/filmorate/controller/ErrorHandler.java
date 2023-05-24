@@ -56,14 +56,6 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleDirectorNotFoundException(DirectorNotFoundException exception) {
-        errorResponse.setParams(exception.getMessage(), "");
-        log(exception);
-        return errorResponse;
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(ValidationException exception) {
         errorResponse.setParams(exception.getMessage(), "");
