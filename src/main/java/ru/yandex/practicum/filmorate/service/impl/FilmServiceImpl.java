@@ -162,7 +162,6 @@ public class FilmServiceImpl implements FilmService {
         if (foundedIds.size() < count) {
             foundedIds.addAll(likeStorage.findPopular(count - foundedIds.size()));
         }
-        
         List<Film> foundedFilms = foundedIds.isEmpty()
                 ? constructFilmList(filmStorage.findAllIds())
                 : constructFilmList(foundedIds);

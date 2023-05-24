@@ -16,6 +16,7 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 import ru.yandex.practicum.filmorate.service.impl.ReviewServiceImpl;
 import ru.yandex.practicum.filmorate.storage.dao.DAOValidator;
+import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.ReviewDbStorage;
 
 import java.util.ArrayList;
@@ -31,6 +32,8 @@ class ReviewControllerTest {
 
     @MockBean
     private ReviewService reviewService;
+    @MockBean
+    EventStorage eventStorage;
 
     @Test
     void testPostReview() {
@@ -51,7 +54,8 @@ class ReviewControllerTest {
         doNothing().when(daoValidator).validateFilmBd(Mockito.<Long>any());
         doNothing().when(daoValidator).validateReviewDB(Mockito.<Long>any());
         doNothing().when(daoValidator).validateUserBd(Mockito.<Long>any());
-        ReviewController reviewController = new ReviewController(new ReviewServiceImpl(storage, daoValidator));
+        ReviewController reviewController = new ReviewController(
+                new ReviewServiceImpl(storage, daoValidator, eventStorage));
         assertSame(review, reviewController.putReview(new Review()));
         verify(storage).update(Mockito.<Review>any());
         verify(daoValidator).validateFilmBd(Mockito.<Long>any());

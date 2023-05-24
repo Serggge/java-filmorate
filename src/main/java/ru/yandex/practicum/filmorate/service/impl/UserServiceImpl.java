@@ -146,6 +146,13 @@ public class UserServiceImpl implements UserService {
         return eventStorage.find(userId);
     }
 
+    @Override
+    public void deleteUserById(long id) {
+        validateId(id);
+        log.debug("Удаление пользователя: id={}", id);
+        userStorage.deleteById(id);
+    }
+
     private User getUserOrThrow(long id) {
         return userStorage.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
@@ -155,13 +162,6 @@ public class UserServiceImpl implements UserService {
         if (!userStorage.existsById(id)) {
             throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", id));
         }
-    }
-
-    @Override
-    public void deleteUserById(long id) {
-        validateId(id);
-        log.debug("Удаление пользователя: id={}", id);
-        userStorage.deleteById(id);
     }
 
 }
