@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dao;
 
 import ru.yandex.practicum.filmorate.model.Like;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,8 @@ public interface LikeStorage {
     boolean isExist(Like like);
 
     void deleteAll();
+
+    List<Long> findPopular(int count);
 
     List<Long> suggestFilms(long userId);
 
