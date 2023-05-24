@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -55,6 +56,11 @@ public class UserController {
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> returnMutualFriends(@PathVariable long id, @PathVariable long otherId) {
         return service.getMutualFriends(id, otherId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void removeUser(@PathVariable("id") long userId) {
+        service.deleteUserById(userId);
     }
 
 }

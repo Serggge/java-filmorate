@@ -10,7 +10,9 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+
 import java.util.*;
+
 import static ru.yandex.practicum.filmorate.util.RowMappers.FILM_ROW_MAPPER;
 
 @Repository("filmDbStorage")
@@ -30,10 +32,10 @@ public class FilmDbStorage implements FilmStorage {
         var keyHolder = new GeneratedKeyHolder();
         if (film.getId() == 0) {
             sqlQuery = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
-                                    "VALUES (:name, :description, :releaseDate, :duration, :mpaId)";
+                    "VALUES (:name, :description, :releaseDate, :duration, :mpaId)";
         } else {
             sqlQuery = "UPDATE films SET name = :name, description = :description, release_date = :releaseDate, " +
-                                          "duration = :duration, mpa_id = :mpaId WHERE film_id = :id";
+                    "duration = :duration, mpa_id = :mpaId WHERE film_id = :id";
         }
         var filmParams = new MapSqlParameterSource()
                 .addValue("id", film.getId())
@@ -69,7 +71,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findAllById(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id " +
-                         "FROM films WHERE film_id IN (:ids)";
+                "FROM films WHERE film_id IN (:ids)";
         var idsParams = new MapSqlParameterSource("ids", ids);
         return namedParameterJdbcTemplate.query(sqlQuery, idsParams, FILM_ROW_MAPPER);
     }
@@ -85,6 +87,12 @@ public class FilmDbStorage implements FilmStorage {
     public void deleteAll() {
         var sqlQuery = "DELETE FROM films";
         jdbcTemplate.update(sqlQuery);
+    }
+
+    @Override
+    public void delete(long filmId) {
+        var sqlQuery = "DELETE FROM films WHERE film_id = ?";
+        jdbcTemplate.update(sqlQuery, filmId);
     }
 
 }
