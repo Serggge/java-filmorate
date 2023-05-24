@@ -70,7 +70,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public void removeUser(@PathVariable("id") long userId) {
-        service.deleteUserById(userId);
+        userService.deleteUserById(userId);
     }
 
     @GetMapping("/{id}/feed")

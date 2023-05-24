@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.util.RowMappers.REVIEW_ROW_MAPPER;
 
@@ -129,4 +130,12 @@ public class ReviewDbStorage implements ReviewStorage {
             list.add(review);
         }
     }
+
+    @Override
+    public Optional<Long> findUserIdByReviewId(long id) {
+        var sqlQuery = "SELECT user_id FROM review WHERE review_Id = ?";
+        var rowSet = jdbcTemplate.queryForRowSet(sqlQuery, id);
+        return rowSet.next() ? Optional.of(rowSet.getLong("user_id")) : Optional.empty();
+    }
+
 }

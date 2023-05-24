@@ -132,12 +132,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Long> findAllIds() {
-        var sqlQuery = "SELECT DISTINCT film_id FROM films";
-        return jdbcTemplate.queryForList(sqlQuery, Long.class);
-    }
-
-    @Override
     public void delete(long filmId) {
         var sqlQuery = "DELETE FROM films WHERE film_id = ?";
         jdbcTemplate.update(sqlQuery, filmId);

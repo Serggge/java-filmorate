@@ -16,8 +16,6 @@ import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -158,7 +156,6 @@ public class FilmServiceImpl implements FilmService {
         if (foundedIds.size() < count) {
             foundedIds.addAll(likeStorage.findPopular(count - foundedIds.size()));
         }
-        
         List<Film> foundedFilms = foundedIds.isEmpty()
                 ? constructFilmList(filmStorage.findAllIds())
                 : constructFilmList(foundedIds);
@@ -217,15 +214,7 @@ public class FilmServiceImpl implements FilmService {
         filmStorage.delete(filmId);
     }
 
-/*    private int safetyParse(String source) {
-        try {
-            return Integer.parseInt(source);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Некорректный параметр: " + source);
-        }
-    }*/
-
-    private <T extends Number> T safetyParse(Function<String, T> parser, String source) {
+    private <T extends Number> T safelyParse(Function<String, T> parser, String source) {
         try {
             return parser.apply(source);
         } catch (Exception e) {
