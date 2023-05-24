@@ -21,4 +21,6 @@ public interface LikeStorage {
 
     void deleteAll();
 
+    List<Long> findCommonLikes(long userId, long friendId);
+
 }
