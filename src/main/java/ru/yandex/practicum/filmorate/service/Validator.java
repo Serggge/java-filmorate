@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.constraints.NotNull;
@@ -15,7 +16,6 @@ import static ru.yandex.practicum.filmorate.util.Constants.FIRST_FILM;
 public final class Validator {
 
     private Validator() {
-
     }
 
     public static User validateUser(User user) {
@@ -51,6 +51,18 @@ public final class Validator {
                     .build();
         } else {
             return film;
+        }
+    }
+
+    public static void createValidator(Review review) {
+        if (review.getReviewId() != 0) {
+            throw new ValidationException("Недопустимый параметр ID при создании ревью");
+        }
+        if (review.getFilmId() == 0) {
+            throw new ValidationException("Неверный id фильма: " + review.getFilmId());
+        }
+        if (review.getUserId() == 0) {
+            throw new ValidationException("Неверный id пользователя: " + review.getUserId());
         }
     }
 

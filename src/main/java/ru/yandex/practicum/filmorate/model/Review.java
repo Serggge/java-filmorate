@@ -16,15 +16,15 @@ import java.time.LocalDateTime;
 @Builder
 public class Review {
     @NotNull
-    private Long reviewId;
+    private long reviewId;
     @NotNull
-    private Long filmId;
+    private long filmId;
     @NotNull
-    private Long userId;
+    private long userId;
     @NotBlank
     private String content;
     private Boolean isPositive;
-    private Integer useful = 0;
+    private int useful;
     @PastOrPresent
     private LocalDateTime reviewDate;
 

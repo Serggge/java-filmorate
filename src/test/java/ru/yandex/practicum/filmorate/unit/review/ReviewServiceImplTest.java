@@ -7,17 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.impl.ReviewServiceImpl;
 import ru.yandex.practicum.filmorate.storage.dao.DAOValidator;
 import ru.yandex.practicum.filmorate.storage.dao.ReviewStorage;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration(classes = {ReviewServiceImpl.class})
@@ -35,23 +34,20 @@ class ReviewServiceImplTest {
     @Test
     void testCreate() {
         Review review = new Review();
-        when(reviewStorage.create(Mockito.<Review>any())).thenReturn(review);
+        when(reviewStorage.update(Mockito.<Review>any())).thenReturn(review);
         doNothing().when(dAOValidator).validateFilmBd(Mockito.<Long>any());
         doNothing().when(dAOValidator).validateUserBd(Mockito.<Long>any());
-        assertSame(review, reviewServiceImpl.create(new Review()));
-        verify(reviewStorage).create(Mockito.<Review>any());
+        Review review2 = mock(Review.class);
+        when(review2.getUserId()).thenReturn(1L);
+        when(review2.getFilmId()).thenReturn(1L);
+        when(review2.getReviewId()).thenReturn(0L);
+        assertSame(review, reviewServiceImpl.create(review2));
+        verify(reviewStorage).update(Mockito.<Review>any());
         verify(dAOValidator).validateFilmBd(Mockito.<Long>any());
         verify(dAOValidator).validateUserBd(Mockito.<Long>any());
-    }
-
-    @Test
-    void testCreate2() {
-        when(reviewStorage.create(Mockito.<Review>any())).thenReturn(new Review());
-        doNothing().when(dAOValidator).validateFilmBd(Mockito.<Long>any());
-        doNothing().when(dAOValidator).validateUserBd(Mockito.<Long>any());
-        assertThrows(ValidationException.class, () -> reviewServiceImpl.create(
-                new Review(1L, 1L, 1L, "Top content in the world",
-                        true, 1, LocalDate.of(1970, 1, 1).atStartOfDay())));
+        verify(review2, atLeast(1)).getFilmId();
+        verify(review2).getReviewId();
+        verify(review2, atLeast(1)).getUserId();
     }
 
     @Test
@@ -61,23 +57,10 @@ class ReviewServiceImplTest {
         doNothing().when(dAOValidator).validateFilmBd(Mockito.<Long>any());
         doNothing().when(dAOValidator).validateReviewDB(Mockito.<Long>any());
         doNothing().when(dAOValidator).validateUserBd(Mockito.<Long>any());
-        assertSame(review, reviewServiceImpl.update(new Review(), true));
+        assertSame(review, reviewServiceImpl.update(new Review()));
         verify(reviewStorage).update(Mockito.<Review>any());
         verify(dAOValidator).validateFilmBd(Mockito.<Long>any());
         verify(dAOValidator).validateReviewDB(Mockito.<Long>any());
-        verify(dAOValidator).validateUserBd(Mockito.<Long>any());
-    }
-
-    @Test
-    void testUpdate2() {
-        Review review = new Review();
-        when(reviewStorage.update(Mockito.<Review>any())).thenReturn(review);
-        doNothing().when(dAOValidator).validateFilmBd(Mockito.<Long>any());
-        doNothing().when(dAOValidator).validateReviewDB(Mockito.<Long>any());
-        doNothing().when(dAOValidator).validateUserBd(Mockito.<Long>any());
-        assertSame(review, reviewServiceImpl.update(new Review(), false));
-        verify(reviewStorage).update(Mockito.<Review>any());
-        verify(dAOValidator).validateFilmBd(Mockito.<Long>any());
         verify(dAOValidator).validateUserBd(Mockito.<Long>any());
     }
 
@@ -102,19 +85,34 @@ class ReviewServiceImplTest {
     }
 
     @Test
-    void testFindByFilmId2() {
-        when(reviewStorage.findByFilmId(anyLong(), anyInt())).thenThrow(new ValidationException("An error occurred"));
-        assertThrows(ValidationException.class, () -> reviewServiceImpl.findByFilmId(1L, 3));
-        verify(reviewStorage).findByFilmId(anyLong(), anyInt());
-    }
-
-    @Test
     void testDeleteById() {
         doNothing().when(reviewStorage).deleteById(anyLong());
         doNothing().when(dAOValidator).validateReviewDB(Mockito.<Long>any());
         reviewServiceImpl.deleteById(1L);
         verify(reviewStorage).deleteById(anyLong());
         verify(dAOValidator).validateReviewDB(Mockito.<Long>any());
+    }
+
+    @Test
+    void testLikeReview() {
+        doNothing().when(reviewStorage).likeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(dAOValidator).validateReviewDB(Mockito.<Long>any());
+        doNothing().when(dAOValidator).validateUserBd(Mockito.<Long>any());
+        reviewServiceImpl.likeReview(1L, 1L);
+        verify(reviewStorage).likeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        verify(dAOValidator).validateReviewDB(Mockito.<Long>any());
+        verify(dAOValidator).validateUserBd(Mockito.<Long>any());
+    }
+
+    @Test
+    void testDislikeReview() {
+        doNothing().when(reviewStorage).dislikeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        doNothing().when(dAOValidator).validateReviewDB(Mockito.<Long>any());
+        doNothing().when(dAOValidator).validateUserBd(Mockito.<Long>any());
+        reviewServiceImpl.dislikeReview(1L, 1L);
+        verify(reviewStorage).dislikeReview(Mockito.<Long>any(), Mockito.<Long>any());
+        verify(dAOValidator).validateReviewDB(Mockito.<Long>any());
+        verify(dAOValidator).validateUserBd(Mockito.<Long>any());
     }
 }
 

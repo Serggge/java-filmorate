@@ -33,7 +33,7 @@ public class RowMappers {
             .content(resultSet.getString("content"))
             .isPositive(resultSet.getBoolean("isPositive"))
             .useful(resultSet.getInt("useful"))
-            .reviewDate(resultSet.getObject("reviewDate", LocalDateTime.class))
+            .reviewDate(resultSet.getObject("review_date", LocalDateTime.class))
             .build();
     public static final RowMapper<Mpa> MPA_ROW_MAPPER = (ResultSet rs, int rowNum) ->
             new Mpa(rs.getInt("mpa_id"));
