@@ -20,6 +20,7 @@ public interface FilmService {
 
     List<Film> getPopular(int count);
 
+    List<Film> getCommonFilmPopular(long userId, long friendId);
     List<Film> getSortedFilms(int directorId, String sortBy);
 
     void delete(long filmId);

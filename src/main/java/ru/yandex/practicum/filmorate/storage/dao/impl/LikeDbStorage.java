@@ -9,8 +9,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import java.util.*;
 import java.util.stream.Collectors;
+
 import static ru.yandex.practicum.filmorate.util.RowMappers.LIKE_ROW_MAPPER;
 
 @Repository("likeDbStorage")
@@ -71,5 +73,12 @@ public class LikeDbStorage implements LikeStorage {
     public void deleteAll() {
         var sqlQuery = "DELETE FROM likes";
         jdbcTemplate.update(sqlQuery);
+    }
+
+    @Override
+    public List<Long> findCommonLikes(long userId, long friendId) {
+        var sqlQuery = "SELECT film_id FROM likes WHERE user_id = ? and film_id in " +
+                "(SELECT film_id FROM likes WHERE user_id = ?)";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, userId, friendId);
     }
 }
