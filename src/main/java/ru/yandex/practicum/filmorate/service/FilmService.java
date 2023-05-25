@@ -20,6 +20,8 @@ public interface FilmService {
 
     List<Film> getPopular(Map<String, String> allParams);
 
+    List<Film> getSortedFilms(int directorId, String sortBy);
+
     void delete(long filmId);
 
     List<Film> getRecommendedFilms(long userId);

@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
@@ -32,6 +33,8 @@ public class FilmServiceImpl implements FilmService {
     private final FilmGenreStorage filmGenreStorage;
     private final LikeStorage likeStorage;
     private final UserService userService;
+    private final DirectorsStorage directorsStorage;
+
     private final EventStorage eventStorage;
 
     @Autowired
@@ -39,11 +42,13 @@ public class FilmServiceImpl implements FilmService {
                            FilmGenreStorage filmGenreStorage,
                            LikeStorage likeStorage,
                            UserService userService,
+                           DirectorsStorage directorsStorage,
                            EventStorage eventStorage) {
         this.filmStorage = filmStorage;
         this.filmGenreStorage = filmGenreStorage;
         this.likeStorage = likeStorage;
         this.userService = userService;
+        this.directorsStorage = directorsStorage;
         this.eventStorage = eventStorage;
     }
 
@@ -56,6 +61,9 @@ public class FilmServiceImpl implements FilmService {
         film = filmStorage.save(film);
         if (!film.getGenres().isEmpty()) {
             film = filmGenreStorage.save(film);
+        }
+        if (!film.getDirectors().isEmpty()) {
+            film = directorsStorage.save(film);
         }
         log.info("Добавлен фильм: {}", film);
         return film;
@@ -70,6 +78,8 @@ public class FilmServiceImpl implements FilmService {
             film = filmStorage.update(film);
             filmGenreStorage.deleteByFilmId(film.getId());
             filmGenreStorage.save(film);
+            directorsStorage.deleteByFilmId(film.getId());
+            directorsStorage.save(film);
             film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId()));
             log.info("Обновлён фильм: {}", film);
             return film;
@@ -90,6 +100,7 @@ public class FilmServiceImpl implements FilmService {
         Film film = getFilmOrThrow(id);
         film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
         film.getLikes().addAll(likeStorage.findUsersIdByFilmId(id));
+        film.getDirectors().addAll(directorsStorage.findDirectorsByFilmId(id));
         return film;
     }
 
@@ -201,6 +212,32 @@ public class FilmServiceImpl implements FilmService {
             if (filmsLikes.containsKey(film.getId())) {
                 film.getLikes().addAll(filmsLikes.get(film.getId()));
             }
+        }
+        return films;
+    }
+
+    public List<Film> getSortedFilms(int directorId, String sortBy) {
+        directorsStorage.getById(directorId);
+        List<Long> ids = directorsStorage.getSortedFilms(directorId);
+        List<Film> films = filmStorage.findAllById(ids);
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(ids);
+        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(ids);
+        Map<Long, Set<Director>> filmsDirectors = directorsStorage.findAll(ids);
+        for (Film film : films) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+            if (filmsLikes.containsKey(film.getId())) {
+                film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+            if (filmsDirectors.containsKey(film.getId())) {
+                film.getDirectors().addAll(filmsDirectors.get(film.getId()));
+            }
+        }
+        if (sortBy.equals("year")) {
+            films.sort(Comparator.comparing(Film::getReleaseDate));
+        } else {
+            films.sort(Comparator.comparingInt(Film::popularity));
         }
         return films;
     }

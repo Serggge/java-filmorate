@@ -29,6 +29,8 @@ public class Film implements Comparable<Film> {
     final Set<Genre> genres = new HashSet<>();
     final Set<Long> likes = new HashSet<>();
 
+    final Set<Director> directors = new HashSet<>();
+
     public int getMpaId() {
         return mpa.getId();
     }

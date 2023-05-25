@@ -23,6 +23,7 @@ import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.service.impl.FilmServiceImpl;
+import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import java.time.LocalDate;
@@ -40,6 +41,8 @@ class FilmServiceTest {
     FilmGenreStorage filmGenreStorage;
     @Mock
     LikeStorage likeStorage;
+    @Mock
+    DirectorsStorage directorsStorage;
 
     @InjectMocks
     FilmServiceImpl filmService;
