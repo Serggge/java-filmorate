@@ -20,10 +20,10 @@ public interface FilmService {
 
     List<Film> getPopular(Map<String, String> allParams);
 
+    void delete(long filmId);
+
     List<Film> getRecommendedFilms(long userId);
 
     List<Film> searchByParams(String query, List<String> by);
-
-    void delete(long filmId);
 
 }
