@@ -183,9 +183,11 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getCommonFilmPopular(long userId, long friendId) {
-        log.info("Запрошен список общий список фильмов с другом, отсортированный по популярности");
-        if (!userService.existsById(userId) || !userService.existsById(friendId)) {
-            throw new UserNotFoundException(String.format("Пользователь с id=%s или с id=%s не найден", userId, friendId));
+        log.debug("Запрошен список общий список фильмов с другом, отсортированный по популярности");
+        if (!userService.existsById(userId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%s", userId));
+        } else if (!userService.existsById(friendId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%s", friendId));
         }
         return filmStorage.findAllById(likeStorage.findCommonLikes(userId, friendId))
                 .stream()
