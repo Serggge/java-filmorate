@@ -53,6 +53,11 @@ public class FilmController {
         return service.getPopular(count);
     }
 
+    @GetMapping("/common")
+    public List<Film> returnCommonPopular(@RequestParam(value = "userId") long userId, @RequestParam(value = "friendId") long friendId) {
+        return service.getCommonFilmPopular(userId, friendId);
+    }
+
     @GetMapping("/director/{directorId}")
     public List<Film> getSortedFilms(@PathVariable("directorId") int directorId, @RequestParam(defaultValue = "year") String sortBy) {
         return service.getSortedFilms(directorId, sortBy);
