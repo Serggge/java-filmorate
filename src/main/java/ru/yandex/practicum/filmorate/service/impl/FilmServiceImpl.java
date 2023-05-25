@@ -216,6 +216,20 @@ public class FilmServiceImpl implements FilmService {
         return films;
     }
 
+    @Override
+    public List<Film> getCommonFilmPopular(long userId, long friendId) {
+        log.debug("Запрошен список общий список фильмов с другом, отсортированный по популярности");
+        if (!userService.existsById(userId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%s", userId));
+        } else if (!userService.existsById(friendId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%s", friendId));
+        }
+        return filmStorage.findAllById(likeStorage.findCommonLikes(userId, friendId))
+                .stream()
+                .sorted(Comparator.comparingInt(Film::popularity).reversed())
+                .collect(Collectors.toList());
+    }
+
     public List<Film> getSortedFilms(int directorId, String sortBy) {
         directorsStorage.getById(directorId);
         List<Long> ids = directorsStorage.getSortedFilms(directorId);

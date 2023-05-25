@@ -74,6 +74,13 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
+    public List<Long> findCommonLikes(long userId, long friendId) {
+        var sqlQuery = "SELECT film_id FROM likes WHERE user_id=? OR user_id=? " +
+                "GROUP BY film_id HAVING count(user_id)=2";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, userId, friendId);
+    }
+
+    @Override
     public List<Long> findPopular(int count) {
         var sqlQuery = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT ?";
         return jdbcTemplate.queryForList(sqlQuery, Long.class, count);

@@ -38,6 +38,7 @@ create TABLE  film_directors (
 CONSTRAINT pk_film_directors PRIMARY KEY (film_id, director_id)
 );
 
+drop table IF EXISTs film_genre CASCADE;
 create TABLE IF NOT EXISTS film_genre (
 	film_id int REFERENCES films (film_id) ON delete CASCADE,
 	genre_id int REFERENCES genres (genre_id) ON delete CASCADE,

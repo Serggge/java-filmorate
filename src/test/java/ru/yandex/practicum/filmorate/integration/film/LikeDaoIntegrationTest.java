@@ -28,6 +28,7 @@ class LikeDaoIntegrationTest {
     static UserDbStorage userStorage;
     static final Film film = new Film();
     static final User user = new User();
+    static final User friend = new User();
     final LikeStorage likeStorage;
 
     @Autowired
@@ -38,6 +39,7 @@ class LikeDaoIntegrationTest {
         setFilmAndUserForDefaults();
         filmStorage.save(film);
         userStorage.save(user);
+        userStorage.save(friend);
     }
 
     @AfterEach
@@ -98,6 +100,19 @@ class LikeDaoIntegrationTest {
     }
 
     @Test
+    void testfindCommonLikes() {
+        final Like like = new Like(film.getId(), user.getId());
+        final Like likeFriend = new Like(film.getId(), friend.getId());
+
+        likeStorage.save(like);
+        likeStorage.save(likeFriend);
+        List<Long> commonLikes = likeStorage.findCommonLikes(user.getId(), friend.getId());
+
+        assertThat(commonLikes.contains(film.getId())).isTrue();
+        assertThat(commonLikes.size() == 1).isTrue();
+    }
+
+    @Test
     void testSuggestFilms() {
         Film secondFilm = Film.builder()
                 .name("Second film")
@@ -144,6 +159,11 @@ class LikeDaoIntegrationTest {
         user.setName("Ivan");
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
+        friend.setId(0);
+        friend.setLogin("Petr2000");
+        friend.setEmail("petr2000@yandex.ru");
+        friend.setName("Petr");
+        friend.setBirthday(LocalDate.of(2000, 1, 1));
     }
 
 }

@@ -20,6 +20,8 @@ public interface LikeStorage {
 
     void deleteAll();
 
+    List<Long> findCommonLikes(long userId, long friendId);
+
     List<Long> findPopular(int count);
 
     List<Long> suggestFilms(long userId);
