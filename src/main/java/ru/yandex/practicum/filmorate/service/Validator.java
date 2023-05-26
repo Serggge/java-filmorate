@@ -4,9 +4,7 @@ import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
@@ -40,7 +38,7 @@ public final class Validator {
         if (releaseDate.isBefore(FIRST_FILM)) {
             throw new ValidationException(String.format("Дата релиза фильма раньше %s", FIRST_FILM));
         }
-        if (film.getGenres() == null || film.getLikes() == null) {
+        if (film.getGenres() == null || film.getLikes() == null || film.getDirectors() == null) {
             return Film.builder()
                     .id(film.getId())
                     .name(film.getName())

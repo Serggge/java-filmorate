@@ -6,11 +6,15 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
-import java.util.*;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
 import static ru.yandex.practicum.filmorate.util.RowMappers.LIKE_ROW_MAPPER;
 
 @Repository("likeDbStorage")
@@ -25,22 +29,19 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    public Like save(Like like) {
+    public boolean save(Like like) {
         var sqlQuery = "INSERT INTO likes (film_id, user_id) VALUES (:filmId, :userId)";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        namedParameterJdbcTemplate.update(sqlQuery, likeParams);
-        return like;
+        return namedParameterJdbcTemplate.update(sqlQuery, likeParams) > 0;
     }
 
     @Override
     public List<Long> findUsersIdByFilmId(long id) {
         var sqlQuery = "SELECT user_id FROM likes WHERE film_id = ?";
-        List<Long> ids = jdbcTemplate.queryForList(sqlQuery, Long.class, id);
-        return ids;
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, id);
     }
 
     @Override
-    @Transactional
     public Map<Long, Set<Long>> findAll(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, user_id FROM likes WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
@@ -53,10 +54,10 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    public void delete(Like like) {
+    public boolean delete(Like like) {
         var sqlQuery = "DELETE FROM likes WHERE film_id = :filmId AND user_id = :userId";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        namedParameterJdbcTemplate.update(sqlQuery, likeParams);
+        return namedParameterJdbcTemplate.update(sqlQuery, likeParams) > 0;
     }
 
     @Override

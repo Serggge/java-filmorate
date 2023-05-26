@@ -26,7 +26,6 @@ import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -39,7 +38,7 @@ class FilmControllerTest {
 
     static Film firstFilm;
     static Film secondFilm;
-    static Random random = new Random();
+    static final Random random = new Random();
     @Autowired
     MockMvc mvc;
     @Autowired
@@ -120,40 +119,6 @@ class FilmControllerTest {
 
         mvc.perform(mvcRequest)
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(firstFilm)))
-                .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.id", is((int) firstFilm.getId())))
-                .andExpect(jsonPath("$.name", is(firstFilm.getName())))
-                .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
-                .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
-                .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
-    }
-
-    @Test
-    void handleAddUserLike_returnFilm() throws Exception {
-        when(service.setLike(anyLong(), anyLong())).thenReturn(firstFilm);
-
-        var mvcRequest = put(String.format("/films/%d/like/%d", firstFilm.getId(), random.nextInt()));
-
-        mvc.perform(mvcRequest).andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(firstFilm)))
-                .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.id", is((int) firstFilm.getId())))
-                .andExpect(jsonPath("$.name", is(firstFilm.getName())))
-                .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
-                .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
-                .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
-    }
-
-    @Test
-    void handleRemoveUserLike_returnFilm() throws Exception {
-        when(service.deleteLike(anyLong(), anyLong())).thenReturn(firstFilm);
-
-        var mvcRequest = delete(String.format("/films/%d/like/%d", firstFilm.getId(), random.nextInt()));
-
-        mvc.perform(mvcRequest).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(mapper.writeValueAsString(firstFilm)))
                 .andExpect(jsonPath("$", notNullValue()))

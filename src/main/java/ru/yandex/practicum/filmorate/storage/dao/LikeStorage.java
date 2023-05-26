@@ -8,13 +8,13 @@ import java.util.Set;
 
 public interface LikeStorage {
 
-    Like save(Like like);
+    boolean save(Like like);
 
     List<Long> findUsersIdByFilmId(long id);
 
     Map<Long, Set<Long>> findAll(Collection<Long> ids);
 
-    void delete(Like like);
+    boolean delete(Like like);
 
     boolean isExist(Like like);
 

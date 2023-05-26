@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -13,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/films")
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
+@Transactional
 public class FilmController {
 
     private final FilmService service;
@@ -39,13 +41,13 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
-        return service.setLike(filmId, userId);
+    public void addUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
+        service.setLike(filmId, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film removeUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
-        return service.deleteLike(filmId, userId);
+    public void removeUserLike(@PathVariable("id") long filmId, @PathVariable long userId) {
+        service.deleteLike(filmId, userId);
     }
 
     @GetMapping("/popular")

@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dao.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -9,12 +8,13 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
-import static ru.yandex.practicum.filmorate.util.RowMappers.FILM_ROW_MAPPER;
+import static ru.yandex.practicum.filmorate.util.Statements.STATEMENT_FOR_FILM;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
@@ -40,7 +40,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
-        var  sqlQuery = "UPDATE films SET name = :name, description = :description, release_date = :releaseDate, " +
+        var sqlQuery = "UPDATE films SET name = :name, description = :description, release_date = :releaseDate, " +
                 "duration = :duration, mpa_id = :mpaId WHERE film_id = :id";
         var filmParams = new BeanPropertySqlParameterSource(film);
         namedParameterJdbcTemplate.update(sqlQuery, filmParams);
@@ -49,26 +49,24 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> findById(long id) {
-        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films WHERE film_id = ?";
-        try {
-            return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, FILM_ROW_MAPPER, id));
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
+        var sqlQuery = STATEMENT_FOR_FILM + " WHERE films.film_id = ?";
+        var rowSet = jdbcTemplate.queryForRowSet(sqlQuery, id);
+        Film film = mapToFilm(rowSet);
+        return Optional.ofNullable(film);
     }
 
     @Override
     public List<Film> findAll() {
-        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films ORDER BY film_id";
-        return jdbcTemplate.query(sqlQuery, FILM_ROW_MAPPER);
+        var rowSet = jdbcTemplate.queryForRowSet(STATEMENT_FOR_FILM);
+        return mapToFilmList(rowSet);
     }
 
     @Override
     public List<Film> findAllById(Collection<Long> ids) {
-        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id " +
-                "FROM films WHERE film_id IN (:ids)";
+        var sqlQuery = STATEMENT_FOR_FILM + " WHERE films.film_id IN (:ids)";
         var idsParams = new MapSqlParameterSource("ids", ids);
-        return namedParameterJdbcTemplate.query(sqlQuery, idsParams, FILM_ROW_MAPPER);
+        var rowSet = namedParameterJdbcTemplate.queryForRowSet(sqlQuery, idsParams);
+        return mapToFilmList(rowSet);
     }
 
     @Override
@@ -86,22 +84,15 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Long> findBySubString(String substring) {
-        var sqlQuery = "SELECT film_id FROM films WHERE (name ~* :substring) OR (description ~* :substring)";
+        var sqlQuery = "SELECT film_id FROM films WHERE (name ~* :substring)";
         var param = new MapSqlParameterSource("substring", substring);
         return namedParameterJdbcTemplate.queryForList(sqlQuery, param, Long.class);
     }
 
     @Override
     public List<Long> findAllByYear(int year) {
-        var sqlQuery = "SELECT film_id FROM films WHERE EXTRACT (YEAR FROM release_date) = ?";
+        var sqlQuery = "SELECT film_id FROM films WHERE EXTRACT(YEAR FROM release_date) = ?";
         return jdbcTemplate.queryForList(sqlQuery, Long.class, year);
-    }
-
-    @Override
-    public List<Long> findAllByGenre(int genreId) {
-        var sqlQuery = "SELECT films.film_id FROM films " +
-                "INNER JOIN film_genre ON films.film_id = film_genre.film_id WHERE genre_id = ?";
-        return jdbcTemplate.queryForList(sqlQuery, Long.class, genreId);
     }
 
     @Override
@@ -110,31 +101,72 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.queryForList(sqlQuery, Long.class);
     }
 
-    private List<Film> mapToFilmList(SqlRowSet rs) {
-        List<Film> films = new ArrayList<>();
-        Film currentFilm = null;
-        while (rs.next()) {
-            long filmId = rs.getLong("film_id");
-            if (currentFilm == null || currentFilm.getId() != filmId) {
-                currentFilm = Film.builder()
-                        .id(filmId)
-                        .name(rs.getString("name"))
-                        .description(rs.getString("description"))
-                        .releaseDate(rs.getDate("release_date").toLocalDate())
-                        .duration(rs.getInt("duration"))
-                        .mpa(new Mpa(rs.getInt("mpa_id")))
-                        .build();
-                films.add(currentFilm);
-            }
-            currentFilm.getGenres().add(new Genre(rs.getInt("genre_id")));
-        }
-        return films;
-    }
-
     @Override
     public void delete(long filmId) {
         var sqlQuery = "DELETE FROM films WHERE film_id = ?";
         jdbcTemplate.update(sqlQuery, filmId);
+    }
+
+    @Override
+    public List<Long> findPopular(int count) {
+        var sqlQuery = "SELECT films.film_id FROM films LEFT JOIN likes ON likes.film_id = films.film_id " +
+                "GROUP BY films.film_id ORDER BY COUNT(likes.user_id) DESC LIMIT ?";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, count);
+    }
+
+    @Override
+    public List<Long> findByYearAndGenre(int year, int genreId) {
+        var sqlQuery = "SELECT films.film_id FROM films INNER JOIN film_genre ON film_genre.film_id = films.film_id " +
+                "WHERE EXTRACT(YEAR FROM films.release_date) = :year AND film_genre.genre_id = :genreId";
+        var paramsSource = new MapSqlParameterSource()
+                .addValue("year", year)
+                .addValue("genreId", genreId);
+        return namedParameterJdbcTemplate.queryForList(sqlQuery, paramsSource, Long.class);
+    }
+
+    private List<Film> mapToFilmList(SqlRowSet rs) {
+        List<Film> films = new ArrayList<>();
+        Film currentFilm = null;
+        while (rs.next()) {
+            rs.previous();
+            currentFilm = mapToFilm(rs);
+            films.add(currentFilm);
+        }
+        return  films;
+    }
+
+    private Film mapToFilm(SqlRowSet rs) {
+        Film film = null;
+        if (rs.next()) {
+            film = Film.builder()
+                    .id(rs.getLong("film_id"))
+                    .name(rs.getString("name"))
+                    .description(rs.getString("description"))
+                    .releaseDate(rs.getDate("release_date").toLocalDate())
+                    .duration(rs.getInt("duration"))
+                    .mpa(new Mpa(rs.getInt("mpa_id")))
+                    .build();
+            rs.previous();
+        } else {
+            return null;
+        }
+        while (rs.next() && film.getId() == rs.getLong("film_id")) {
+            int genreId = rs.getInt("GENRE_ID");
+            if (!rs.wasNull()) {
+                film.addGenre(new Genre(genreId));
+            }
+            int directorId = rs.getInt("DIRECTOR_ID");
+            if (!rs.wasNull()) {
+                String directorName = rs.getString("DIRECTOR_NAME");
+                film.addDirector(new Director(directorId, directorName));
+            }
+            long userId = rs.getLong("USER_ID");
+            if (!rs.wasNull()) {
+                film.addLike(userId);
+            }
+        }
+        rs.previous();
+        return film;
     }
 
 }

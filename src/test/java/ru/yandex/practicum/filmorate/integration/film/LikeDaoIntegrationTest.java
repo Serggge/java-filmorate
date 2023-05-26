@@ -100,7 +100,7 @@ class LikeDaoIntegrationTest {
     }
 
     @Test
-    void testfindCommonLikes() {
+    void testFindCommonLikes() {
         final Like like = new Like(film.getId(), user.getId());
         final Like likeFriend = new Like(film.getId(), friend.getId());
 

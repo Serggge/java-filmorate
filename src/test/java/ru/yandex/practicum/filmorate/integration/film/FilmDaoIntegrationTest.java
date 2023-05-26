@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MovieGenre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.dao.impl.DirectorsStorageImpl;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmGenreDbStorage;
 
@@ -29,6 +30,7 @@ class FilmDaoIntegrationTest {
     static final Film secondFilm = new Film();
     final FilmDbStorage filmStorage;
     final FilmGenreDbStorage filmGenreStorage;
+    final DirectorsStorageImpl directorsStorage;
 
 
     @BeforeEach
@@ -39,6 +41,8 @@ class FilmDaoIntegrationTest {
     @AfterEach
     void afterEach() {
         filmStorage.deleteAll();
+        filmGenreStorage.deleteAll();
+        directorsStorage.deleteAll();
     }
 
     @Test
@@ -56,19 +60,20 @@ class FilmDaoIntegrationTest {
     }
 
     @Test
-    void testUpdateEntity() {
-        final long id = filmStorage.save(firstFilm).getId();
-        secondFilm.setId(id);
+    void testUpdateFilm() {
+        final Film saved = filmStorage.save(firstFilm);
+        final long filmId = saved.getId();
+        secondFilm.setId(filmId);
 
-        final Film saved = filmStorage.save(secondFilm);
+        final Film updated = filmStorage.update(secondFilm);
 
-        assertThat(saved).isNotNull();
-        assertThat(saved.getId()).isEqualTo(id);
-        assertThat(saved.getName()).isEqualTo(secondFilm.getName());
-        assertThat(saved.getDescription()).isEqualTo(secondFilm.getDescription());
-        assertThat(saved.getReleaseDate()).isEqualTo(secondFilm.getReleaseDate());
-        assertThat(saved.getDuration()).isEqualTo(secondFilm.getDuration());
-        assertThat(saved.getMpa()).isEqualTo(secondFilm.getMpa());
+        assertThat(updated).isNotNull();
+        assertThat(updated.getId()).isEqualTo(filmId);
+        assertThat(updated.getName()).isEqualTo(secondFilm.getName());
+        assertThat(updated.getDescription()).isEqualTo(secondFilm.getDescription());
+        assertThat(updated.getReleaseDate()).isEqualTo(secondFilm.getReleaseDate());
+        assertThat(updated.getDuration()).isEqualTo(secondFilm.getDuration());
+        assertThat(updated.getMpa()).isEqualTo(secondFilm.getMpa());
     }
 
     @Test
@@ -80,7 +85,8 @@ class FilmDaoIntegrationTest {
 
         assertThat(allFilms).isNotNull();
         assertThat(allFilms.size()).isEqualTo(2);
-        assertTrue(allFilms.containsAll(List.of(savedFirst, savedSecond)));
+        assertTrue(allFilms.contains(savedFirst));
+        assertTrue(allFilms.contains(savedSecond));
     }
 
     @Test
@@ -106,11 +112,12 @@ class FilmDaoIntegrationTest {
         final Film savedFirst = filmStorage.save(firstFilm);
         final Film savedSecond = filmStorage.save(secondFilm);
 
-        final Collection<Film> films = filmStorage.findAllById(List.of(savedFirst.getId(), savedSecond.getId()));
+        final List<Film> films = filmStorage.findAllById(List.of(savedFirst.getId(), savedSecond.getId()));
 
         assertThat(films).isNotNull();
         assertThat(films.size()).isEqualTo(2);
-        assertTrue(films.containsAll(List.of(savedFirst, savedSecond)));
+        assertTrue(films.contains(savedFirst));
+        assertTrue(films.contains(savedSecond));
     }
 
     @Test
@@ -124,19 +131,12 @@ class FilmDaoIntegrationTest {
     @Test
     void testFindBySubString() {
         final String partOfName = "FILM";
-        final String partOfDesc = "script";
         final Film savedFirst = filmStorage.save(firstFilm);
         final Film savedSecond = filmStorage.save(secondFilm);
 
         final List<Long> foundedByName = filmStorage.findBySubString(partOfName);
-        final List<Long> foundedByDesc= filmStorage.findBySubString(partOfDesc);
 
         assertThat(foundedByName)
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(2)
-                .contains(savedFirst.getId(), savedSecond.getId());
-        assertThat(foundedByDesc)
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(2)
@@ -163,7 +163,7 @@ void testFindByParams_byYearParam() {
         final Film savedFilm = filmStorage.save(firstFilm);
         filmGenreStorage.save(savedFilm);
 
-        final List<Long> foundedIds = filmStorage.findAllByGenre(genreId);
+        final List<Long> foundedIds = filmGenreStorage.findAllByGenre(genreId);
 
         assertThat(foundedIds)
                 .isNotNull()
@@ -179,6 +179,9 @@ void testFindByParams_byYearParam() {
         firstFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         firstFilm.setDuration(120);
         firstFilm.setMpa(new Mpa(1));
+        firstFilm.getGenres().clear();
+        firstFilm.getDirectors().clear();
+        firstFilm.getLikes().clear();
 
         secondFilm.setId(0);
         secondFilm.setName("Second film");
@@ -186,6 +189,9 @@ void testFindByParams_byYearParam() {
         secondFilm.setReleaseDate(LocalDate.of(2001, 12, 31));
         secondFilm.setDuration(180);
         secondFilm.setMpa(new Mpa(2));
+        secondFilm.getGenres().clear();
+        secondFilm.getDirectors().clear();
+        secondFilm.getLikes().clear();
     }
 
     @Test

@@ -14,9 +14,9 @@ public interface FilmService {
 
     Film getById(long id);
 
-    Film setLike(long filmId, long userId);
+    void setLike(long filmId, long userId);
 
-    Film deleteLike(long filmId, long userId);
+    void deleteLike(long filmId, long userId);
 
     List<Film> getPopular(Map<String, String> allParams);
 
@@ -25,6 +25,7 @@ public interface FilmService {
     void delete(long filmId);
 
     List<Film> getCommonFilmPopular(long userId, long friendId);
+
     List<Film> getRecommendedFilms(long userId);
 
     List<Film> searchByParams(String query, List<String> by);

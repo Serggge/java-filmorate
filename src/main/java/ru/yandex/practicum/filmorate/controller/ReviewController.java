@@ -2,15 +2,16 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/reviews")
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
+@Transactional
 public class ReviewController {
     private final ReviewService service;
 
@@ -58,4 +59,5 @@ public class ReviewController {
     public void removeDislikeReview(@PathVariable long reviewId, @PathVariable long userId) {
         service.likeReview(reviewId, userId);
     }
+
 }

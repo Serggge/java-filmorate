@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import ru.yandex.practicum.filmorate.model.Genre;
-
 import java.io.IOException;
 
 public class GenreDeserializer extends StdDeserializer<Genre> {

@@ -5,11 +5,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -23,13 +20,10 @@ import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -258,7 +252,7 @@ class UserControllerTest {
         lenient().when(userService.create(any(User.class))).thenReturn(user);
 
         user.setLogin("q q");
-        var mvcRequest = post(String.format("/users")).contentType(MediaType.APPLICATION_JSON)
+        var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(user));
 
         mvc.perform(mvcRequest).andExpect(status().isBadRequest())
