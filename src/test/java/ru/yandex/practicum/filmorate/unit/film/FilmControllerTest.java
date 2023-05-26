@@ -130,7 +130,7 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
     }
 
-    @Test
+/*    @Test
     void handleAddUserLike_returnFilm() throws Exception {
         when(service.setLike(anyLong(), anyLong())).thenReturn(firstFilm);
 
@@ -145,9 +145,9 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
                 .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
                 .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
-    }
+    }*/
 
-    @Test
+/*    @Test
     void handleRemoveUserLike_returnFilm() throws Exception {
         when(service.deleteLike(anyLong(), anyLong())).thenReturn(firstFilm);
 
@@ -162,7 +162,7 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
                 .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
                 .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
-    }
+    }*/
 
     @Test
     void handleReturnPopular_returnFilmListDefaultSize() throws Exception {

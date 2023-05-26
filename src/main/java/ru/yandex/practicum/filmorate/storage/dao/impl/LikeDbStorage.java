@@ -25,11 +25,10 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    public Like save(Like like) {
+    public boolean save(Like like) {
         var sqlQuery = "INSERT INTO likes (film_id, user_id) VALUES (:filmId, :userId)";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        namedParameterJdbcTemplate.update(sqlQuery, likeParams);
-        return like;
+        return namedParameterJdbcTemplate.update(sqlQuery, likeParams) > 0;
     }
 
     @Override
@@ -53,10 +52,10 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    public void delete(Like like) {
+    public boolean delete(Like like) {
         var sqlQuery = "DELETE FROM likes WHERE film_id = :filmId AND user_id = :userId";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        namedParameterJdbcTemplate.update(sqlQuery, likeParams);
+        return namedParameterJdbcTemplate.update(sqlQuery, likeParams) > 0;
     }
 
     @Override

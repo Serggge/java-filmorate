@@ -14,9 +14,9 @@ public interface FilmService {
 
     Film getById(long id);
 
-    Film setLike(long filmId, long userId);
+    void setLike(long filmId, long userId);
 
-    Film deleteLike(long filmId, long userId);
+    void deleteLike(long filmId, long userId);
 
     List<Film> getPopular(Map<String, String> allParams);
 

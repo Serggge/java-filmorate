@@ -4,12 +4,10 @@ import org.springframework.jdbc.core.RowMapper;
 import ru.yandex.practicum.filmorate.model.*;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
-import java.time.Instant;
 
 public class RowMappers {
 
     private RowMappers() {
-
     }
 
     public static final RowMapper<User> USER_ROW_MAPPER = (ResultSet rs, int rowNum) -> User.builder()
@@ -54,5 +52,10 @@ public class RowMappers {
                     .eventType(EventType.valueOf(rs.getString("event_type")))
                     .operation(Operation.valueOf(rs.getString("operation")))
                     .build());
+    public static final RowMapper<Director> DIRECTOR_ROW_MAPPER = ((ResultSet rs, int rowNum) ->
+                Director.builder()
+                        .id(rs.getInt("id"))
+                        .name(rs.getString("name"))
+                        .build());
 
 }

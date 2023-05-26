@@ -16,7 +16,9 @@ import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,20 +74,15 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film update(Film film) {
         film = validateFilm(film);
-        if (film.getId() == 0) {
-            throw new ValidationException("Для обновления требуется указать ID фильма");
-        } else if (filmStorage.existsById(film.getId())) {
-            film = filmStorage.update(film);
-            filmGenreStorage.deleteByFilmId(film.getId());
-            filmGenreStorage.save(film);
-            directorsStorage.deleteByFilmId(film.getId());
-            directorsStorage.save(film);
-            film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId()));
-            log.info("Обновлён фильм: {}", film);
-            return film;
-        } else {
-            throw new FilmNotFoundException(String.format("Фильм: id=%d не найден", film.getId()));
-        }
+        checkFilmExistence(film.getId());
+        filmStorage.update(film);
+        filmGenreStorage.deleteByFilmId(film.getId());
+        filmGenreStorage.save(film);
+        directorsStorage.deleteByFilmId(film.getId());
+        directorsStorage.save(film);
+        film.getLikes().addAll(likeStorage.findUsersIdByFilmId(film.getId()));
+        log.info("Обновлён фильм: {}", film);
+        return film;
     }
 
     @Override
@@ -105,50 +102,44 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public Film setLike(long filmId, long userId) {
-        Film film = getFilmOrThrow(filmId);
-        User user = userService.getById(userId);
+    public void setLike(long filmId, long userId) {
+        checkFilmExistence(filmId);
+        checkUserExistence(userId);
         Like like = new Like(filmId, userId);
         if (!likeStorage.isExist(like)) {
             likeStorage.save(like);
             log.info("Пользователь: id={} поставил лайк фильму: id={}", userId, filmId);
-            film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(filmId));
-            film.getLikes().addAll(likeStorage.findUsersIdByFilmId(filmId));
+            eventStorage.save(Event.builder()
+                    .timestamp(Instant.now().toEpochMilli())
+                    .eventType(EventType.LIKE)
+                    .operation(Operation.ADD)
+                    .userId(userId)
+                    .entityId(filmId)
+                    .build());
         } else {
             throw new DataUpdateException(
                     String.format("Пользователь id=%d уже оставлял лайк фильму id=%d", userId, filmId));
         }
-        eventStorage.save(Event.builder()
-                .timestamp(Instant.now().toEpochMilli())
-                .eventType(EventType.LIKE)
-                .operation(Operation.ADD)
-                .userId(userId)
-                .entityId(filmId)
-                .build());
-        return film;
     }
 
     @Override
-    public Film deleteLike(long filmId, long userId) {
-        Film film = getFilmOrThrow(filmId);
-        User user = userService.getById(userId);
+    public void deleteLike(long filmId, long userId) {
+        checkFilmExistence(filmId);
+        checkUserExistence(userId);
         Like like = new Like(filmId, userId);
         if (likeStorage.isExist(like)) {
             likeStorage.delete(like);
             log.info("Пользователь: id={} убрал лайк фильму: id={}", userId, filmId);
-            film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(filmId));
-            film.getLikes().addAll(likeStorage.findUsersIdByFilmId(filmId));
+            eventStorage.save(Event.builder()
+                    .timestamp(Instant.now().toEpochMilli())
+                    .eventType(EventType.LIKE)
+                    .operation(Operation.REMOVE)
+                    .userId(userId)
+                    .entityId(filmId)
+                    .build());
         } else {
             throw new DataUpdateException("Пользователь ранее не оставлял лайк");
         }
-        eventStorage.save(Event.builder()
-                .timestamp(Instant.now().toEpochMilli())
-                .eventType(EventType.LIKE)
-                .operation(Operation.REMOVE)
-                .userId(userId)
-                .entityId(filmId)
-                .build());
-        return film;
     }
 
     @Override
@@ -164,8 +155,8 @@ public class FilmServiceImpl implements FilmService {
             int genreId = safelyParse(Integer::parseInt, allParams.get("genreId"));
             foundedIds.addAll(filmStorage.findAllByGenre(genreId));
         }
-        if (foundedIds.size() < count) {
-            foundedIds.addAll(likeStorage.findPopular(count - foundedIds.size()));
+        if (foundedIds.isEmpty()) {
+            foundedIds.addAll(likeStorage.findPopular(count));
         }
         List<Film> foundedFilms = foundedIds.isEmpty()
                 ? constructFilmList(filmStorage.findAllIds())
@@ -192,28 +183,6 @@ public class FilmServiceImpl implements FilmService {
         List<Film> foundedFilms = constructFilmList(filmStorage.findBySubString(query));
         foundedFilms.sort(Comparator.comparingInt(Film::popularity).reversed());
         return foundedFilms;
-    }
-
-    private Film getFilmOrThrow(long id) {
-        Film saved = filmStorage.findById(id)
-                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
-        saved.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
-        return saved;
-    }
-
-    private List<Film> constructFilmList(Collection<Long> filmsIds) {
-        List<Film> films = filmStorage.findAllById(filmsIds);
-        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
-        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
-        for (Film film : films) {
-            if (filmsGenres.containsKey(film.getId())) {
-                film.getGenres().addAll(filmsGenres.get(film.getId()));
-            }
-            if (filmsLikes.containsKey(film.getId())) {
-                film.getLikes().addAll(filmsLikes.get(film.getId()));
-            }
-        }
-        return films;
     }
 
     @Override
@@ -265,11 +234,49 @@ public class FilmServiceImpl implements FilmService {
         filmStorage.delete(filmId);
     }
 
+    private Film getFilmOrThrow(long id) {
+        Film saved = filmStorage.findById(id)
+                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
+        saved.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
+        return saved;
+    }
+
+    private List<Film> constructFilmList(Collection<Long> filmsIds) {
+        List<Film> films = filmStorage.findAllById(filmsIds);
+        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
+        Map<Long, Set<Director>> filmDirectors = directorsStorage.findAll(filmsIds);
+        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
+        for (Film film : films) {
+            if (filmsGenres.containsKey(film.getId())) {
+                film.getGenres().addAll(filmsGenres.get(film.getId()));
+            }
+            if (filmsLikes.containsKey(film.getId())) {
+                film.getLikes().addAll(filmsLikes.get(film.getId()));
+            }
+            if (filmDirectors.containsKey(film.getId())) {
+                film.getDirectors().addAll(filmDirectors.get(film.getId()));
+            }
+        }
+        return films;
+    }
+
     private <T extends Number> T safelyParse(Function<String, T> parser, String source) {
         try {
             return parser.apply(source);
         } catch (Exception e) {
             throw new IllegalArgumentException("Некорректный параметр: " + source);
+        }
+    }
+
+    private void checkUserExistence(long userId) {
+        if (!userService.existsById(userId)) {
+            throw new UserNotFoundException(String.format("Пользователь с id=%s", userId));
+        }
+    }
+
+    private void checkFilmExistence(long filmId) {
+        if (!userService.existsById(filmId)) {
+            throw new FilmNotFoundException(String.format("Пользователь с id=%s", filmId));
         }
     }
 

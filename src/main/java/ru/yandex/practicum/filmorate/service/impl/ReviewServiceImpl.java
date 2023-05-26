@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ReviewNotFoundException;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
@@ -14,10 +13,8 @@ import ru.yandex.practicum.filmorate.service.ReviewService;
 import ru.yandex.practicum.filmorate.storage.dao.DAOValidator;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.ReviewStorage;
-
 import java.time.Instant;
 import java.util.List;
-
 import static ru.yandex.practicum.filmorate.service.Validator.createValidator;
 
 @Service
@@ -53,12 +50,15 @@ public class ReviewServiceImpl implements ReviewService {
         daoValidator.validateFilmBd(review.getFilmId());
         daoValidator.validateUserBd(review.getUserId());
         log.debug("Запрос на обновление ревью");
+        long authorId = reviewStorage.findUserIdByReviewId(review.getReviewId()).orElseThrow(
+                () -> new ReviewNotFoundException(String.format("Отзыв с id=%d не найден", review.getReviewId()))
+        );
         Review updatedReview = reviewStorage.update(review);
         Event event = Event.builder()
                 .timestamp(Instant.now().toEpochMilli())
                 .eventType(EventType.REVIEW)
                 .operation(Operation.UPDATE)
-                .userId(review.getUserId())
+                .userId(authorId)
                 .entityId(review.getReviewId())
                 .build();
         eventStorage.save(event);
