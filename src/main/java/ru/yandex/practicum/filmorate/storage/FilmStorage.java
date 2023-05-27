@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import ru.yandex.practicum.filmorate.model.Film;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -26,10 +25,12 @@ public interface FilmStorage {
 
     List<Long> findAllByYear(int year);
 
-    List<Long> findAllByGenre(int genreId);
-
     List<Long> findAllIds();
 
     void delete(long id);
+
+    List<Long> findPopular(int count);
+
+    List<Long> findByYearAndGenre(int year, int genreId);
 
 }

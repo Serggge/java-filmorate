@@ -9,16 +9,13 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.DataException;
 import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
-
 import java.util.*;
 import java.util.stream.Collectors;
-
 import static ru.yandex.practicum.filmorate.util.RowMappers.DIRECTOR_ROW_MAPPER;
 
 @Repository
@@ -112,7 +109,6 @@ public class DirectorsStorageImpl implements DirectorsStorage {
     }
 
     @Override
-    @Transactional
     public Map<Long, Set<Director>> findAll(Collection<Long> ids) {
         String sql = "SELECT film_id, director_id, name FROM film_directors " +
                 "INNER JOIN directors on film_directors.director_id = directors.id WHERE film_id IN (:ids)";
@@ -132,6 +128,14 @@ public class DirectorsStorageImpl implements DirectorsStorage {
     public void deleteByFilmId(long id) {
         String sqlQuery = "DELETE FROM film_directors WHERE film_id = ?";
         jdbcTemplate.update(sqlQuery, id);
+    }
+
+    @Override
+    public List<Long> findBySubString(String substring) {
+        var sqlQuery = "SELECT DISTINCT film_id FROM film_directors " +
+                "INNER JOIN directors ON directors.id = film_directors.director_id " +
+                "WHERE name ~* ?";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, substring);
     }
 
     public Map<String, Object> buildDirector(Director director) {

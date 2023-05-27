@@ -6,7 +6,6 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import java.util.*;
@@ -39,7 +38,6 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    @Transactional
     public Map<Long, Set<Long>> findAll(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, user_id FROM likes WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);

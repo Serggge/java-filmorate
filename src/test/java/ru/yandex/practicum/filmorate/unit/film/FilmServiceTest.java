@@ -339,14 +339,14 @@ class FilmServiceTest {
         likes.put(firstFilm.getId(), new HashSet<>());
         likes.put(secondFilm.getId(), new HashSet<>());
         likes.get(firstFilm.getId()).add(1L);
-        given(filmStorage.findAllByGenre(anyInt())).willReturn(ids);
+        given(filmGenreStorage.findAllByGenre(anyInt())).willReturn(ids);
         given(filmStorage.findAllById(anyCollection())).willReturn(List.of(firstFilm, secondFilm));
         given(likeStorage.findAll(anyCollection())).willReturn(likes);
         final Map<String, String> genreParam = Map.of("genreId", String.valueOf(genreId));
 
         final List<Film> mostPopular = filmService.getPopular(genreParam);
 
-        verify(filmStorage).findAllByGenre(genreId);
+        verify(filmGenreStorage).findAllByGenre(genreId);
         assertThat(mostPopular).isNotNull();
         assertThat(mostPopular.size()).isEqualTo(2);
         assertThat(mostPopular).isEqualTo(List.of(firstFilm, secondFilm));
@@ -369,14 +369,14 @@ class FilmServiceTest {
         likes.put(firstFilm.getId(), new HashSet<>());
         likes.put(secondFilm.getId(), new HashSet<>());
         likes.get(secondFilm.getId()).add(1L);
-        given(filmStorage.findAllByGenre(anyInt())).willReturn(ids);
+        given(filmGenreStorage.findAllByGenre(anyInt())).willReturn(ids);
         given(filmStorage.findAllById(anyCollection())).willReturn(List.of(firstFilm, secondFilm));
         given(likeStorage.findAll(anyCollection())).willReturn(likes);
         final Map<String, String> genreParam = Map.of("genreId", String.valueOf(genreId));
 
         final List<Film> mostPopular = filmService.getPopular(genreParam);
 
-        verify(filmStorage).findAllByGenre(genreId);
+        verify(filmGenreStorage).findAllByGenre(genreId);
         assertThat(mostPopular).isNotNull();
         assertThat(mostPopular.size()).isEqualTo(2);
         assertThat(mostPopular).isEqualTo(List.of(secondFilm, firstFilm));

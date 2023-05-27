@@ -163,7 +163,7 @@ void testFindByParams_byYearParam() {
         final Film savedFilm = filmStorage.save(firstFilm);
         filmGenreStorage.save(savedFilm);
 
-        final List<Long> foundedIds = filmStorage.findAllByGenre(genreId);
+        final List<Long> foundedIds = filmGenreStorage.findAllByGenre(genreId);
 
         assertThat(foundedIds)
                 .isNotNull()

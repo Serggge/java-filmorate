@@ -39,12 +39,12 @@ public class Film implements Comparable<Film> {
         likes.add(id);
     }
 
-    public boolean removeLike(long id) {
-        return likes.remove(id);
+    public int getPopularity() {
+        return likes.size();
     }
 
-    public int popularity() {
-        return likes.size();
+    public boolean removeLike(long id) {
+        return likes.remove(id);
     }
 
     public void clearLikes() {
@@ -53,6 +53,10 @@ public class Film implements Comparable<Film> {
 
     public void addGenre(Genre genre) {
         genres.add(genre);
+    }
+
+    public void addDirector(Director director) {
+        directors.add(director);
     }
 
     @Override

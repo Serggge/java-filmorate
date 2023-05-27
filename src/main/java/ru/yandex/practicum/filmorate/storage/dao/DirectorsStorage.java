@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage.dao;
 
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -29,4 +28,7 @@ public interface DirectorsStorage {
     void deleteByFilmId(long id);
 
     List<Long> getSortedFilms(int directorId);
+
+    List<Long> findBySubString(String substring);
+
 }
