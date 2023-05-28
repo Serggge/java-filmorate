@@ -138,6 +138,13 @@ public class DirectorsStorageImpl implements DirectorsStorage {
         return jdbcTemplate.queryForList(sqlQuery, Long.class, substring);
     }
 
+    @Override
+    public boolean existsById(int directorId) {
+        var sqlQuery = "SELECT id FROM directors WHERE id = ?";
+        var rowSet = jdbcTemplate.queryForRowSet(sqlQuery, directorId);
+        return rowSet.next();
+    }
+
     public Map<String, Object> buildDirector(Director director) {
         Map<String, Object> values = new HashMap<>();
         values.put("name", director.getName());
@@ -153,5 +160,7 @@ public class DirectorsStorageImpl implements DirectorsStorage {
         }
         return ids;
     }
+
+
 
 }

@@ -16,7 +16,9 @@ import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
+
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,11 +93,7 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film getById(long id) {
         log.debug("Запрошен фильм: id={}", id);
-        Film film = getFilmOrThrow(id);
-        film.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
-        film.getLikes().addAll(likeStorage.findUsersIdByFilmId(id));
-        film.getDirectors().addAll(directorsStorage.findDirectorsByFilmId(id));
-        return film;
+        return getFilmOrThrow(id);
     }
 
     @Override
@@ -163,9 +161,7 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getRecommendedFilms(long userId) {
-        if (!userService.existsById(userId)) {
-            throw new UserNotFoundException(String.format("Пользователь с id=%d не найден", userId));
-        }
+        checkUserExistence(userId);
         log.debug("Запрошен список рекомендованных фильмов для пользователя id={}", userId);
         return filmStorage.findAllById(likeStorage.suggestFilms(userId));
     }
@@ -187,20 +183,16 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getCommonFilmPopular(long userId, long friendId) {
-        log.debug("Запрошен список общий список фильмов с другом, отсортированный по популярности");
-        if (!userService.existsById(userId)) {
-            throw new UserNotFoundException(String.format("Пользователь с id=%s", userId));
-        } else if (!userService.existsById(friendId)) {
-            throw new UserNotFoundException(String.format("Пользователь с id=%s", friendId));
-        }
-        return filmStorage.findAllById(likeStorage.findCommonLikes(userId, friendId))
-                .stream()
-                .sorted(Comparator.comparingInt(Film::getPopularity).reversed())
-                .collect(Collectors.toList());
+        checkUserExistence(userId);
+        checkUserExistence(friendId);
+        List<Film> commonFilms = filmStorage.findAllById(likeStorage.findCommonLikes(userId, friendId));
+        commonFilms.sort(Comparator.comparingInt(Film::getPopularity).reversed());
+        return commonFilms;
     }
 
+    @Override
     public List<Film> getSortedFilms(int directorId, String sortBy) {
-        directorsStorage.getById(directorId);
+        checkDirectorExistence(directorId);
         List<Long> ids = directorsStorage.getSortedFilms(directorId);
         List<Film> films = filmStorage.findAllById(ids);
         if (sortBy.equals("year")) {
@@ -221,29 +213,8 @@ public class FilmServiceImpl implements FilmService {
     }
 
     private Film getFilmOrThrow(long id) {
-        Film saved = filmStorage.findById(id)
-                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
-        saved.getGenres().addAll(filmGenreStorage.findGenresByFilmId(id));
-        return saved;
-    }
-
-    private List<Film> constructFilmList(Collection<Long> filmsIds) {
-        List<Film> films = filmStorage.findAllById(filmsIds);
-        Map<Long, Set<Genre>> filmsGenres = filmGenreStorage.findAll(filmsIds);
-        Map<Long, Set<Director>> filmDirectors = directorsStorage.findAll(filmsIds);
-        Map<Long, Set<Long>> filmsLikes = likeStorage.findAll(filmsIds);
-        for (Film film : films) {
-            if (filmsGenres.containsKey(film.getId())) {
-                film.getGenres().addAll(filmsGenres.get(film.getId()));
-            }
-            if (filmsLikes.containsKey(film.getId())) {
-                film.getLikes().addAll(filmsLikes.get(film.getId()));
-            }
-            if (filmDirectors.containsKey(film.getId())) {
-                film.getDirectors().addAll(filmDirectors.get(film.getId()));
-            }
-        }
-        return films;
+        return filmStorage.findById(id).orElseThrow(() ->
+                new FilmNotFoundException(String.format("Фильм с id=%d не найден", id)));
     }
 
     private <T extends Number> T parseSafely(Function<String, T> parser, String source) {
@@ -263,6 +234,12 @@ public class FilmServiceImpl implements FilmService {
     private void checkFilmExistence(long filmId) {
         if (!filmStorage.existsById(filmId)) {
             throw new FilmNotFoundException(String.format("Фильм с id=%d не найден", filmId));
+        }
+    }
+
+    private void checkDirectorExistence(int directorId) {
+        if (!directorsStorage.existsById(directorId)) {
+            throw new FilmNotFoundException(String.format("Режиссёр с id=%d не найден", directorId));
         }
     }
 

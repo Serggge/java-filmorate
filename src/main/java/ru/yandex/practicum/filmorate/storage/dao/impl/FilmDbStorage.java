@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dao.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -15,7 +14,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
-import static ru.yandex.practicum.filmorate.util.RowMappers.FILM_ROW_MAPPER;
+import static ru.yandex.practicum.filmorate.util.Statements.STATEMENT_FOR_FILM;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
@@ -41,7 +40,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
-        var  sqlQuery = "UPDATE films SET name = :name, description = :description, release_date = :releaseDate, " +
+        var sqlQuery = "UPDATE films SET name = :name, description = :description, release_date = :releaseDate, " +
                 "duration = :duration, mpa_id = :mpaId WHERE film_id = :id";
         var filmParams = new BeanPropertySqlParameterSource(film);
         namedParameterJdbcTemplate.update(sqlQuery, filmParams);
@@ -50,39 +49,21 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> findById(long id) {
-        var sqlQuery = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films WHERE film_id = ?";
-        try {
-            return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, FILM_ROW_MAPPER, id));
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
+        var sqlQuery = STATEMENT_FOR_FILM + " WHERE films.film_id = ?";
+        var rowSet = jdbcTemplate.queryForRowSet(sqlQuery, id);
+        Film film = mapToFilm(rowSet);
+        return Optional.ofNullable(film);
     }
 
     @Override
     public List<Film> findAll() {
-        var sqlQuery = "SELECT films.film_id, films.name as film_name, description, release_date, duration, mpa_id, " +
-                "genres.genre_id as genre_id, directors.id as director_id, directors.name as director_name, " +
-                "likes.user_id FROM films " +
-                "LEFT JOIN film_genre ON film_genre.film_id = films.film_id " +
-                "LEFT JOIN genres ON film_genre.genre_id = genres.genre_id " +
-                "LEFT JOIN film_directors ON film_directors.film_id = films.film_id " +
-                "LEFT JOIN directors ON directors.id = film_directors.director_id " +
-                "LEFT JOIN likes ON likes.film_id = films.film_id";
-        var rowSet = jdbcTemplate.queryForRowSet(sqlQuery);
+        var rowSet = jdbcTemplate.queryForRowSet(STATEMENT_FOR_FILM);
         return mapToFilmList(rowSet);
     }
 
     @Override
     public List<Film> findAllById(Collection<Long> ids) {
-        var sqlQuery = "SELECT films.film_id, films.name as film_name, description, release_date, duration, mpa_id, " +
-                "genres.genre_id as genre_id, directors.id as director_id, directors.name as director_name, " +
-                "likes.user_id FROM films " +
-                "LEFT JOIN film_genre ON film_genre.film_id = films.film_id " +
-                "LEFT JOIN genres ON film_genre.genre_id = genres.genre_id " +
-                "LEFT JOIN film_directors ON film_directors.film_id = films.film_id " +
-                "LEFT JOIN directors ON directors.id = film_directors.director_id " +
-                "LEFT JOIN likes ON likes.film_id = films.film_id " +
-                "WHERE films.film_id IN (:ids)";
+        var sqlQuery = STATEMENT_FOR_FILM + " WHERE films.film_id IN (:ids)";
         var idsParams = new MapSqlParameterSource("ids", ids);
         var rowSet = namedParameterJdbcTemplate.queryForRowSet(sqlQuery, idsParams);
         return mapToFilmList(rowSet);
@@ -147,34 +128,45 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films = new ArrayList<>();
         Film currentFilm = null;
         while (rs.next()) {
-            long filmId = rs.getLong("film_id");
-            if (currentFilm == null || currentFilm.getId() != filmId) {
-                currentFilm = Film.builder()
-                        .id(filmId)
-                        .name(rs.getString("name"))
-                        .description(rs.getString("description"))
-                        .releaseDate(rs.getDate("release_date").toLocalDate())
-                        .duration(rs.getInt("duration"))
-                        .mpa(new Mpa(rs.getInt("mpa_id")))
-                        .build();
-                films.add(currentFilm);
-            }
+            rs.previous();
+            currentFilm = mapToFilm(rs);
+            films.add(currentFilm);
+        }
+        return  films;
+    }
+
+    private Film mapToFilm(SqlRowSet rs) {
+        Film film = null;
+        if (rs.next()) {
+            film = Film.builder()
+                    .id(rs.getLong("film_id"))
+                    .name(rs.getString("name"))
+                    .description(rs.getString("description"))
+                    .releaseDate(rs.getDate("release_date").toLocalDate())
+                    .duration(rs.getInt("duration"))
+                    .mpa(new Mpa(rs.getInt("mpa_id")))
+                    .build();
+            rs.previous();
+        } else {
+            return film;
+        }
+        while (rs.next() && film.getId() == rs.getLong("film_id")) {
             int genreId = rs.getInt("GENRE_ID");
             if (!rs.wasNull()) {
-                currentFilm.addGenre(new Genre(genreId));
+                film.addGenre(new Genre(genreId));
             }
             int directorId = rs.getInt("DIRECTOR_ID");
             if (!rs.wasNull()) {
                 String directorName = rs.getString("DIRECTOR_NAME");
-                currentFilm.addDirector(new Director(directorId, directorName));
+                film.addDirector(new Director(directorId, directorName));
             }
             long userId = rs.getLong("USER_ID");
             if (!rs.wasNull()) {
-                currentFilm.addLike(userId);
+                film.addLike(userId);
             }
-
         }
-        return films;
+        rs.previous();
+        return film;
     }
 
 }

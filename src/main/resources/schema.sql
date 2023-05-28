@@ -102,7 +102,5 @@ CREATE TABLE events
 );
 
 CREATE INDEX IF NOT EXISTS film_name_index ON films (name);
-
-CREATE INDEX IF NOT EXISTS users_email_index ON users (login);
-
-CREATE INDEX IF NOT EXISTS users_name_index ON users (name);
+CREATE INDEX IF NOT EXISTS film_release_date_index ON films (release_date);
+CREATE INDEX IF NOT EXISTS director_name_index ON directors (name);

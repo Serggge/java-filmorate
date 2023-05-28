@@ -26,12 +26,12 @@ public class User {
         friends.add(id);
     }
 
-    public boolean deleteFriendId(long id) {
+    public boolean deleteFriend(long id) {
         return friends.remove(id);
     }
 
-    public List<Long> getFriends() {
-        return new ArrayList<>(friends);
+    public Set<Long> getFriends() {
+        return friends;
     }
 
     public void clearFriendList() {

@@ -31,4 +31,6 @@ public interface DirectorsStorage {
 
     List<Long> findBySubString(String substring);
 
+    boolean existsById(int directorId);
+
 }

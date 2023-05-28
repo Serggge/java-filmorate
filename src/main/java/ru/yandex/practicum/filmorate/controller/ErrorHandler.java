@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.ErrorResponse;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,13 +72,13 @@ public class ErrorHandler {
         return errorResponse;
     }
 
-/*    @ExceptionHandler
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
     public ErrorResponse handleDataUpdateException(DataUpdateException exception) {
         errorResponse.setParams(exception.getMessage(), "");
         log(exception);
         return errorResponse;
-    }*/
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
