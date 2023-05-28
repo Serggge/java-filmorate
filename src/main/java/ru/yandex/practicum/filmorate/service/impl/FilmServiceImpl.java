@@ -16,9 +16,7 @@ import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
-
 import static ru.yandex.practicum.filmorate.service.Validator.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,10 +59,10 @@ public class FilmServiceImpl implements FilmService {
         }
         film = filmStorage.save(film);
         if (!film.getGenres().isEmpty()) {
-            film = filmGenreStorage.save(film);
+            filmGenreStorage.save(film);
         }
         if (!film.getDirectors().isEmpty()) {
-            film = directorsStorage.save(film);
+            directorsStorage.save(film);
         }
         log.info("Добавлен фильм: {}", film);
         return film;

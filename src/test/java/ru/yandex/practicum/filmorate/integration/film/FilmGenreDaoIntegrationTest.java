@@ -44,7 +44,7 @@ class FilmGenreDaoIntegrationTest {
     void testSave() {
         final int genreId = new Random().nextInt(MovieGenre.values().length - 1) + 1;
         final Genre genre = new Genre(genreId);
-        firstFilm.getGenres().add(genre);
+        firstFilm.addGenre(genre);
         final long filmId = filmDbStorage.save(firstFilm).getId();
 
         filmGenreStorage.save(firstFilm);

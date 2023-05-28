@@ -161,6 +161,9 @@ public class DirectorsStorageImpl implements DirectorsStorage {
         return ids;
     }
 
-
+    public void deleteAll() {
+        var sqlQuery = "DELETE FROM directors";
+        jdbcTemplate.update(sqlQuery);
+    }
 
 }

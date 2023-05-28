@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import javax.validation.constraints.*;
@@ -30,6 +31,7 @@ public class Film implements Comparable<Film> {
     final Set<Director> directors = new HashSet<>();
     final Set<Long> likes = new HashSet<>();
 
+    @JsonIgnore
     public int getMpaId() {
         return mpa.getId();
     }

@@ -26,8 +26,8 @@ public class User {
         friends.add(id);
     }
 
-    public boolean deleteFriend(long id) {
-        return friends.remove(id);
+    public void deleteFriend(long id) {
+        friends.remove(id);
     }
 
     public Set<Long> getFriends() {

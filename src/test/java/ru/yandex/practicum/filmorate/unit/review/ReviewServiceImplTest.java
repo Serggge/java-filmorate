@@ -10,11 +10,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.impl.ReviewServiceImpl;
 import ru.yandex.practicum.filmorate.storage.dao.DAOValidator;
+import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.ReviewStorage;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -30,6 +29,9 @@ class ReviewServiceImplTest {
 
     @MockBean
     private ReviewStorage reviewStorage;
+
+    @MockBean
+    private EventStorage eventStorage;
 
     @Test
     void testCreate() {

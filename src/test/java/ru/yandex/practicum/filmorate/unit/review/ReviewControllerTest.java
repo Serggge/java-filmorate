@@ -66,8 +66,8 @@ class ReviewControllerTest {
     @Test
     void testLikeReview() throws Exception {
         doNothing().when(reviewService).likeReview(anyLong(), anyLong());
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/reviews/{reviewId}/like/{userId}", 1L,
-                1L);
+        MockHttpServletRequestBuilder requestBuilder =
+                MockMvcRequestBuilders.put("/reviews/{reviewId}/like/{userId}", 1L, 1L);
         MockMvcBuilders.standaloneSetup(reviewController)
                 .build()
                 .perform(requestBuilder)
@@ -77,8 +77,8 @@ class ReviewControllerTest {
     @Test
     void testLikeReview2() throws Exception {
         doNothing().when(reviewService).likeReview(anyLong(), anyLong());
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/reviews/{reviewId}/like/{userId}", 1L,
-                1L);
+        MockHttpServletRequestBuilder requestBuilder =
+                MockMvcRequestBuilders.put("/reviews/{reviewId}/like/{userId}", 1L, 1L);
         requestBuilder.characterEncoding("Encoding");
         MockMvcBuilders.standaloneSetup(reviewController)
                 .build()

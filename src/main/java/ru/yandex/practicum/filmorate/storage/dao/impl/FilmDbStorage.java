@@ -84,7 +84,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Long> findBySubString(String substring) {
-        var sqlQuery = "SELECT film_id FROM films WHERE (name ~* :substring) OR (description ~* :substring)";
+        var sqlQuery = "SELECT film_id FROM films WHERE (name ~* :substring)";
         var param = new MapSqlParameterSource("substring", substring);
         return namedParameterJdbcTemplate.queryForList(sqlQuery, param, Long.class);
     }
