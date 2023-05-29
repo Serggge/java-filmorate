@@ -12,11 +12,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +50,7 @@ class ReviewServiceImplTest {
         when(reviewStorage.update((Review) any())).thenReturn(review);
         doNothing().when(dAOValidator).validateFilmBd((Long) any());
         doNothing().when(dAOValidator).validateUserBd((Long) any());
-        doNothing().when(eventStorage).save((Event) any());
+        when(eventStorage.save(any(Event.class))).thenReturn(null);
         Review review1 = mock(Review.class);
         when(review1.getUserId()).thenReturn(1L);
         when(review1.getFilmId()).thenReturn(1L);
@@ -95,7 +93,7 @@ class ReviewServiceImplTest {
         doNothing().when(dAOValidator).validateFilmBd((Long) any());
         doNothing().when(dAOValidator).validateReviewDB((Long) any());
         doNothing().when(dAOValidator).validateUserBd((Long) any());
-        doNothing().when(eventStorage).save((Event) any());
+        when(eventStorage.save(any(Event.class))).thenReturn(null);
         assertSame(review, reviewServiceImpl.update(new Review()));
         verify(reviewStorage).findUserIdByReviewId(anyLong());
         verify(reviewStorage).update((Review) any());
@@ -129,7 +127,7 @@ class ReviewServiceImplTest {
         doNothing().when(dAOValidator).validateFilmBd((Long) any());
         doNothing().when(dAOValidator).validateReviewDB((Long) any());
         doNothing().when(dAOValidator).validateUserBd((Long) any());
-        doNothing().when(eventStorage).save((Event) any());
+        when(eventStorage.save(any(Event.class))).thenReturn(null);
         assertThrows(ReviewNotFoundException.class, () -> reviewServiceImpl.update(new Review()));
         verify(reviewStorage).findUserIdByReviewId(anyLong());
         verify(dAOValidator).validateFilmBd((Long) any());
@@ -169,7 +167,7 @@ class ReviewServiceImplTest {
         doNothing().when(reviewStorage).deleteById(anyLong());
         when(reviewStorage.findUserIdByReviewId(anyLong())).thenReturn(Optional.of(42L));
         doNothing().when(dAOValidator).validateReviewDB((Long) any());
-        doNothing().when(eventStorage).save((Event) any());
+        when(eventStorage.save(any(Event.class))).thenReturn(null);
         reviewServiceImpl.deleteById(1L);
         verify(reviewStorage).findUserIdByReviewId(anyLong());
         verify(reviewStorage).deleteById(anyLong());
@@ -195,7 +193,7 @@ class ReviewServiceImplTest {
         doNothing().when(reviewStorage).deleteById(anyLong());
         when(reviewStorage.findUserIdByReviewId(anyLong())).thenReturn(Optional.empty());
         doNothing().when(dAOValidator).validateReviewDB((Long) any());
-        doNothing().when(eventStorage).save((Event) any());
+        when(eventStorage.save((any(Event.class)))).thenReturn(null);
         assertThrows(ReviewNotFoundException.class, () -> reviewServiceImpl.deleteById(1L));
         verify(reviewStorage).findUserIdByReviewId(anyLong());
         verify(dAOValidator).validateReviewDB((Long) any());

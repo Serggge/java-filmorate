@@ -141,7 +141,7 @@ public class UserServiceImpl implements UserService {
             throw  new UserNotFoundException(String.format("Пользователь с id=%d не найден", userId));
         }
         log.debug("Запрос событий для пользователя с id={}", userId);
-        return eventStorage.find(userId);
+        return eventStorage.findAllByUserId(userId);
     }
 
     @Override
