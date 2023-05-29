@@ -1,22 +1,25 @@
 package ru.yandex.practicum.filmorate.unit.review;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.Review;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class ReviewTest {
+
     @Test
     void testConstructor() {
         Review actualReview = new Review();
         actualReview.setContent("Not all who wander are lost");
         actualReview.setFilmId(1L);
         actualReview.setIsPositive(true);
-        LocalDateTime reviewDate = LocalDate.of(1970, 1, 1).atStartOfDay();
-        actualReview.setReviewDate(reviewDate);
+        LocalDateTime ofResult = LocalDateTime.of(1, 1, 1, 1, 1);
+        actualReview.setReviewDate(ofResult);
         actualReview.setReviewId(1L);
         actualReview.setUseful(1);
         actualReview.setUserId(1L);
@@ -24,27 +27,27 @@ class ReviewTest {
         assertEquals("Not all who wander are lost", actualReview.getContent());
         assertEquals(1L, actualReview.getFilmId());
         assertTrue(actualReview.getIsPositive());
-        assertSame(reviewDate, actualReview.getReviewDate());
+        assertSame(ofResult, actualReview.getReviewDate());
         assertEquals(1L, actualReview.getReviewId());
         assertEquals(1, actualReview.getUseful());
         assertEquals(1L, actualReview.getUserId());
         assertEquals(
                 "Review(reviewId=1, filmId=1, userId=1, content=Not all who wander are lost, isPositive=true, useful=1,"
-                        + " reviewDate=1970-01-01T00:00)",
+                        + " reviewDate=0001-01-01T01:01)",
                 actualToStringResult);
     }
 
     @Test
     void testConstructor2() {
         Review actualReview = new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1,
-                LocalDate.of(1970, 1, 1).atStartOfDay());
+                LocalDateTime.of(1, 1, 1, 1, 1));
 
         assertEquals("Not all who wander are lost", actualReview.getContent());
         assertEquals(1L, actualReview.getUserId());
         assertEquals(1, actualReview.getUseful());
         assertEquals(1L, actualReview.getReviewId());
         assertTrue(actualReview.getIsPositive());
-        assertEquals("00:00", actualReview.getReviewDate().toLocalTime().toString());
+        assertEquals("01:01", actualReview.getReviewDate().toLocalTime().toString());
         assertEquals(1L, actualReview.getFilmId());
     }
 
@@ -65,16 +68,15 @@ class ReviewTest {
     @Test
     void testEquals3() {
         Review review = new Review();
-        Review review2 = new Review();
-        assertEquals(review, review2);
+        Review review1 = new Review();
+        assertEquals(review, review1);
         int expectedHashCodeResult = review.hashCode();
-        assertEquals(expectedHashCodeResult, review2.hashCode());
+        assertEquals(expectedHashCodeResult, review1.hashCode());
     }
 
     @Test
     void testEquals4() {
-        Review review = new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1,
-                LocalDate.of(1970, 1, 1).atStartOfDay());
+        Review review = new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1, LocalDateTime.of(1, 1, 1, 1, 1));
         assertNotEquals(review, new Review());
     }
 
@@ -116,47 +118,45 @@ class ReviewTest {
     @Test
     void testEquals10() {
         Review review = new Review();
-        review.setReviewDate(LocalDate.of(1970, 1, 1).atStartOfDay());
+        review.setReviewDate(LocalDateTime.of(1, 1, 1, 1, 1));
         assertNotEquals(review, new Review());
     }
 
     @Test
     void testEquals11() {
-        Review review = new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1,
-                LocalDate.of(1970, 1, 1).atStartOfDay());
-        Review review2 = new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1,
-                LocalDate.of(1970, 1, 1).atStartOfDay());
+        Review review = new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1, LocalDateTime.of(1, 1, 1, 1, 1));
+        Review review1 = new Review(1L, 1L, 1L, "Not all who wander are lost", true, 1, LocalDateTime.of(1, 1, 1, 1, 1));
 
-        assertEquals(review, review2);
+        assertEquals(review, review1);
         int expectedHashCodeResult = review.hashCode();
-        assertEquals(expectedHashCodeResult, review2.hashCode());
+        assertEquals(expectedHashCodeResult, review1.hashCode());
     }
 
     @Test
     void testEquals12() {
         Review review = new Review();
 
-        Review review2 = new Review();
-        review2.setContent("Not all who wander are lost");
-        assertNotEquals(review, review2);
+        Review review1 = new Review();
+        review1.setContent("Not all who wander are lost");
+        assertNotEquals(review, review1);
     }
 
     @Test
     void testEquals13() {
         Review review = new Review();
 
-        Review review2 = new Review();
-        review2.setIsPositive(true);
-        assertNotEquals(review, review2);
+        Review review1 = new Review();
+        review1.setIsPositive(true);
+        assertNotEquals(review, review1);
     }
 
     @Test
     void testEquals14() {
         Review review = new Review();
 
-        Review review2 = new Review();
-        review2.setReviewDate(LocalDate.of(1970, 1, 1).atStartOfDay());
-        assertNotEquals(review, review2);
+        Review review1 = new Review();
+        review1.setReviewDate(LocalDateTime.of(1, 1, 1, 1, 1));
+        assertNotEquals(review, review1);
     }
 }
 
