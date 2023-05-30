@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.dao.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,9 +14,9 @@ import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.dao.DirectorsStorage;
-
 import java.util.*;
 import java.util.stream.Collectors;
+import static ru.yandex.practicum.filmorate.util.RowMappers.DIRECTOR_ROW_MAPPER;
 
 @Repository
 public class DirectorsStorageImpl implements DirectorsStorage {
@@ -30,27 +31,16 @@ public class DirectorsStorageImpl implements DirectorsStorage {
 
     @Override
     public List<Director> getAll() {
-        SqlRowSet rows = jdbcTemplate.queryForRowSet("SELECT id, name FROM directors");
-        List<Director> directors = new ArrayList<>();
-        while (rows.next()) {
-            Director director = Director.builder()
-                    .id(rows.getInt("id"))
-                    .name(rows.getString("name"))
-                    .build();
-            directors.add(director);
-        }
-        return directors;
+        var sqlQuery = "SELECT id, name FROM directors";
+        return jdbcTemplate.query(sqlQuery, DIRECTOR_ROW_MAPPER);
     }
 
     @Override
     public Director getById(int id) {
-        SqlRowSet rows = jdbcTemplate.queryForRowSet("SELECT id, name FROM directors WHERE id = ?", id);
-        if (rows.next()) {
-            return Director.builder()
-                    .id(rows.getInt("id"))
-                    .name(rows.getString("name"))
-                    .build();
-        } else {
+        var sqlQuery = "SELECT id, name FROM directors WHERE id = ?";
+        try {
+            return jdbcTemplate.queryForObject(sqlQuery, DIRECTOR_ROW_MAPPER, id);
+        } catch (EmptyResultDataAccessException e) {
             throw new DirectorNotFoundException("Такой режиссер не найден: " + id);
         }
     }
@@ -120,27 +110,39 @@ public class DirectorsStorageImpl implements DirectorsStorage {
 
     @Override
     public Map<Long, Set<Director>> findAll(Collection<Long> ids) {
-        Map<Long, Set<Director>> directorsMap = new HashMap<>();
-        for (Long id : ids) {
-            Set<Director> directors = new HashSet<>();
-            String sql = "SELECT director_id FROM film_directors WHERE film_id = ?";
-            SqlRowSet rows = jdbcTemplate.queryForRowSet(sql, id);
-            while (rows.next()) {
-                sql = "SELECT * FROM directors WHERE id = ?";
-                SqlRowSet rowDirector = jdbcTemplate.queryForRowSet(sql, rows.getInt("director_id"));
-                if (rowDirector.next()) {
-                    directors.add(new Director(rowDirector.getInt("id"), rowDirector.getString("name")));
-                }
-            }
-            directorsMap.put(id, directors);
-        }
-        return directorsMap;
+        String sql = "SELECT film_id, director_id, name FROM film_directors " +
+                "INNER JOIN directors on film_directors.director_id = directors.id WHERE film_id IN (:ids)";
+        var idParams = new MapSqlParameterSource("ids", ids);
+        return namedParameterJdbcTemplate.queryForStream(sql, idParams, (rs, rowNum) ->
+                        Map.entry(rs.getLong("film_id"),
+                                new Director(rs.getInt("director_id"), rs.getString("name"))))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(
+                                Map.Entry::getValue,
+                                Collectors.toSet()
+                        )));
     }
 
     @Override
     public void deleteByFilmId(long id) {
         String sqlQuery = "DELETE FROM film_directors WHERE film_id = ?";
         jdbcTemplate.update(sqlQuery, id);
+    }
+
+    @Override
+    public List<Long> findBySubString(String substring) {
+        var sqlQuery = "SELECT DISTINCT film_id FROM film_directors " +
+                "INNER JOIN directors ON directors.id = film_directors.director_id " +
+                "WHERE name ~* ?";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, substring);
+    }
+
+    @Override
+    public boolean existsById(int directorId) {
+        var sqlQuery = "SELECT id FROM directors WHERE id = ?";
+        var rowSet = jdbcTemplate.queryForRowSet(sqlQuery, directorId);
+        return rowSet.next();
     }
 
     public Map<String, Object> buildDirector(Director director) {
@@ -157,6 +159,11 @@ public class DirectorsStorageImpl implements DirectorsStorage {
             ids.add((long) rows.getInt("film_id"));
         }
         return ids;
+    }
+
+    public void deleteAll() {
+        var sqlQuery = "DELETE FROM directors";
+        jdbcTemplate.update(sqlQuery);
     }
 
 }

@@ -7,6 +7,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MovieGenre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,24 +22,23 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @WebMvcTest(FilmController.class)
 class FilmControllerTest {
 
     static Film firstFilm;
     static Film secondFilm;
-    static Random random = new Random();
+    static final Random random = new Random();
     @Autowired
     MockMvc mvc;
     @Autowired
@@ -129,42 +130,8 @@ class FilmControllerTest {
     }
 
     @Test
-    void handleAddUserLike_returnFilm() throws Exception {
-        when(service.setLike(anyLong(), anyLong())).thenReturn(firstFilm);
-
-        var mvcRequest = put(String.format("/films/%d/like/%d", firstFilm.getId(), random.nextInt()));
-
-        mvc.perform(mvcRequest).andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(firstFilm)))
-                .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.id", is((int) firstFilm.getId())))
-                .andExpect(jsonPath("$.name", is(firstFilm.getName())))
-                .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
-                .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
-                .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
-    }
-
-    @Test
-    void handleRemoveUserLike_returnFilm() throws Exception {
-        when(service.deleteLike(anyLong(), anyLong())).thenReturn(firstFilm);
-
-        var mvcRequest = delete(String.format("/films/%d/like/%d", firstFilm.getId(), random.nextInt()));
-
-        mvc.perform(mvcRequest).andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(firstFilm)))
-                .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.id", is((int) firstFilm.getId())))
-                .andExpect(jsonPath("$.name", is(firstFilm.getName())))
-                .andExpect(jsonPath("$.description", is(firstFilm.getDescription())))
-                .andExpect(jsonPath("$.releaseDate", is(firstFilm.getReleaseDate().toString())))
-                .andExpect(jsonPath("$.duration", is(firstFilm.getDuration())));
-    }
-
-    @Test
     void handleReturnPopular_returnFilmListDefaultSize() throws Exception {
-        when(service.getPopular(anyInt())).thenReturn(List.of(firstFilm, secondFilm));
+        when(service.getPopular(anyMap())).thenReturn(List.of(firstFilm, secondFilm));
 
         var mvcRequest = get("/films/popular");
 
@@ -182,8 +149,63 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$[*].duration", contains(firstFilm.getDuration(),
                         secondFilm.getDuration())));
 
-        verify(service).getPopular(10);
+        verify(service).getPopular(Collections.emptyMap());
     }
+
+    @Test
+    void handleReturnPopularWithOutParams_returnFilmList() throws Exception {
+        when(service.getPopular(anyMap())).thenReturn(List.of(firstFilm, secondFilm));
+
+        var mvcRequest = get("/films/popular");
+
+        mvc.perform(mvcRequest)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(mapper.writeValueAsString(List.of(firstFilm, secondFilm))))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].id", contains((int) firstFilm.getId(), (int) secondFilm.getId())))
+                .andExpect(jsonPath("$[*].name", contains(firstFilm.getName(), secondFilm.getName())))
+                .andExpect(jsonPath("$[*].description", contains(firstFilm.getDescription(),
+                        secondFilm.getDescription())))
+                .andExpect(jsonPath("$[*].releaseDate", contains(firstFilm.getReleaseDate().toString(),
+                        secondFilm.getReleaseDate().toString())))
+                .andExpect(jsonPath("$[*].duration", contains(firstFilm.getDuration(),
+                        secondFilm.getDuration())));
+
+        verify(service).getPopular(Collections.emptyMap());
+    }
+
+    @Test
+    void handleReturnPopularWithParams_returnFilmList() throws Exception {
+        final int count = 1;
+        final int genreId = 2;
+        final int year = firstFilm.getReleaseDate().getYear();
+        firstFilm.getGenres().add(new Genre(genreId));
+        Map<String, String> mapParams = new HashMap<>();
+        mapParams.put("count", String.valueOf(count));
+        mapParams.put("genreId", String.valueOf(genreId));
+        mapParams.put("year", String.valueOf(year));
+        when(service.getPopular(anyMap())).thenReturn(List.of(firstFilm));
+
+        var mvcRequest = get(String.format("/films/popular?count=%d&genreId=%d&year=%d", count, genreId, year));
+
+        mvc.perform(mvcRequest)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(mapper.writeValueAsString(List.of(firstFilm))))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is((int) firstFilm.getId())))
+                .andExpect(jsonPath("$[0].name", is(firstFilm.getName())))
+                .andExpect(jsonPath("$[0].description", is(firstFilm.getDescription())))
+                .andExpect(jsonPath("$[0].releaseDate", is(firstFilm.getReleaseDate().toString())))
+                .andExpect(jsonPath("$[0].duration", is(firstFilm.getDuration())))
+                .andExpect(jsonPath("$[0].genres[0].id", is(genreId)))
+                .andExpect(jsonPath("$[0].genres[0].name", is(MovieGenre.values()[genreId - 1].getName())));
+
+        verify(service).getPopular(mapParams);
+    }
+
+
 
     @Test
     void handleCreateNew_RequestBodyHasWrongJson_ThrowHttpMessageNotReadableEx_returnErrorMessage() throws Exception {

@@ -6,13 +6,11 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 
 @Repository("filmGenresDbStorage")
@@ -47,7 +45,6 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
     }
 
     @Override
-    @Transactional
     public Map<Long, Set<Genre>> findAll(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, genre_id FROM film_genre WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
@@ -71,6 +68,12 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
     public void deleteAll() {
         var sqlQuery = "DELETE from film_genre";
         jdbcTemplate.update(sqlQuery);
+    }
+
+    @Override
+    public List<Long> findAllByGenre(int genreId) {
+        var sqlQuery = "SELECT film_id from film_genre WHERE genre_id = ?";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, genreId);
     }
 
 }

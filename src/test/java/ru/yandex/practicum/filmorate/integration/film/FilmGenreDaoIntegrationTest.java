@@ -14,9 +14,8 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmDbStorage;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -27,7 +26,7 @@ class FilmGenreDaoIntegrationTest {
     static final Film firstFilm = new Film();
     static final Film secondFilm = new Film();
     final FilmGenreStorage filmGenreStorage;
-    final FilmDbStorage filmDbStorage;
+    final FilmDbStorage filmStorage;
 
     @BeforeEach
     void beforeEach() {
@@ -37,15 +36,15 @@ class FilmGenreDaoIntegrationTest {
     @AfterEach
     void afterEach() {
         filmGenreStorage.deleteAll();
-        filmDbStorage.deleteAll();
+        filmStorage.deleteAll();
     }
 
     @Test
     void testSave() {
         final int genreId = new Random().nextInt(MovieGenre.values().length - 1) + 1;
         final Genre genre = new Genre(genreId);
-        firstFilm.getGenres().add(genre);
-        final long filmId = filmDbStorage.save(firstFilm).getId();
+        firstFilm.addGenre(genre);
+        final long filmId = filmStorage.save(firstFilm).getId();
 
         filmGenreStorage.save(firstFilm);
         List<Genre> genres = new ArrayList<>(filmGenreStorage.findGenresByFilmId(filmId));
@@ -62,7 +61,7 @@ class FilmGenreDaoIntegrationTest {
         final Genre firstGenre = new Genre(3);
         final Genre secondGenre = new Genre(4);
         firstFilm.getGenres().addAll(List.of(firstGenre, secondGenre));
-        final long filmId = filmDbStorage.save(firstFilm).getId();
+        final long filmId = filmStorage.save(firstFilm).getId();
 
         filmGenreStorage.save(firstFilm);
         List<Genre> genres = new ArrayList<>(filmGenreStorage.findGenresByFilmId(filmId));
@@ -75,9 +74,9 @@ class FilmGenreDaoIntegrationTest {
     }
 
     @Test
-    void  testDeleteByFilmId() {
+    void testDeleteByFilmId() {
         firstFilm.getGenres().addAll(List.of(new Genre(1), new Genre(2)));
-        final long filmId = filmDbStorage.save(firstFilm).getId();
+        final long filmId = filmStorage.save(firstFilm).getId();
 
         filmGenreStorage.save(firstFilm);
         filmGenreStorage.deleteByFilmId(filmId);
@@ -86,6 +85,57 @@ class FilmGenreDaoIntegrationTest {
         assertThat(genres)
                 .isNotNull()
                 .isEmpty();
+    }
+
+    @Test
+    void testFindAllByGenre() {
+        Random random = new Random();
+        Genre genre = new Genre(random.nextInt(6) + 1);
+        firstFilm.addGenre(genre);
+        secondFilm.addGenre(genre);
+        filmStorage.save(firstFilm);
+        filmStorage.save(secondFilm);
+        filmGenreStorage.save(firstFilm);
+        filmGenreStorage.save(secondFilm);
+
+        final List<Long> foundedIds = filmGenreStorage.findAllByGenre(genre.getId());
+
+        assertThat(foundedIds)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .contains(firstFilm.getId(), secondFilm.getId());
+    }
+
+    @Test
+    void testFindAll_returnMapOfFilmsIdsAndHisGenres() {
+        Random random = new Random();
+        Genre genre = new Genre(random.nextInt(5) + 1);
+        Genre otherGenre = new Genre(genre.getId() + 1);
+        firstFilm.addGenre(genre);
+        secondFilm.addGenre(otherGenre);
+        filmStorage.save(firstFilm);
+        filmStorage.save(secondFilm);
+        filmGenreStorage.save(firstFilm);
+        filmGenreStorage.save(secondFilm);
+        Set<Long> filmsIds = Set.of(firstFilm.getId(), secondFilm.getId());
+
+        Map<Long, Set<Genre>> filmGenres = filmGenreStorage.findAll(filmsIds);
+
+        assertThat(filmGenres)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .hasEntrySatisfying(firstFilm.getId(),set ->
+                        assertThat(set)
+                        .isNotEmpty()
+                        .hasSize(1)
+                        .contains(genre))
+                .hasEntrySatisfying(secondFilm.getId(), set ->
+                        assertThat(set)
+                                .isNotEmpty()
+                                .hasSize(1)
+                                .contains(otherGenre));
     }
 
     private void setFilmsForDefaults() {

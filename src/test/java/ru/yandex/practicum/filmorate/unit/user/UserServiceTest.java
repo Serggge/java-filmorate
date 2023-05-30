@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,8 +14,8 @@ import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.service.impl.UserServiceImpl;
+import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -34,6 +33,8 @@ class UserServiceTest {
     UserStorage userStorage;
     @Mock
     FriendStorage friendStorage;
+    @Mock
+    EventStorage eventStorage;
     @InjectMocks
     UserServiceImpl userService;
 
@@ -199,7 +200,7 @@ class UserServiceTest {
         assertThat(returned).isNotNull();
         assertThat(returned).isEqualTo(friend);
         assertThat(user.getFriends().size()).isEqualTo(0);
-        assertThat(user.getFriends()).isEqualTo(Collections.emptyList());
+        assertThat(user.getFriends()).isEqualTo(Collections.emptySet());
     }
 
     @Test

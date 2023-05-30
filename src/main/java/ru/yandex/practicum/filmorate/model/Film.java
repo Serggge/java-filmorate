@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -28,20 +28,24 @@ public class Film implements Comparable<Film> {
     @NotNull
     Mpa mpa;
     final Set<Genre> genres = new HashSet<>();
+    final Set<Director> directors = new HashSet<>();
     final Set<Long> likes = new HashSet<>();
 
-    final Set<Director> directors = new HashSet<>();
+    @JsonIgnore
+    public int getMpaId() {
+        return mpa.getId();
+    }
 
     public void addLike(long id) {
         likes.add(id);
     }
 
-    public boolean removeLike(long id) {
-        return likes.remove(id);
+    public int getPopularity() {
+        return likes.size();
     }
 
-    public int popularity() {
-        return likes.size();
+    public boolean removeLike(long id) {
+        return likes.remove(id);
     }
 
     public void clearLikes() {
@@ -50,6 +54,10 @@ public class Film implements Comparable<Film> {
 
     public void addGenre(Genre genre) {
         genres.add(genre);
+    }
+
+    public void addDirector(Director director) {
+        directors.add(director);
     }
 
     @Override

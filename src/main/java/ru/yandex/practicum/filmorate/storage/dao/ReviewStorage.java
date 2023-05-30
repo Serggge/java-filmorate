@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.dao;
 import ru.yandex.practicum.filmorate.model.Review;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReviewStorage {
 
@@ -17,4 +18,7 @@ public interface ReviewStorage {
     void likeReview(Long id, Long userId);
 
     void dislikeReview(Long id, Long userId);
+
+    Optional<Long> findUserIdByReviewId(long id);
+
 }

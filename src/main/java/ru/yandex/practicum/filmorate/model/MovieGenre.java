@@ -11,7 +11,7 @@ public enum MovieGenre {
 
     private final String name;
 
-    private MovieGenre(String name) {
+    MovieGenre(String name) {
         this.name = name;
     }
 

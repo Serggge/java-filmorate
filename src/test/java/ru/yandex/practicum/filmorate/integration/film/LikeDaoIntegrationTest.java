@@ -12,13 +12,11 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.dao.impl.UserDbStorage;
-
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -89,7 +87,7 @@ class LikeDaoIntegrationTest {
     }
 
     @Test
-    void testFindAll() {
+    void testFindAllByCollectionId() {
         final Like like = new Like(film.getId(), user.getId());
 
         likeStorage.save(like);
@@ -101,7 +99,7 @@ class LikeDaoIntegrationTest {
     }
 
     @Test
-    void testfindCommonLikes() {
+    void testFindCommonLikes() {
         final Like like = new Like(film.getId(), user.getId());
         final Like likeFriend = new Like(film.getId(), friend.getId());
 
@@ -111,6 +109,117 @@ class LikeDaoIntegrationTest {
 
         assertThat(commonLikes.contains(film.getId())).isTrue();
         assertThat(commonLikes.size() == 1).isTrue();
+    }
+
+    @Test
+    void testFindPopular_returnTwoIdsAndPopularFirst() {
+        final Like userLikeFilm = new Like(film.getId(), user.getId());
+        final Like friendLikeFilm = new Like(film.getId(), friend.getId());
+        likeStorage.save(userLikeFilm);
+        likeStorage.save(friendLikeFilm);
+        Film otherFilm = Film.builder()
+                .name("Second film")
+                .description("Description second film")
+                .releaseDate(LocalDate.of(2020, 1, 1))
+                .duration(200)
+                .mpa(new Mpa(1))
+                .build();
+        otherFilm = filmStorage.save(otherFilm);
+        final Like userLikeOtherFilm = new Like(otherFilm.getId(), user.getId());
+        likeStorage.save(userLikeOtherFilm);
+
+        List<Long> popularFilmIds = likeStorage.findPopular(2);
+
+        assertThat(popularFilmIds)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .containsExactly(film.getId(), otherFilm.getId());
+    }
+
+    @Test
+    void testFindPopular_returnTwoIdsAndPopularSecond() {
+        final Like userLikeFilm = new Like(film.getId(), user.getId());
+        likeStorage.save(userLikeFilm);
+        Film otherFilm = Film.builder()
+                .name("Second film")
+                .description("Description second film")
+                .releaseDate(LocalDate.of(2020, 1, 1))
+                .duration(200)
+                .mpa(new Mpa(1))
+                .build();
+        otherFilm = filmStorage.save(otherFilm);
+        final Like userLikeOtherFilm = new Like(otherFilm.getId(), user.getId());
+        final Like friendLikeOtherFilm = new Like(otherFilm.getId(), friend.getId());
+        likeStorage.save(userLikeOtherFilm);
+        likeStorage.save(friendLikeOtherFilm);
+
+        List<Long> popularFilmIds = likeStorage.findPopular(2);
+
+        assertThat(popularFilmIds)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .containsExactly(otherFilm.getId(), film.getId());
+    }
+
+    @Test
+    void testFindPopular_returnOneIdAndPopularSecond() {
+        final Like userLikeFilm = new Like(film.getId(), user.getId());
+        likeStorage.save(userLikeFilm);
+        Film otherFilm = Film.builder()
+                .name("Second film")
+                .description("Description second film")
+                .releaseDate(LocalDate.of(2020, 1, 1))
+                .duration(200)
+                .mpa(new Mpa(1))
+                .build();
+        otherFilm = filmStorage.save(otherFilm);
+        final Like userLikeOtherFilm = new Like(otherFilm.getId(), user.getId());
+        final Like friendLikeOtherFilm = new Like(otherFilm.getId(), friend.getId());
+        likeStorage.save(userLikeOtherFilm);
+        likeStorage.save(friendLikeOtherFilm);
+
+        List<Long> popularFilmIds = likeStorage.findPopular(1);
+
+        assertThat(popularFilmIds)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(1)
+                .containsExactly(otherFilm.getId());
+    }
+
+    @Test
+    void testSuggestFilms() {
+        Film secondFilm = Film.builder()
+                .name("Second film")
+                .description("Description second film")
+                .releaseDate(LocalDate.now())
+                .duration(200)
+                .mpa(new Mpa(2))
+                .build();
+        User secondUser = User.builder()
+                .login("Peter555")
+                .name("Peter")
+                .email("peter@ya.ru")
+                .birthday(LocalDate.of(2010, 1, 1))
+                .build();
+        secondFilm = filmStorage.save(secondFilm);
+        secondUser = userStorage.save(secondUser);
+        final Like firstUserFirstFilm = new Like(film.getId(), user.getId());
+        likeStorage.save(firstUserFirstFilm);
+        final Like secondUserFirstFilm = new Like(film.getId(), secondUser.getId());
+        likeStorage.save(secondUserFirstFilm);
+        final Like secondUserSecondFilm = new Like(secondFilm.getId(), secondUser.getId());
+        likeStorage.save(secondUserSecondFilm);
+
+        List<Long> suggestForUser = likeStorage.suggestFilms(user.getId());
+
+        assertThat(suggestForUser)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(1)
+                .contains(secondFilm.getId());
     }
 
     private static void setFilmAndUserForDefaults() {

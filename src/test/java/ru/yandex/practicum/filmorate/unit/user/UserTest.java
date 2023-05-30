@@ -6,10 +6,8 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserTest {
@@ -91,11 +89,11 @@ public class UserTest {
     void mustAddUserIdInFriendList() {
         final long friendId = random.nextInt(32) + 1;
         user.addFriendId(friendId);
-        final List<Long> friends = user.getFriends();
+        final Set<Long> friends = user.getFriends();
 
         assertFalse(friends.isEmpty());
         assertEquals(1, friends.size());
-        assertEquals(List.of(friendId), friends);
+        assertEquals(Set.of(friendId), friends);
         assertTrue(friends.contains(friendId));
     }
 
@@ -103,22 +101,22 @@ public class UserTest {
     void mustDeleteFriendIdFromFriendList() {
         final long friendId = random.nextInt(32) + 1;
         user.addFriendId(friendId);
-        user.deleteFriendId(friendId);
-        final List<Long> friends = user.getFriends();
+        user.deleteFriend(friendId);
+        final Set<Long> friends = user.getFriends();
 
         assertTrue(friends.isEmpty());
-        assertEquals(Collections.emptyList(), friends);
+        assertEquals(Collections.emptySet(), friends);
         assertFalse(friends.contains(friendId));
     }
 
     @Test
     void mustReturnFriendList() {
-        final List<Long> expected = new ArrayList<>();
+        final Set<Long> expected = new HashSet<>();
         for (long i = 1; i <= 10; i++) {
             user.addFriendId(i);
             expected.add(i);
         }
-        final List<Long> returned = user.getFriends();
+        final Set<Long> returned = user.getFriends();
 
         assertFalse(returned.isEmpty());
         assertEquals(expected.size(), returned.size());
@@ -131,7 +129,7 @@ public class UserTest {
         final long friendId = random.nextInt(32) + 1;
         user.addFriendId(friendId);
         user.clearFriendList();
-        final List<Long> cleared = user.getFriends();
+        final Set<Long> cleared = user.getFriends();
 
         assertTrue(cleared.isEmpty());
     }

@@ -6,11 +6,13 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.storage.dao.LikeStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ru.yandex.practicum.filmorate.util.RowMappers.LIKE_ROW_MAPPER;
@@ -27,22 +29,19 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    public Like save(Like like) {
+    public boolean save(Like like) {
         var sqlQuery = "INSERT INTO likes (film_id, user_id) VALUES (:filmId, :userId)";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        namedParameterJdbcTemplate.update(sqlQuery, likeParams);
-        return like;
+        return namedParameterJdbcTemplate.update(sqlQuery, likeParams) > 0;
     }
 
     @Override
     public List<Long> findUsersIdByFilmId(long id) {
         var sqlQuery = "SELECT user_id FROM likes WHERE film_id = ?";
-        List<Long> ids = jdbcTemplate.queryForList(sqlQuery, Long.class, id);
-        return ids;
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, id);
     }
 
     @Override
-    @Transactional
     public Map<Long, Set<Long>> findAll(Collection<Long> ids) {
         var sqlQuery = "SELECT film_id, user_id FROM likes WHERE film_id IN (:ids)";
         var idParams = new MapSqlParameterSource("ids", ids);
@@ -55,10 +54,10 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    public void delete(Like like) {
+    public boolean delete(Like like) {
         var sqlQuery = "DELETE FROM likes WHERE film_id = :filmId AND user_id = :userId";
         var likeParams = new BeanPropertySqlParameterSource(like);
-        namedParameterJdbcTemplate.update(sqlQuery, likeParams);
+        return namedParameterJdbcTemplate.update(sqlQuery, likeParams) > 0;
     }
 
     @Override
@@ -81,4 +80,36 @@ public class LikeDbStorage implements LikeStorage {
                 "GROUP BY film_id HAVING count(user_id)=2";
         return jdbcTemplate.queryForList(sqlQuery, Long.class, userId, friendId);
     }
+
+    @Override
+    public List<Long> findPopular(int count) {
+        var sqlQuery = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT ?";
+        return jdbcTemplate.queryForList(sqlQuery, Long.class, count);
+    }
+
+    @Override
+    public List<Long> suggestFilms(long userId) {
+        var sqlQuery = "WITH user_favorite_films AS " +
+                "    (SELECT film_id " +
+                "     FROM likes " +
+                "     WHERE user_id = :userId) " +
+                "SELECT DISTINCT film_id " +
+                "FROM likes " +
+                "WHERE user_id IN " +
+                "        (SELECT user_id " +
+                "         FROM likes " +
+                "         WHERE film_id IN " +
+                "                 (SELECT film_id " +
+                "                  FROM user_favorite_films) " +
+                "             AND user_id != :userId " +
+                "         GROUP BY user_id " +
+                "         ORDER BY COUNT(user_id) DESC " +
+                "         LIMIT 3) " +
+                "    AND film_id NOT IN " +
+                "        (SELECT film_id " +
+                "         FROM user_favorite_films)";
+        return namedParameterJdbcTemplate.queryForList(sqlQuery,
+                new MapSqlParameterSource("userId", userId), Long.class);
+    }
+
 }
