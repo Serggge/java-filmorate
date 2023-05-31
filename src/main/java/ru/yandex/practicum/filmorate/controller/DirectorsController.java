@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.DirectorsService;
@@ -12,7 +11,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/directors")
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
-@Transactional
 public class DirectorsController {
 
     private final DirectorsService service;

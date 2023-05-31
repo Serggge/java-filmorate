@@ -6,12 +6,14 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import java.util.List;
 import static ru.yandex.practicum.filmorate.util.RowMappers.EVENT_ROW_MAPPER;
 
 @Repository("eventDbStorage")
+@Transactional
 public class EventDbStorage implements EventStorage {
 
     private final JdbcTemplate jdbcTemplate;

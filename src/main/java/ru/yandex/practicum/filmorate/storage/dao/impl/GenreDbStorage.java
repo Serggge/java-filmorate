@@ -6,6 +6,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.GenreStorage;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 
 @Repository("genreDbStorage")
+@Transactional
 @RequiredArgsConstructor(onConstructor__ = @Autowired)
 public class GenreDbStorage implements GenreStorage {
 

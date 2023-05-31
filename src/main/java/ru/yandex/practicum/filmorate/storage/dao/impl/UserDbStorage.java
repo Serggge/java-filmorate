@@ -9,12 +9,14 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.*;
 import static ru.yandex.practicum.filmorate.util.RowMappers.USER_ROW_MAPPER;
 
 @Repository("userDbStorage")
+@Transactional
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;

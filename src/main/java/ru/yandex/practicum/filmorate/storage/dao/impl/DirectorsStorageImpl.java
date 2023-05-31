@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.DataException;
 import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 import static ru.yandex.practicum.filmorate.util.RowMappers.DIRECTOR_ROW_MAPPER;
 
 @Repository
+@Transactional
 public class DirectorsStorageImpl implements DirectorsStorage {
 
     private final JdbcTemplate jdbcTemplate;

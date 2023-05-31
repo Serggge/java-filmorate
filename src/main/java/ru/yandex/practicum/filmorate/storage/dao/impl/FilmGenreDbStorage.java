@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.dao.FilmGenreStorage;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 import static ru.yandex.practicum.filmorate.util.RowMappers.GENRE_ROW_MAPPER;
 
 @Repository("filmGenresDbStorage")
+@Transactional
 public class FilmGenreDbStorage implements FilmGenreStorage {
 
     private final JdbcTemplate jdbcTemplate;
