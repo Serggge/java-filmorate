@@ -20,4 +20,6 @@ public interface FilmGenreStorage {
 
     void deleteAll();
 
+    List<Long> findAllByGenre(int genreId);
+
 }

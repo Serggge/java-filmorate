@@ -9,6 +9,8 @@ public interface FilmStorage {
 
     Film save(Film film);
 
+    Film update(Film film);
+
     Optional<Film> findById(long id);
 
     List<Film> findAllById(Collection<Long> ids);
@@ -18,5 +20,17 @@ public interface FilmStorage {
     boolean existsById(long id);
 
     void deleteAll();
+
+    List<Long> findBySubString(String substring);
+
+    List<Long> findAllByYear(int year);
+
+    List<Long> findAllIds();
+
+    void delete(long id);
+
+    List<Long> findPopular(int count);
+
+    List<Long> findByYearAndGenre(int year, int genreId);
 
 }

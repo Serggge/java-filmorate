@@ -5,11 +5,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,14 +18,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -44,7 +39,9 @@ class UserControllerTest {
     @Autowired
     ObjectMapper mapper;
     @MockBean
-    UserService service;
+    UserService userService;
+    @MockBean
+    FilmService filmService;
 
     @BeforeAll
     public static void beforeAll() {
@@ -61,7 +58,7 @@ class UserControllerTest {
 
     @Test
     void handlePostUsers_addNewUser_returnAdded() throws Exception {
-        when(service.create(any(User.class))).thenReturn(user);
+        when(userService.create(any(User.class))).thenReturn(user);
 
         final var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(user));
@@ -80,7 +77,7 @@ class UserControllerTest {
 
     @Test
     void handlePutUsers_updateIncomingUser_returnUpdated() throws Exception {
-        when(service.update(any(User.class))).thenReturn(friend);
+        when(userService.update(any(User.class))).thenReturn(friend);
 
         final var mvcRequest = put("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(friend));
@@ -99,7 +96,7 @@ class UserControllerTest {
 
     @Test
     void handleGetUsers_returnAllUsers() throws Exception {
-        when(service.getAll()).thenReturn(List.of(user, friend));
+        when(userService.getAll()).thenReturn(List.of(user, friend));
 
         final var mvcRequest = get("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(List.of(user, friend)));
@@ -120,7 +117,7 @@ class UserControllerTest {
 
     @Test
     void handleReturnById_returnUserObject() throws Exception {
-        when(service.getById(anyLong())).thenReturn(user);
+        when(userService.getById(anyLong())).thenReturn(user);
 
         final var mvcRequest = get("/users/" + user.getId());
 
@@ -138,7 +135,7 @@ class UserControllerTest {
 
     @Test
     void handleInviteFriend_returnFriend() throws Exception {
-        when(service.addFriend(anyLong(), anyLong())).thenReturn(friend);
+        when(userService.addFriend(anyLong(), anyLong())).thenReturn(friend);
 
         final var mvcRequest = put(String.format("/users/%d/friends/%d", user.getId(), friend.getId()));
 
@@ -156,7 +153,7 @@ class UserControllerTest {
 
     @Test
     void handleRemoveFromFriends_returnFriend() throws Exception {
-        when(service.deleteFriendById(anyLong(), anyLong())).thenReturn(friend);
+        when(userService.deleteFriendById(anyLong(), anyLong())).thenReturn(friend);
 
         final var mvcRequest = delete(String.format("/users/%d/friends/%d", user.getId(), friend.getId()));
 
@@ -174,7 +171,7 @@ class UserControllerTest {
     @Test
     void handleReturnAllFriends_returnFriends() throws Exception {
         final List<User> friends = List.of(friend);
-        when(service.getAllFriends(anyLong())).thenReturn(friends);
+        when(userService.getAllFriends(anyLong())).thenReturn(friends);
 
         var mvcRequest = get(String.format("/users/%d/friends", user.getId()));
 
@@ -194,7 +191,7 @@ class UserControllerTest {
     void handleReturnMutualFriends_returnMutualFriends() throws Exception {
         User mutualFriend = User.builder().id(friend.getId() + 1).email("dima07@mailbox.org").name("Dmitry")
                 .login("DmitryDima").birthday(LocalDate.of(1980, 9, 26)).build();
-        when(service.getMutualFriends(anyLong(), anyLong())).thenReturn(List.of(mutualFriend));
+        when(userService.getMutualFriends(anyLong(), anyLong())).thenReturn(List.of(mutualFriend));
 
         var mvcRequest = get(String.format("/users/%d/friends/common/%d", user.getId(), friend.getId()));
 
@@ -212,7 +209,7 @@ class UserControllerTest {
 
     @Test
     void handleAddNew_RequestBodyHasWrongJson_ThrowHttpMessageNotReadableEx_returnErrorMessage() throws Exception {
-        lenient().when(service.create(any(User.class))).thenReturn(user);
+        lenient().when(userService.create(any(User.class))).thenReturn(user);
 
         var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content("\"id\": 1");
@@ -227,12 +224,12 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message", is("Получен некорректный формат JSON")))
                 .andExpect(jsonPath("$.description", Matchers.startsWith("JSON parse error")));
 
-        verify(service, never()).create(any(User.class));
+        verify(userService, never()).create(any(User.class));
     }
 
     @Test
     void handleReturnById_PathVariableWrongType_ThrowMethodArgumentTypeMismatchEx_returnErrorMsg() throws Exception {
-        lenient().when(service.update(any(User.class))).thenReturn(user);
+        lenient().when(userService.update(any(User.class))).thenReturn(user);
 
         var mvcRequest = get(String.format("/users/%s", user.getName()));
 
@@ -247,15 +244,15 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.description", containsString("Failed to convert value " +
                         "of type 'java.lang.String' to required type 'long'")));
 
-        verify(service, never()).update(any(User.class));
+        verify(userService, never()).update(any(User.class));
     }
 
     @Test
     void handleAddNew_UserObjectHasNotValidField_ThrowMethodArgumentNotValidEx_returnErrorMessage() throws Exception {
-        lenient().when(service.create(any(User.class))).thenReturn(user);
+        lenient().when(userService.create(any(User.class))).thenReturn(user);
 
         user.setLogin("q q");
-        var mvcRequest = post(String.format("/users")).contentType(MediaType.APPLICATION_JSON)
+        var mvcRequest = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(user));
 
         mvc.perform(mvcRequest).andExpect(status().isBadRequest())
@@ -268,7 +265,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.description",
                         containsString("логин не может содержать пробелы")));
 
-        verify(service, never()).create(any(User.class));
+        verify(userService, never()).create(any(User.class));
     }
 
     @Test

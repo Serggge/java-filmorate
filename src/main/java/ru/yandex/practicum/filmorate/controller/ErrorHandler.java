@@ -24,6 +24,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     protected ErrorResponse handleHttpMessageNotReadable(HttpMessageNotReadableException exception) {
+
         errorResponse.setParams("Получен некорректный формат JSON", exception.getMessage());
         log(exception);
         return errorResponse;
@@ -34,12 +35,12 @@ public class ErrorHandler {
     protected ErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
         Map<String, String> errorReport = new HashMap<>();
         exception.getBindingResult()
-                 .getAllErrors()
-                 .forEach(error -> {
-                     String fieldName = ((FieldError) error).getField();
-                     String message = error.getDefaultMessage();
-                     errorReport.put(fieldName, message);
-                 });
+                .getAllErrors()
+                .forEach(error -> {
+                    String fieldName = ((FieldError) error).getField();
+                    String message = error.getDefaultMessage();
+                    errorReport.put(fieldName, message);
+                });
         errorResponse.setParams(errorReport.keySet().toString(), errorReport.values().toString());
         log(exception);
         return errorResponse;
@@ -53,7 +54,6 @@ public class ErrorHandler {
         return errorResponse;
     }
 
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(ValidationException exception) {
@@ -66,7 +66,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException exception) {
         String message = String.format("The parameter '%s' of value '%s' could not be converted to type '%s'",
-                                        exception.getName(), exception.getValue(), exception.getRequiredType());
+                exception.getName(), exception.getValue(), exception.getRequiredType());
         errorResponse.setParams(message, exception.getMessage());
         log(exception);
         return errorResponse;

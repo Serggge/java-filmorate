@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,14 +12,10 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor(onConstructor__ = @Autowired)
 public class GenreServiceImpl implements GenreService {
 
     private final GenreStorage storage;
-
-    @Autowired
-    public GenreServiceImpl(GenreStorage storage) {
-        this.storage = storage;
-    }
 
     @Override
     public List<Genre> getAll() {
@@ -28,7 +25,7 @@ public class GenreServiceImpl implements GenreService {
 
     @Override
     public Genre getById(long id) {
-        log.debug("Запрошен Жанр id=" + id);
+        log.debug("Запрошен жанр id=" + id);
         return storage.findById(id).orElseThrow(() -> new GenreNotFoundException(
                 String.format("Жанр с id=%d не найден", id)
         ));

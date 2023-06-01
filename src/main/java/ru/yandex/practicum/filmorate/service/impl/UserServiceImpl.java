@@ -6,12 +6,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataUpdateException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
-import ru.yandex.practicum.filmorate.model.Friendship;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.dao.EventStorage;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
 import static ru.yandex.practicum.filmorate.service.Validator.*;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,11 +22,15 @@ public class UserServiceImpl implements UserService {
 
     private final UserStorage userStorage;
     private final FriendStorage friendStorage;
+    private final EventStorage eventStorage;
 
     @Autowired
-    public UserServiceImpl(@Qualifier("userDbStorage") UserStorage userStorage, FriendStorage friendStorage) {
+    public UserServiceImpl(@Qualifier("userDbStorage") UserStorage userStorage,
+                           FriendStorage friendStorage,
+                           EventStorage eventStorage) {
         this.userStorage = userStorage;
         this.friendStorage = friendStorage;
+        this.eventStorage = eventStorage;
     }
 
     @Override
@@ -74,6 +79,13 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new DataUpdateException("Пользователи уже являются друзьями");
         }
+        eventStorage.save(Event.builder()
+                .timestamp(Instant.now().toEpochMilli())
+                .eventType(EventType.FRIEND)
+                .operation(Operation.ADD)
+                .userId(userId)
+                .entityId(friendId)
+                .build());
         return getUserOrThrow(friendId);
     }
 
@@ -88,6 +100,13 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new UserNotFoundException("Пользователь не является вашим другом");
         }
+        eventStorage.save(Event.builder()
+                .timestamp(Instant.now().toEpochMilli())
+                .eventType(EventType.FRIEND)
+                .operation(Operation.REMOVE)
+                .userId(userId)
+                .entityId(friendId)
+                .build());
         return getUserOrThrow(friendId);
     }
 
@@ -116,9 +135,25 @@ public class UserServiceImpl implements UserService {
         return userStorage.existsById(id);
     }
 
+    @Override
+    public List<Event> getEvents(long userId) {
+        if (!userStorage.existsById(userId)) {
+            throw  new UserNotFoundException(String.format("Пользователь с id=%d не найден", userId));
+        }
+        log.debug("Запрос событий для пользователя с id={}", userId);
+        return eventStorage.findAllByUserId(userId);
+    }
+
+    @Override
+    public void deleteUserById(long id) {
+        validateId(id);
+        log.debug("Удаление пользователя: id={}", id);
+        userStorage.deleteById(id);
+    }
+
     private User getUserOrThrow(long id) {
         return userStorage.findById(id)
-                      .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
+                .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id=%d не найден", id)));
     }
 
     private void validateId(long id) {

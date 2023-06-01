@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.storage.dao.FriendStorage;
 import java.util.List;
@@ -15,13 +16,13 @@ import java.util.Optional;
 import static ru.yandex.practicum.filmorate.util.RowMappers.FRIENDSHIP_ROW_MAPPER;
 
 @Repository("friendshipDbStorage")
+@Transactional
 public class FriendshipDbStorage implements FriendStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    public FriendshipDbStorage(JdbcTemplate jdbcTemplate) {
+    public FriendshipDbStorage(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
     }
